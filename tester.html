@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NBA Schrift Score | Player Power Leaderboard</title>
+  
+  <!-- Inter & JetBrains Mono Fonts + Tailwind CSS CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- HTML2Canvas for Crisp Social Image Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            court: {
+              950: '#070a11',
+              900: '#0c111d',
+              850: '#111827',
+              800: '#162032',
+              700: '#1e2d44',
+              border: '#1f2e47',
+            },
+            emerald: {
+              accent: '#10b981',
+              glow: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #070a11;
+      color: #e2e8f0;
+      font-feature-settings: "tnum" 1;
+      -webkit-tap-highlight-color: transparent;
+      scroll-behavior: smooth;
+    }
+    
+    .smooth-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0c111d; }
+    ::-webkit-scrollbar-thumb { background: #1e2d44; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+    /* Sticky Solid Table Headers (Desktop & Mobile) */
+    .table-fixed-header thead th {
+      position: sticky;
+      top: 0;
+      z-index: 25;
+      background-color: #111827;
+    }
+
+    /* Solid Freeze for Rank & Player Columns on Mobile */
+    @media (max-width: 768px) {
+      .sticky-col-rank {
+        position: sticky;
+        left: 0;
+        z-index: 15;
+        background-color: #0c111d;
+        width: 38px;
+        min-width: 38px;
+      }
+      .sticky-col-player {
+        position: sticky;
+        left: 38px;
+        z-index: 15;
+        background-color: #0c111d;
+        border-right: 2px solid #1f2e47;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.4);
+      }
+      .table-fixed-header thead th.sticky-col-rank {
+        z-index: 35;
+        background-color: #111827;
+      }
+      .table-fixed-header thead th.sticky-col-player {
+        z-index: 35;
+        background-color: #111827;
+        border-right: 2px solid #1f2e47;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-court-border bg-court-900/95 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+        <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-base sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">
+          SS
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            <span class="text-sm sm:text-xl font-extrabold tracking-tight text-white truncate">
+              SCHRIFT <span class="text-emerald-400">SCORE</span>
+            </span>
+            <span id="season-badge" class="text-[8px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
+            <span id="vip-badge" class="hidden text-[8px] sm:text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">👑 PLUS</span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-slate-400 truncate">
+            By <span class="text-slate-200 font-medium">Zachary Schriftman</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Header Tools -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+        <button 
+          onclick="openComparisonModal()"
+          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-teal-500/30 transition-colors"
+        >
+          <span>⚔️</span>
+          <span>Compare</span>
+          <span id="header-compare-count" class="bg-teal-500 text-slate-950 font-extrabold px-1.5 py-0.2 rounded-full text-[9px] ml-0.5">0/3</span>
+        </button>
+        <button 
+          onclick="toggleCalculator()"
+          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-emerald-500/30 transition-colors"
+        >
+          <span>⚡</span>
+          <span class="hidden xs:inline">Calculator</span>
+        </button>
+        <div class="flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-300 bg-court-850 px-2 py-1.5 sm:px-2.5 rounded-full border border-court-border">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="player-count">...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN PAGE CONTAINER -->
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 w-full flex-1 flex flex-col space-y-3.5 sm:space-y-6">
+
+    <!-- ERA / SEASON NAVIGATION SELECTOR (Completely Isolated Tabs) -->
+    <section class="bg-court-900 border border-court-border rounded-xl p-1.5 sm:p-2 flex items-center justify-between gap-2 shadow-lg">
+      <div class="flex items-center space-x-1 sm:space-x-2 font-mono text-xs w-full sm:w-auto">
+        <button 
+          id="btn-season-2627" 
+          onclick="switchSeason('2026/27')" 
+          class="flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+        >
+          🏀 2026–27 (Live)
+        </button>
+        <button 
+          id="btn-season-2526" 
+          onclick="switchSeason('2025/26')" 
+          class="flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800"
+        >
+          📜 2025–26 Season
+        </button>
+      </div>
+
+      <a 
+        href="#genesis-section"
+        class="hidden md:flex items-center space-x-1 text-xs font-mono text-slate-400 hover:text-emerald-300 transition-colors pr-2"
+      >
+        <span>📖 How weights are calculated</span>
+      </a>
+    </section>
+
+    <!-- FORMULA BANNER -->
+    <section class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl relative overflow-hidden">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+            <h2 id="formula-title" class="text-[11px] sm:text-sm font-semibold tracking-wide text-slate-300 uppercase font-mono">2026–2027 Formula Weights</h2>
+          </div>
+          <p id="formula-desc" class="text-[10px] sm:text-xs text-slate-400 mt-0.5">
+            1 PPG = 0.35 SS • 1 RPG = 0.83 SS • 1 APG = 1.14 SS • 1 SPG = 1.80 SS • 1 BPG = 1.98 SS • 1 GP = 0.04 SS
+          </p>
+        </div>
+
+        <!-- Formula Coefficients -->
+        <div class="flex sm:grid sm:grid-cols-6 gap-1.5 sm:gap-2 w-full md:w-auto font-mono text-[10px] sm:text-xs overflow-x-auto pb-1 sm:pb-0 smooth-scroll">
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">PPG</div>
+            <div id="w-ppg" class="font-bold text-emerald-400">× 0.35</div>
+          </div>
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">RPG</div>
+            <div id="w-rpg" class="font-bold text-emerald-400">× 0.83</div>
+          </div>
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">APG</div>
+            <div id="w-apg" class="font-bold text-emerald-400">× 1.14</div>
+          </div>
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">SPG</div>
+            <div id="w-spg" class="font-bold text-teal-300">× 1.80</div>
+          </div>
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">BPG</div>
+            <div id="w-bpg" class="font-bold text-teal-300">× 1.98</div>
+          </div>
+          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-400 text-[8px] sm:text-[10px]">GP</div>
+            <div id="w-gp" class="font-bold text-amber-300">× 0.04</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAT CALCULATOR DRAWER (Collapsible) -->
+    <section id="calc-drawer" class="hidden bg-gradient-to-br from-court-900 to-court-850 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-2xl transition-all">
+      <div class="flex items-center justify-between border-b border-court-border pb-2.5 mb-3">
+        <div>
+          <h3 class="text-xs sm:text-base font-extrabold text-white flex items-center gap-1.5">
+            <span>⚡</span> Stat Calculator
+          </h3>
+          <p class="text-[10px] sm:text-xs text-slate-400">Calculate score, role, and tier for any custom stat line.</p>
+        </div>
+        <button onclick="toggleCalculator()" class="text-slate-400 hover:text-white text-base font-bold px-2 py-1">✕</button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 font-mono text-xs">
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">PPG (Points)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-ppg" placeholder="0" value="25.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">RPG (Rebounds)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-rpg" placeholder="0" value="7.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">APG (Assists)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-apg" placeholder="0" value="6.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">SPG (Steals)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-spg" placeholder="0" value="1.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">BPG (Blocks)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-bpg" placeholder="0" value="1.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-300 font-bold block mb-1">GP (Games)</label>
+          <input type="number" inputmode="numeric" step="1" min="0" id="calc-gp" placeholder="0" value="4" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+        </div>
+      </div>
+
+      <!-- Result Bar -->
+      <div class="mt-3.5 pt-3 border-t border-court-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 font-mono">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-[11px] text-slate-400">SCHRIFT SCORE:</span>
+          <span id="calc-result" class="text-xl sm:text-3xl font-black text-emerald-400">26.85</span>
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <div id="calc-role" class="text-[10px] sm:text-xs font-mono bg-court-800 text-slate-200 border border-court-border px-2.5 py-1 rounded-full truncate">
+            Role: All-Around Primary Initiator
+          </div>
+          <div id="calc-tier" class="text-[10px] sm:text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold truncate">
+            Tier 3: All-Star Starter / Primary Option
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HIGHLIGHT STAT CARDS -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      <div onclick="openCardFromHighlight('leader')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] sm:text-xs font-mono text-slate-400 truncate">#1 SCHRIFT SCORE</span>
+          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+        </div>
+        <div id="stat-leader" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
+        <div id="stat-leader-score" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+      </div>
+
+      <div onclick="openCardFromHighlight('scorer')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] sm:text-xs font-mono text-slate-400 truncate">SCORING LEADER</span>
+          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+        </div>
+        <div id="stat-scorer" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
+        <div id="stat-scorer-val" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+      </div>
+
+      <div onclick="openCardFromHighlight('riser')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] sm:text-xs font-mono text-emerald-400 truncate">BIGGEST RISER</span>
+          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+        </div>
+        <div id="stat-riser" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
+        <div id="stat-riser-val" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+      </div>
+
+      <div onclick="openCardFromHighlight('faller')" class="bg-court-900 hover:bg-court-850 hover:border-rose-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] sm:text-xs font-mono text-rose-400 truncate">BIGGEST FALLER</span>
+          <span class="text-[9px] font-mono text-slate-500 group-hover:text-rose-400 transition-colors">↗</span>
+        </div>
+        <div id="stat-faller" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-rose-300 transition-colors">--</div>
+        <div id="stat-faller-val" class="text-[10px] sm:text-xs font-mono text-rose-400 mt-0.5 truncate">--</div>
+      </div>
+    </section>
+
+    <!-- SEARCH & CONTROLS -->
+    <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+      <div class="relative flex-1">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Search by player or team..." 
+          class="w-full bg-court-900 border border-court-border rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-sans"
+        />
+        <span class="absolute right-3 top-2 sm:top-2.5 text-slate-500 text-xs">🔍</span>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <select 
+          id="team-select" 
+          class="flex-1 sm:flex-none bg-court-900 border border-court-border rounded-xl px-2.5 py-2 sm:py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+        >
+          <option value="ALL">All 30 Teams</option>
+        </select>
+        
+        <button 
+          id="reset-btn" 
+          class="bg-court-800 hover:bg-court-700 text-slate-300 text-xs px-3 py-2 rounded-xl border border-court-border transition-colors font-mono flex-shrink-0"
+        >
+          Reset
+        </button>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD TABLE (COMPACT STACKED CELLS DESIGN) -->
+    <section class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col relative">
+      <div class="sm:hidden bg-court-850 border-b border-court-border px-3 py-1.5 flex items-center justify-between text-[10px] font-mono text-slate-400">
+        <span>Tap row to inspect / compare</span>
+        <span class="text-emerald-400 animate-pulse">Swipe stats →</span>
+      </div>
+
+      <div class="overflow-x-auto max-h-[66vh] sm:max-h-[72vh] table-fixed-header relative smooth-scroll">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm" id="main-table">
+          <thead>
+            <tr class="bg-court-850 border-b border-court-border text-[9px] sm:text-[11px] font-mono text-slate-400 uppercase tracking-wider select-none">
+              <th onclick="sortTable('rank')" id="th-rank" class="th-sortable sticky-col-rank py-2.5 sm:py-3.5 px-2 text-center cursor-pointer hover:text-white">Rk ↕</th>
+              <th onclick="sortTable('name')" id="th-name" class="th-sortable sticky-col-player py-2.5 sm:py-3.5 px-3 sm:px-4 cursor-pointer hover:text-white whitespace-nowrap">Player ↕</th>
+              <th onclick="sortTable('rankChange')" id="th-rankChange" class="th-sortable py-2.5 sm:py-3.5 px-2 text-center cursor-pointer hover:text-white">+/- ↕</th>
+              <th onclick="sortTable('team')" id="th-team" class="th-sortable py-2.5 sm:py-3.5 px-2 cursor-pointer hover:text-white">Team ↕</th>
+              <th onclick="sortTable('total')" id="th-total" class="th-sortable py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold text-right cursor-pointer hover:text-emerald-300 whitespace-nowrap text-emerald-400 bg-emerald-500/15">SS Total ↕</th>
+              
+              <th onclick="sortTable('ppg')" id="th-ppg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>PTS ↕</div>
+                <div id="col-weight-ppg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.35</div>
+              </th>
+              <th onclick="sortTable('rpg')" id="th-rpg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>TRB ↕</div>
+                <div id="col-weight-rpg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.83</div>
+              </th>
+              <th onclick="sortTable('apg')" id="th-apg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>AST ↕</div>
+                <div id="col-weight-apg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.14</div>
+              </th>
+              <th onclick="sortTable('spg')" id="th-spg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>STL ↕</div>
+                <div id="col-weight-spg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.80</div>
+              </th>
+              <th onclick="sortTable('bpg')" id="th-bpg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>BLK ↕</div>
+                <div id="col-weight-bpg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.98</div>
+              </th>
+              <th onclick="sortTable('gp')" id="th-gp" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+                <div>GP ↕</div>
+                <div id="col-weight-gp" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.04</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="table-rows" class="divide-y divide-court-border/40 text-slate-300 font-mono text-[11px] sm:text-xs">
+            <tr>
+              <td colspan="11" class="py-16 text-center text-slate-400 font-sans">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
+                <p id="table-loading-msg">Loading live 2026/27 player analytics...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEPARATE DEDICATED SECTION: THE GENESIS OF THE SCHRIFT SCORE -->
+    <section id="genesis-section" class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl p-4 sm:p-7 shadow-xl mt-6">
+      <div class="border-b border-court-border pb-3 mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <h2 class="text-sm sm:text-lg font-extrabold text-white tracking-wide font-sans">
+            The Genesis of the Schrift Score
+          </h2>
+          <span class="text-[9px] sm:text-[10px] font-mono bg-court-850 text-emerald-400 px-1.5 py-0.5 rounded border border-court-border">Formula Derivation</span>
+        </div>
+        <p class="text-[10px] sm:text-xs text-slate-400 font-mono mt-1">
+          ALL STATS VIA BASKETBALL REFERENCE • 10-Year Rolling Empirical Model
+        </p>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-300 font-sans">
+        <p>
+          The <strong class="text-white">Schrift Score</strong> is derived from a 10-year rolling statistical model created by <strong class="text-emerald-400 font-semibold">Zachary Schriftman</strong>. Every multiplier is scientifically grounded using this 3-step formula:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3 my-3 font-mono text-xs">
+          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
+            <span class="text-emerald-400 font-bold block mb-1">Step 1: 10-Year Aggregation</span>
+            <span class="text-slate-400 text-[11px] leading-relaxed block">Sum the top 10 qualified player totals for each category over the last 10 seasons.</span>
+          </div>
+          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
+            <span class="text-emerald-400 font-bold block mb-1">Step 2: Baseline Division</span>
+            <span class="text-slate-400 text-[11px] leading-relaxed block">Divide that combined 10-year aggregate number by 100 to yield the individual elite baseline.</span>
+          </div>
+          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
+            <span class="text-emerald-400 font-bold block mb-1">Step 3: Inversion Calculation</span>
+            <span class="text-slate-400 text-[11px] leading-relaxed block">Divide 10 by that baseline number to compute the category's active formula multiplier.</span>
+          </div>
+        </div>
+
+        <div class="bg-court-850 border border-emerald-500/30 rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
+          <span class="text-emerald-400 font-bold block text-xs sm:text-sm mb-1">Formula 2026–2027:</span>
+          <div class="text-white font-bold text-[11px] sm:text-sm bg-court-950 p-2.5 rounded-lg border border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
+            Schrift Score = (0.35 × PPG) + (0.83 × RPG) + (1.14 × APG) + (1.80 × SPG) + (1.98 × BPG) + (0.04 × GP)
+          </div>
+        </div>
+
+        <div class="bg-court-850 border border-court-border rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
+          <span class="text-slate-300 font-bold block text-xs sm:text-sm mb-1">Formula 2025–2026:</span>
+          <div class="text-white font-bold text-[11px] sm:text-sm bg-court-950 p-2.5 rounded-lg border border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
+            Schrift Score = (0.36 × PPG) + (0.84 × RPG) + (1.18 × APG) + (1.80 × SPG) + (1.99 × BPG) + (0.04 × GP)
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: PLAYER STATS INSPECT CARD -->
+  <div id="player-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modal-content-card" class="bg-court-900 border border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+
+      <!-- Player Header in Modal -->
+      <div class="flex items-center space-x-3 mb-3.5">
+        <div id="modal-rank-badge" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400 flex-shrink-0">
+          <span class="text-[8px] text-slate-400">RANK</span>
+          <span id="modal-rank" class="text-base sm:text-lg leading-none">#1</span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h3 id="modal-name" class="text-base sm:text-xl font-extrabold text-white font-sans truncate">Player Name</h3>
+          <div class="flex items-center space-x-2 mt-0.5">
+            <span id="modal-team" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-court-800 border border-court-border text-slate-300">TEAM</span>
+            <span id="modal-change" class="text-[10px] font-mono font-bold text-emerald-400">▲ +1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schrift Score & Archetype Callout (No Truncation on Mobile) -->
+      <div class="bg-court-850 border border-court-border rounded-xl p-3 sm:p-3.5 flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 font-mono mb-3.5">
+        <div class="flex-shrink-0">
+          <span class="text-[9px] text-slate-400 block tracking-wider uppercase">Total Schrift Score</span>
+          <div id="modal-total" class="text-2xl sm:text-3xl font-black text-emerald-400 leading-tight">32.79</div>
+        </div>
+        <div class="xs:text-right flex flex-col xs:items-end">
+          <span class="text-[9px] text-slate-400 block tracking-wider uppercase mb-1">Analytical Role</span>
+          <div id="modal-role-badge" class="text-[10.5px] sm:text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg leading-snug whitespace-normal text-left xs:text-right max-w-full">
+            Two-Way Engine
+          </div>
+        </div>
+      </div>
+
+      <!-- Contribution Breakdown Bar with Exact Percentages -->
+      <div class="mb-3.5">
+        <div class="flex justify-between text-[10px] font-mono text-slate-300 mb-1.5">
+          <span>Score Composition</span>
+          <span id="modal-primary-driver" class="text-emerald-400 font-semibold truncate">Primary Driver: Points</span>
+        </div>
+        <div class="w-full h-2.5 rounded-full bg-court-800 flex overflow-hidden border border-court-border">
+          <div id="bar-scoring" class="bg-amber-400 transition-all duration-300" style="width: 25%"></div>
+          <div id="bar-rebounding" class="bg-blue-400 transition-all duration-300" style="width: 25%"></div>
+          <div id="bar-playmaking" class="bg-emerald-400 transition-all duration-300" style="width: 25%"></div>
+          <div id="bar-defense" class="bg-purple-400 transition-all duration-300" style="width: 25%"></div>
+        </div>
+        
+        <!-- Live Percentage Labels -->
+        <div class="grid grid-cols-4 text-center text-[9px] font-mono text-slate-400 mt-2 gap-1">
+          <div class="bg-court-800/40 py-1 rounded">
+            <span class="text-amber-400 font-bold block" id="pct-scoring">0%</span>
+            <span>PTS</span>
+          </div>
+          <div class="bg-court-800/40 py-1 rounded">
+            <span class="text-blue-400 font-bold block" id="pct-rebounding">0%</span>
+            <span>TRB</span>
+          </div>
+          <div class="bg-court-800/40 py-1 rounded">
+            <span class="text-emerald-400 font-bold block" id="pct-playmaking">0%</span>
+            <span>AST</span>
+          </div>
+          <div class="bg-court-800/40 py-1 rounded">
+            <span class="text-purple-400 font-bold block" id="pct-defense">0%</span>
+            <span>DEF</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat Breakdown Grid -->
+      <div class="grid grid-cols-5 gap-1.5 text-center font-mono text-xs mb-3.5">
+        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+          <div class="text-[9px] text-slate-400">PPG</div>
+          <div id="modal-ppg" class="font-bold text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-ppg" class="text-[9px] text-amber-400 mt-0.5">+--</div>
+        </div>
+        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+          <div class="text-[9px] text-slate-400">TRB</div>
+          <div id="modal-rpg" class="font-bold text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-rpg" class="text-[9px] text-blue-400 mt-0.5">+--</div>
+        </div>
+        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+          <div class="text-[9px] text-slate-400">AST</div>
+          <div id="modal-apg" class="font-bold text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-apg" class="text-[9px] text-emerald-400 mt-0.5">+--</div>
+        </div>
+        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+          <div class="text-[9px] text-slate-400">STL</div>
+          <div id="modal-spg" class="font-bold text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-spg" class="text-[9px] text-purple-400 mt-0.5">+--</div>
+        </div>
+        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+          <div class="text-[9px] text-slate-400">BLK</div>
+          <div id="modal-bpg" class="font-bold text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-bpg" class="text-[9px] text-purple-400 mt-0.5">+--</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons inside Modal -->
+      <div class="flex gap-2 font-mono">
+        <button id="modal-compare-btn" onclick="addCurrentModalPlayerToCompare()" class="flex-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5">
+          <span>⚔️</span>
+          <span id="modal-compare-text">Add to Compare</span>
+        </button>
+        <button onclick="exportSinglePlayerCard()" class="px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1" title="Export Social Image Card">
+          <span>📸</span>
+          <span class="hidden xs:inline">Share</span>
+        </button>
+        <button onclick="closeModal()" class="px-4 bg-court-800 hover:bg-court-700 text-slate-300 text-xs py-2.5 rounded-xl border border-court-border transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HEAD-TO-HEAD PLAYER COMPARISON TOOL -->
+  <div id="compare-modal" onclick="handleCompareBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="compare-content-card" class="bg-court-900 border border-court-border w-full max-w-6xl rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+      
+      <!-- Compare Header -->
+      <div class="flex items-center justify-between border-b border-court-border pb-3 mb-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-base sm:text-xl">⚔️</span>
+            <h2 class="text-sm sm:text-lg font-extrabold text-white tracking-wide font-sans">
+              Head-to-Head Player Comparison
+            </h2>
+            <span id="compare-tier-tag" class="text-[9px] sm:text-[10px] font-mono bg-teal-500/10 text-teal-300 border border-teal-500/20 px-2 py-0.5 rounded">Free Tier: 3 Slots</span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5">
+            Compare players head-to-head. Category leaders highlighted with <span class="text-emerald-400 font-bold">👑 WIN</span>.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="export-battle-btn" onclick="exportComparisonBattleCard()" class="hidden px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1 transition-colors">
+            <span>📸</span>
+            <span class="hidden sm:inline">Export Battle Card</span>
+            <span class="sm:hidden">Share</span>
+          </button>
+          <button onclick="closeComparisonModal()" class="text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+        </div>
+      </div>
+
+      <!-- Slots Container -->
+      <div id="compare-slots-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 mb-5 font-mono">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Comparative Battle Matrix Table -->
+      <div id="compare-matrix-container" class="overflow-x-auto smooth-scroll">
+        <table class="w-full text-left border-collapse text-xs font-mono" id="compare-table">
+          <!-- Dynamically populated via JS -->
+        </table>
+      </div>
+
+      <!-- Bottom Control Bar -->
+      <div class="mt-4 pt-3 border-t border-court-border flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs">
+        <div id="compare-footer-note" class="text-[11px] text-slate-400 text-center sm:text-left">
+          Free tier allows comparing up to 3 players. Upgrade to Plus to compare up to 10 players!
+        </div>
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <button id="upgrade-plus-bar-btn" onclick="openPlusModal('banner')" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5">
+            <span>👑</span>
+            <span>Schrift Score Plus</span>
+          </button>
+          <button onclick="closeComparisonModal()" class="px-3.5 py-2 bg-court-800 hover:bg-court-700 text-slate-300 rounded-xl border border-court-border transition-colors">
+            Done
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: SCHRIFT SCORE PLUS PAYWALL -->
+  <div id="plus-modal" onclick="handlePlusBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-gradient-to-b from-court-900 to-court-950 border border-amber-500/40 w-full max-w-md rounded-2xl p-5 sm:p-7 shadow-2xl relative overflow-hidden font-sans">
+      <button onclick="closePlusModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-2xl text-slate-950 font-black shadow-lg shadow-amber-500/20 mb-3.5">
+        👑
+      </div>
+
+      <div class="flex items-center gap-2">
+        <h3 class="text-xl font-extrabold text-white tracking-tight">Schrift Score <span class="text-amber-400">Plus</span></h3>
+        <span class="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PRO ACCESS</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-1">Unlock unrestricted NBA analytics tools and head-to-head comparisons.</p>
+
+      <div class="space-y-2.5 my-5 text-xs text-slate-200">
+        <div class="flex items-start space-x-2.5">
+          <span class="text-amber-400 font-bold">✓</span>
+          <span><strong>Compare up to 10 players</strong> head-to-head simultaneously</span>
+        </div>
+        <div class="flex items-start space-x-2.5">
+          <span class="text-amber-400 font-bold">✓</span>
+          <span><strong>Export high-res battle cards</strong> formatted for Twitter/Reddit</span>
+        </div>
+        <div class="flex items-start space-x-2.5">
+          <span class="text-amber-400 font-bold">✓</span>
+          <span><strong>Custom Metric Modeling:</strong> Build and test custom coefficients</span>
+        </div>
+        <div class="flex items-start space-x-2.5">
+          <span class="text-amber-400 font-bold">✓</span>
+          <span><strong>10-Year Historical Matchups:</strong> Compare modern stars with legends</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 mb-5 font-mono text-xs">
+        <div onclick="selectPlusPlan('monthly')" id="plan-monthly" class="cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all">
+          <span class="text-[10px] text-slate-400 block uppercase">Monthly</span>
+          <div class="text-lg font-black text-white mt-0.5">$3.99<span class="text-[10px] text-slate-400 font-normal">/mo</span></div>
+          <span class="text-[9px] text-slate-500 mt-0.5 block">Cancel anytime</span>
+        </div>
+        <div onclick="selectPlusPlan('annual')" id="plan-annual" class="cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center relative transition-all">
+          <span class="absolute -top-2 right-2 bg-amber-400 text-slate-950 font-bold text-[8px] px-1.5 py-0.2 rounded font-sans">SAVE 37%</span>
+          <span class="text-[10px] text-amber-300 block uppercase font-bold">Annual Pass</span>
+          <div class="text-lg font-black text-white mt-0.5">$29.99<span class="text-[10px] text-slate-400 font-normal">/yr</span></div>
+          <span class="text-[9px] text-amber-300/80 mt-0.5 block">$2.50 / month</span>
+        </div>
+      </div>
+
+      <button onclick="handlePlusCheckout()" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-extrabold text-sm py-3 rounded-xl shadow-xl shadow-amber-500/20 transition-all font-mono">
+        Upgrade to Plus — Secure Checkout
+      </button>
+
+      <p class="text-[10px] text-slate-500 text-center mt-3 font-mono">
+        Instant digital delivery • Cancel anytime
+      </p>
+    </div>
+  </div>
+
+  <!-- HIDDEN OFF-SCREEN CONTAINERS FOR HIGH-RES VIRAL IMAGE GENERATION -->
+  <div class="fixed left-[-9999px] top-[-9999px] z-[-1]" aria-hidden="true">
+    <!-- Single Player Card Render Template -->
+    <div id="export-single-template" style="width: 720px; background-color: #070a11;" class="p-8 rounded-3xl border-2 border-emerald-500/40 font-sans text-white">
+      <!-- Watermark Header -->
+      <div class="flex items-center justify-between border-b border-court-border pb-4 mb-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl shadow-lg border border-emerald-400/40">
+            SS
+          </div>
+          <div>
+            <div class="text-xl font-extrabold tracking-tight">
+              NBA SCHRIFT <span class="text-emerald-400">SCORE</span>
+            </div>
+            <div id="export-season-label" class="text-xs font-mono text-slate-400">2026/27 OFFICIAL LEADERBOARD</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[11px] font-mono text-slate-400 uppercase">Created by</div>
+          <div class="text-sm font-bold text-white">Zachary Schriftman</div>
+        </div>
+      </div>
+
+      <!-- Player Hero -->
+      <div class="flex items-center justify-between bg-court-900 border border-court-border rounded-2xl p-6 mb-6">
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400">
+            <span class="text-[10px] text-slate-400">RANK</span>
+            <span id="export-rank" class="text-2xl leading-none">#1</span>
+          </div>
+          <div>
+            <h1 id="export-name" class="text-2xl font-black text-white">Player Name</h1>
+            <div class="flex items-center space-x-2 mt-1">
+              <span id="export-team" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-court-800 border border-court-border text-slate-300">TEAM</span>
+              <span id="export-role" class="text-xs font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded">Two-Way Engine</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-right font-mono">
+          <span class="text-[11px] text-slate-400 block tracking-wider uppercase font-bold">Total Schrift Score</span>
+          <div id="export-total" class="text-4xl font-black text-emerald-400">32.79</div>
+          <span id="export-change" class="text-xs font-bold text-emerald-400">▲ +1 today</span>
+        </div>
+      </div>
+
+      <!-- Stat Box Breakdown -->
+      <div class="grid grid-cols-6 gap-2.5 text-center font-mono text-sm mb-6">
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">PPG</div>
+          <div id="export-ppg" class="font-black text-white text-lg mt-0.5">--</div>
+          <div id="export-ss-ppg" class="text-xs text-amber-400 mt-0.5 font-bold">+-- SS</div>
+        </div>
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">TRB</div>
+          <div id="export-rpg" class="font-black text-white text-lg mt-0.5">--</div>
+          <div id="export-ss-rpg" class="text-xs text-blue-400 mt-0.5 font-bold">+-- SS</div>
+        </div>
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">AST</div>
+          <div id="export-apg" class="font-black text-white text-lg mt-0.5">--</div>
+          <div id="export-ss-apg" class="text-xs text-emerald-400 mt-0.5 font-bold">+-- SS</div>
+        </div>
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">STL</div>
+          <div id="export-spg" class="font-black text-white text-lg mt-0.5">--</div>
+          <div id="export-ss-spg" class="text-xs text-teal-300 mt-0.5 font-bold">+-- SS</div>
+        </div>
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">BLK</div>
+          <div id="export-bpg" class="font-black text-white text-lg mt-0.5">--</div>
+          <div id="export-ss-bpg" class="text-xs text-teal-300 mt-0.5 font-bold">+-- SS</div>
+        </div>
+        <div class="bg-court-900 p-3 rounded-xl border border-court-border">
+          <div class="text-xs text-slate-400 font-bold">GP</div>
+          <div id="export-gp" class="font-black text-slate-300 text-lg mt-0.5">--</div>
+          <div id="export-ss-gp" class="text-xs text-amber-300 mt-0.5 font-bold">+-- SS</div>
+        </div>
+      </div>
+
+      <!-- Contribution Percentages Bar -->
+      <div class="bg-court-900 border border-court-border rounded-xl p-4 mb-6">
+        <div class="flex justify-between text-xs font-mono text-slate-300 mb-2">
+          <span>Score Composition</span>
+          <span id="export-driver" class="text-emerald-400 font-bold">Primary: Points</span>
+        </div>
+        <div class="w-full h-3 rounded-full bg-court-800 flex overflow-hidden border border-court-border mb-2.5">
+          <div id="export-bar-pts" class="bg-amber-400" style="width: 25%"></div>
+          <div id="export-bar-reb" class="bg-blue-400" style="width: 25%"></div>
+          <div id="export-bar-ast" class="bg-emerald-400" style="width: 25%"></div>
+          <div id="export-bar-def" class="bg-purple-400" style="width: 25%"></div>
+        </div>
+        <div class="grid grid-cols-4 text-center text-xs font-mono text-slate-400">
+          <div><span class="text-amber-400 font-bold" id="export-pct-pts">0%</span> PTS</div>
+          <div><span class="text-blue-400 font-bold" id="export-pct-reb">0%</span> REB</div>
+          <div><span class="text-emerald-400 font-bold" id="export-pct-ast">0%</span> AST</div>
+          <div><span class="text-purple-400 font-bold" id="export-pct-def">0%</span> STOCKS</div>
+        </div>
+      </div>
+
+      <!-- VIRAL WATERMARK FOOTER -->
+      <div class="pt-4 border-t border-court-border flex items-center justify-between font-mono text-xs text-slate-400">
+        <div class="flex items-center space-x-1.5">
+          <span>🏀</span>
+          <span>Verified NBA Player Power Metric</span>
+        </div>
+        <div class="text-emerald-400 font-bold text-sm tracking-wide">
+          https://schriftscore.vercel.app/
+        </div>
+      </div>
+    </div>
+
+    <!-- 2-Player Head-to-Head Battle Card Render Template -->
+    <div id="export-battle-template" style="width: 820px; background-color: #070a11;" class="p-8 rounded-3xl border-2 border-teal-500/40 font-sans text-white">
+      <!-- Watermark Header -->
+      <div class="flex items-center justify-between border-b border-court-border pb-4 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center font-black text-white text-2xl shadow-lg border border-teal-400/40">
+            ⚔️
+          </div>
+          <div>
+            <div class="text-xl font-extrabold tracking-tight">
+              NBA SCHRIFT <span class="text-emerald-400">SCORE</span> BATTLE
+            </div>
+            <div id="battle-headline-sub" class="text-xs font-mono text-slate-400">HEAD-TO-HEAD COMPOSITE MATCHUP</div>
+          </div>
+        </div>
+        <div class="text-right font-mono">
+          <div class="text-[10px] text-slate-400 uppercase">Metric Creator</div>
+          <div class="text-xs font-bold text-white">Zachary Schriftman</div>
+        </div>
+      </div>
+
+      <!-- Big Quote / Headline -->
+      <div class="bg-court-900 border border-court-border rounded-2xl p-4 mb-5 text-center font-mono">
+        <span class="text-xs text-slate-400 block uppercase">Matchup Breakdown</span>
+        <h2 id="battle-quote-headline" class="text-lg font-black text-white mt-0.5">
+          Look at SGA's Schrift Score compared to Luka
+        </h2>
+      </div>
+
+      <!-- 2 Players Side-by-Side Hero -->
+      <div class="grid grid-cols-2 gap-4 mb-5 font-mono">
+        <div id="battle-card-p1" class="bg-court-900 border border-court-border rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <span id="battle-p1-rank" class="text-xs text-slate-400 block font-bold">#1 OVERALL</span>
+            <h3 id="battle-p1-name" class="text-xl font-black text-white">Player 1</h3>
+            <span id="battle-p1-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase block font-bold">Schrift Score</span>
+            <div id="battle-p1-score" class="text-3xl font-black text-emerald-400">32.79</div>
+            <span id="battle-p1-badge" class="text-xs font-bold text-amber-300">👑 LEADER</span>
+          </div>
+        </div>
+
+        <div id="battle-card-p2" class="bg-court-900 border border-court-border rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <span id="battle-p2-rank" class="text-xs text-slate-400 block font-bold">#2 OVERALL</span>
+            <h3 id="battle-p2-name" class="text-xl font-black text-white">Player 2</h3>
+            <span id="battle-p2-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase block font-bold">Schrift Score</span>
+            <div id="battle-p2-score" class="text-3xl font-black text-emerald-400">30.96</div>
+            <span id="battle-p2-badge" class="text-xs font-bold text-slate-400">TRAILS BY 1.83</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matchup Table -->
+      <div class="bg-court-900 border border-court-border rounded-2xl p-4 mb-5">
+        <table class="w-full text-left font-mono text-sm border-collapse" id="battle-render-table">
+          <!-- Populated dynamically via JS -->
+        </table>
+      </div>
+
+      <!-- VIRAL WATERMARK FOOTER -->
+      <div class="pt-4 border-t border-court-border flex items-center justify-between font-mono text-xs text-slate-400">
+        <div class="flex items-center space-x-2">
+          <span>⚔️</span>
+          <span>Compare any NBA player head-to-head</span>
+        </div>
+        <div class="text-emerald-400 font-bold text-sm tracking-wide">
+          https://schriftscore.vercel.app/
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-court-border bg-court-950 py-4 text-center text-[10px] sm:text-xs text-slate-400 font-mono">
+    <p>NBA Schrift Score © 2026–2027 • Created by Zachary Schriftman</p>
+    <p class="text-slate-500 text-[9px] mt-0.5">Updated daily at 7:00 AM</p>
+  </footer>
+
+  <!-- DATA & APP INTERACTION SCRIPT -->
+  <script>
+    // =========================================================================
+    // CONFIGURATION & STRIPE PAYMENT LINKS
+    // =========================================================================
+    const STRIPE_MONTHLY_URL = "https://buy.stripe.com/eVq7sE3vy362a21c9mfjG00";
+    const STRIPE_ANNUAL_URL  = "https://buy.stripe.com/fZufZaaY0cGC7TT8XafjG01";
+
+    const SHEET_ID = '1GHhk4GIxhe6cOFzdGvA6fw-f9Nlcn7m6QJNg5-Bgie4';
+
+    // SEPARATE ERA GIDS & MULTIPLIERS (10-Year Rolling Formulas)
+    const SEASONS = {
+      '2026/27': {
+        label: '2026/27',
+        badgeText: '2026/27',
+        gid: '1861164094', // Live NBA 2026/27 Season tab
+        weights: { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 },
+        title: '2026–2027 Formula Weights',
+        desc: '1 PPG = 0.35 SS • 1 RPG = 0.83 SS • 1 APG = 1.14 SS • 1 SPG = 1.80 SS • 1 BPG = 1.98 SS • 1 GP = 0.04 SS'
+      },
+      '2025/26': {
+        label: '2025/26',
+        badgeText: '2025/26',
+        gid: '1238570489', // NBA 2025/26 Season tab
+        weights: { ppg: 0.36, rpg: 0.84, apg: 1.18, spg: 1.80, bpg: 1.99, gp: 0.04 },
+        title: '2025–2026 Formula Weights',
+        desc: '1 PPG = 0.36 SS • 1 RPG = 0.84 SS • 1 APG = 1.18 SS • 1 SPG = 1.80 SS • 1 BPG = 1.99 SS • 1 GP = 0.04 SS'
+      }
+    };
+
+    let activeSeason = '2026/27';
+
+    let seasonsData = {
+      '2026/27': [],
+      '2025/26': []
+    };
+
+    let masterData = [];
+    let currentData = [];
+    let sortColumn = 'total';
+    let sortDirection = 'desc';
+
+    let isPlusUser = false;
+    let comparePlayerRanks = [null, null, null];
+    let selectedPlusPlan = 'annual';
+    let currentInspectingRank = null;
+
+    let highlightPlayers = {
+      leader: null,
+      scorer: null,
+      riser: null,
+      faller: null
+    };
+
+    async function init() {
+      checkPlusMembershipStatus();
+      await loadSeasonData('2026/27');
+    }
+
+    async function loadSeasonData(seasonKey) {
+      activeSeason = seasonKey;
+      const cfg = SEASONS[seasonKey];
+
+      const btn2627 = document.getElementById('btn-season-2627');
+      const btn2526 = document.getElementById('btn-season-2526');
+
+      if (seasonKey === '2026/27') {
+        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800";
+      } else {
+        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800";
+      }
+
+      document.getElementById('season-badge').textContent = cfg.badgeText;
+      document.getElementById('formula-title').textContent = cfg.title;
+      document.getElementById('formula-desc').textContent = cfg.desc;
+
+      document.getElementById('w-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
+      document.getElementById('w-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
+      document.getElementById('w-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
+      document.getElementById('w-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
+      document.getElementById('w-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
+      document.getElementById('w-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
+
+      document.getElementById('col-weight-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
+      document.getElementById('col-weight-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
+      document.getElementById('col-weight-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
+      document.getElementById('col-weight-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
+      document.getElementById('col-weight-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
+      document.getElementById('col-weight-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
+
+      document.getElementById('table-rows').innerHTML = `
+        <tr>
+          <td colspan="11" class="py-16 text-center text-slate-400 font-sans">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
+            <p>Loading ${cfg.label} player analytics...</p>
+          </td>
+        </tr>
+      `;
+
+      if (seasonsData[seasonKey] && seasonsData[seasonKey].length > 0) {
+        masterData = seasonsData[seasonKey];
+      } else {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${cfg.gid}`;
+        try {
+          const response = await fetch(csvUrl);
+          if (!response.ok) throw new Error("Network fetch failed");
+          const csvText = await response.text();
+          masterData = parseCSV(csvText, cfg.weights);
+        } catch (err) {
+          console.warn(`Direct CSV fetch failed for ${seasonKey}, loading fallback...`, err);
+          masterData = (seasonKey === '2026/27') ? getFallback202627Data() : getFallback202526Data();
+        }
+        seasonsData[seasonKey] = masterData;
+      }
+
+      masterData = masterData.filter(p => !p.name.toLowerCase().includes("league average") && !p.name.toLowerCase().includes("average"));
+      currentData = [...masterData];
+      
+      comparePlayerRanks = [masterData[0]?.rank || null, masterData[1]?.rank || null, null];
+
+      populateTeams();
+      updateTopCards();
+      updateHeaderHighlights();
+      renderTable();
+      runCalculator();
+      renderCompareSlots();
+      updateCompareCountBadge();
+
+      document.getElementById('player-count').textContent = `${masterData.length} Players`;
+    }
+
+    function switchSeason(seasonKey) {
+      if (seasonKey === activeSeason) return;
+      document.getElementById('search-input').value = "";
+      loadSeasonData(seasonKey);
+    }
+
+    function checkPlusMembershipStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('plus') === 'active' || localStorage.getItem('schrift_plus') === 'active') {
+        isPlusUser = true;
+        localStorage.setItem('schrift_plus', 'active');
+        
+        document.getElementById('vip-badge').classList.remove('hidden');
+        document.getElementById('compare-tier-tag').textContent = "Plus Tier: Up to 10 Slots";
+        document.getElementById('compare-tier-tag').className = "text-[9px] sm:text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded";
+        document.getElementById('compare-footer-note').textContent = "Plus tier active: Compare up to 10 players simultaneously!";
+        
+        const upgradeBtn = document.getElementById('upgrade-plus-bar-btn');
+        if (upgradeBtn) upgradeBtn.classList.add('hidden');
+      } else {
+        isPlusUser = false;
+      }
+    }
+
+    function parseCSV(text, weights) {
+      const lines = text.trim().split('\n');
+      const rows = [];
+      let startIdx = 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes("Names") || lines[i].includes("Teams")) {
+          startIdx = i + 1;
+          break;
+        }
+      }
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line) continue;
+        
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
+        if (cols.length < 18 || !cols[3]) continue;
+        
+        const rawName = cols[3];
+        const lowerName = rawName.toLowerCase();
+
+        if (lowerName === "names" || lowerName === "player" || lowerName.includes("league average") || lowerName.includes("average")) {
+          continue;
+        }
+
+        const num = (v) => {
+          const parsed = parseFloat(v);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        const rankYesterday = cols[0] !== "" ? parseInt(cols[0]) : null;
+        const rank = parseInt(cols[1]) || (i - startIdx + 1);
+        const rankChange = cols[2] !== "" ? parseInt(cols[2]) : (rankYesterday ? rankYesterday - rank : 0);
+
+        const ppg = num(cols[5]);
+        const rpg = num(cols[7]);
+        const apg = num(cols[9]);
+        const spg = num(cols[11]);
+        const bpg = num(cols[13]);
+        const gp  = num(cols[15]);
+
+        const ssPpg = num(cols[6]) || (ppg * weights.ppg);
+        const ssRpg = num(cols[8]) || (rpg * weights.rpg);
+        const ssApg = num(cols[10]) || (apg * weights.apg);
+        const ssSpg = num(cols[12]) || (spg * weights.spg);
+        const ssBpg = num(cols[14]) || (bpg * weights.bpg);
+        const ssGp  = num(cols[16]) || (gp * weights.gp);
+        const total = num(cols[17]) || (ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp);
+
+        rows.push({
+          rankYesterday,
+          rank,
+          rankChange,
+          name: rawName,
+          team: cols[4] || "NBA",
+          ppg, ssPpg,
+          rpg, ssRpg,
+          apg, ssApg,
+          spg, ssSpg,
+          bpg, ssBpg,
+          gp, ssGp,
+          total
+        });
+      }
+
+      rows.sort((a, b) => b.total - a.total);
+      rows.forEach((r, idx) => r.rank = idx + 1);
+      return rows;
+    }
+
+    function getFallback202627Data() {
+      return [
+        { rank: 1, rankYesterday: 1, rankChange: 0, name: "Nikola Jokić", team: "DEN", ppg: 22.3, ssPpg: 7.81, rpg: 9.7, ssRpg: 8.05, apg: 8.7, ssApg: 9.92, spg: 1.3, ssSpg: 2.34, bpg: 2.3, ssBpg: 4.55, gp: 3, ssGp: 0.12, total: 32.79 },
+        { rank: 2, rankYesterday: 3, rankChange: 1, name: "Luka Dončić", team: "LAL", ppg: 34.3, ssPpg: 12.01, rpg: 7.3, ssRpg: 6.06, apg: 8.0, ssApg: 9.12, spg: 1.7, ssSpg: 3.06, bpg: 0.3, ssBpg: 0.59, gp: 3, ssGp: 0.12, total: 30.96 },
+        { rank: 3, rankYesterday: 4, rankChange: 1, name: "Domantas Sabonis", team: "SAC", ppg: 18.7, ssPpg: 6.55, rpg: 17.3, ssRpg: 14.36, apg: 7.0, ssApg: 7.98, spg: 1.0, ssSpg: 1.80, bpg: 0.0, ssBpg: 0.00, gp: 3, ssGp: 0.12, total: 30.80 },
+        { rank: 4, rankYesterday: 15, rankChange: 11, name: "Cooper Flagg", team: "DAL", ppg: 25.0, ssPpg: 8.75, rpg: 5.3, ssRpg: 4.40, apg: 6.3, ssApg: 7.18, spg: 3.7, ssSpg: 6.66, bpg: 1.7, ssBpg: 3.37, gp: 3, ssGp: 0.12, total: 30.48 },
+        { rank: 5, rankYesterday: 2, rankChange: -3, name: "Jalen Johnson", team: "ATL", ppg: 21.5, ssPpg: 7.53, rpg: 9.8, ssRpg: 8.13, apg: 8.5, ssApg: 9.69, spg: 1.8, ssSpg: 3.24, bpg: 0.8, ssBpg: 1.58, gp: 4, ssGp: 0.16, total: 30.33 }
+      ];
+    }
+
+    function getFallback202526Data() {
+      return [
+        { rank: 1, rankYesterday: 1, rankChange: 0, name: "Nikola Jokić", team: "DEN", ppg: 27.7, ssPpg: 9.97, rpg: 12.9, ssRpg: 10.84, apg: 10.7, ssApg: 12.63, spg: 1.4, ssSpg: 2.52, bpg: 0.8, ssBpg: 1.59, gp: 65, ssGp: 2.60, total: 40.15 },
+        { rank: 2, rankYesterday: 2, rankChange: 0, name: "Luka Dončić", team: "LAL", ppg: 33.5, ssPpg: 12.06, rpg: 7.7, ssRpg: 6.47, apg: 8.3, ssApg: 9.79, spg: 1.6, ssSpg: 2.88, bpg: 0.5, ssBpg: 1.00, gp: 64, ssGp: 2.56, total: 34.76 },
+        { rank: 3, rankYesterday: 3, rankChange: 0, name: "Giannis Antetokounmpo", team: "MIL", ppg: 27.6, ssPpg: 9.94, rpg: 9.8, ssRpg: 8.23, apg: 5.4, ssApg: 6.37, spg: 0.9, ssSpg: 1.62, bpg: 0.7, ssBpg: 1.39, gp: 36, ssGp: 1.44, total: 28.99 },
+        { rank: 4, rankYesterday: 4, rankChange: 0, name: "Shai Gilgeous-Alexander", team: "OKC", ppg: 31.1, ssPpg: 11.20, rpg: 4.3, ssRpg: 3.61, apg: 6.6, ssApg: 7.79, spg: 1.4, ssSpg: 2.52, bpg: 0.8, ssBpg: 1.59, gp: 68, ssGp: 2.72, total: 29.43 }
+      ];
+    }
+
+    function updateTopCards() {
+      if (masterData.length === 0) return;
+
+      const leader = masterData[0];
+      highlightPlayers.leader = leader;
+      document.getElementById('stat-leader').textContent = leader.name;
+      document.getElementById('stat-leader-score').textContent = `${leader.total.toFixed(2)} Total (${leader.team})`;
+
+      const topScorer = [...masterData].sort((a,b) => b.ppg - a.ppg)[0];
+      highlightPlayers.scorer = topScorer;
+      document.getElementById('stat-scorer').textContent = topScorer.name;
+      document.getElementById('stat-scorer-val').textContent = `${topScorer.ppg.toFixed(1)} PPG (${topScorer.team})`;
+
+      const sortedByChange = [...masterData].sort((a,b) => b.rankChange - a.rankChange);
+      const biggestRiser = sortedByChange[0];
+      const biggestFaller = sortedByChange[sortedByChange.length - 1];
+
+      highlightPlayers.riser = biggestRiser;
+      highlightPlayers.faller = biggestFaller;
+
+      if (biggestRiser && biggestRiser.rankChange > 0) {
+        document.getElementById('stat-riser').textContent = biggestRiser.name;
+        document.getElementById('stat-riser-val').textContent = `▲ +${biggestRiser.rankChange} (#${biggestRiser.rank})`;
+      } else {
+        document.getElementById('stat-riser').textContent = "None";
+        document.getElementById('stat-riser-val').textContent = "0";
+      }
+
+      if (biggestFaller && biggestFaller.rankChange < 0) {
+        document.getElementById('stat-faller').textContent = biggestFaller.name;
+        document.getElementById('stat-faller-val').textContent = `▼ ${biggestFaller.rankChange} (#${biggestFaller.rank})`;
+      } else {
+        document.getElementById('stat-faller').textContent = "None";
+        document.getElementById('stat-faller-val').textContent = "0";
+      }
+    }
+
+    function openCardFromHighlight(type) {
+      const p = highlightPlayers[type];
+      if (p) inspectPlayer(p.rank);
+    }
+
+    function populateTeams() {
+      const select = document.getElementById('team-select');
+      const teams = [...new Set(masterData.map(p => p.team))].sort();
+      select.innerHTML = '<option value="ALL">All 30 Teams</option>';
+      teams.forEach(t => {
+        if (!t) return;
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateHeaderHighlights() {
+      document.querySelectorAll('.th-sortable').forEach(th => {
+        th.classList.remove('text-emerald-400', 'bg-emerald-500/15', 'font-bold');
+        th.classList.add('text-slate-400');
+      });
+
+      const activeTh = document.getElementById(`th-${sortColumn}`);
+      if (activeTh) {
+        activeTh.classList.remove('text-slate-400');
+        activeTh.classList.add('text-emerald-400', 'bg-emerald-500/15', 'font-bold');
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('table-rows');
+      if (currentData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="py-12 text-center text-slate-500 font-sans">No matching players found.</td></tr>`;
+        return;
+      }
+
+      const colClass = (colName, extra = "") => {
+        const isSorted = (sortColumn === colName);
+        if (isSorted) {
+          return `bg-emerald-500/10 ${extra}`;
+        }
+        return extra;
+      };
+
+      tbody.innerHTML = currentData.map((p) => {
+        let changeBadge = `<span class="text-slate-500">• 0</span>`;
+        if (p.rankChange > 0) {
+          changeBadge = `<span class="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">▲${p.rankChange}</span>`;
+        } else if (p.rankChange < 0) {
+          changeBadge = `<span class="text-rose-400 font-bold bg-rose-500/10 px-1 py-0.5 rounded border border-rose-500/20">▼${Math.abs(p.rankChange)}</span>`;
+        }
+
+        return `
+          <tr onclick="inspectPlayer(${p.rank})" class="hover:bg-court-800/70 cursor-pointer transition-colors group">
+            <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${sortColumn === 'rank' ? 'text-emerald-400 bg-emerald-500/10' : 'text-white'}">${p.rank}</td>
+            <td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-white group-hover:text-emerald-400 transition-colors whitespace-nowrap ${sortColumn === 'name' ? 'text-emerald-400 bg-emerald-500/10' : ''}">
+              ${p.name}
+            </td>
+            <td class="py-2.5 sm:py-3 px-2 text-center text-[10px] sm:text-[11px] ${colClass('rankChange')}">${changeBadge}</td>
+            <td class="py-2.5 sm:py-3 px-2 ${colClass('team')}">
+              <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-court-800 border border-court-border text-slate-300">
+                ${p.team}
+              </span>
+            </td>
+            
+            <td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-extrabold whitespace-nowrap ${sortColumn === 'total' ? 'text-emerald-400 bg-emerald-500/15' : 'text-emerald-400/90 bg-emerald-500/5'}">
+              <span class="text-xs sm:text-sm font-black">${p.total.toFixed(2)}</span>
+            </td>
+            
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('ppg')}">
+              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.ppg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssPpg.toFixed(2)}</div>
+            </td>
+
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('rpg')}">
+              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.rpg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssRpg.toFixed(2)}</div>
+            </td>
+
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('apg')}">
+              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.apg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssApg.toFixed(2)}</div>
+            </td>
+
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('spg')}">
+              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.spg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-teal-300 font-mono leading-tight mt-0.5">+${p.ssSpg.toFixed(2)}</div>
+            </td>
+
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('bpg')}">
+              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.bpg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-teal-300 font-mono leading-tight mt-0.5">+${p.ssBpg.toFixed(2)}</div>
+            </td>
+
+            <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('gp')}">
+              <div class="font-bold text-slate-300 text-xs sm:text-[13px] leading-tight">${p.gp}</div>
+              <div class="text-[9px] sm:text-[10px] text-amber-300 font-mono leading-tight mt-0.5">+${p.ssGp.toFixed(2)}</div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      const team = document.getElementById('team-select').value;
+
+      currentData = masterData.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q);
+        const matchesTeam = (team === "ALL") || (p.team === team);
+        return matchesQuery && matchesTeam;
+      });
+
+      renderTable();
+    }
+
+    document.getElementById('search-input').addEventListener('input', applyFilters);
+    document.getElementById('team-select').addEventListener('change', applyFilters);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = "";
+      document.getElementById('team-select').value = "ALL";
+      currentData = [...masterData];
+      renderTable();
+    });
+
+    function sortTable(col) {
+      if (sortColumn === col) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = col;
+        sortDirection = (col === 'name' || col === 'team') ? 'asc' : 'desc';
+      }
+
+      currentData.sort((a, b) => {
+        let valA = a[col];
+        let valB = b[col];
+        if (typeof valA === 'string') {
+          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      });
+
+      updateHeaderHighlights();
+      renderTable();
+    }
+
+    // --- ACCURATE REALISTIC BASKETBALL ROLES ENGINE ---
+    function determinePlayerArchetype(p) {
+      const ppg = p.ppg || 0;
+      const rpg = p.rpg || 0;
+      const apg = p.apg || 0;
+      const spg = p.spg || 0;
+      const bpg = p.bpg || 0;
+      const stocks = spg + bpg;
+
+      if (apg >= 9.0 && rpg >= 9.0) return "Generational Triple-Double Hub (MVP Engine)";
+      if (ppg >= 20.0 && apg >= 7.0 && rpg >= 7.0) return "Triple-Double Engine (MVP Hub)";
+      if (ppg >= 24.0 && apg >= 6.5) return "Helio Primary Engine (Lead Creator)";
+      if (ppg >= 20.0 && stocks >= 2.5) return "Two-Way Alpha / Two-Way Engine";
+      if (stocks >= 4.0) return "All-Defensive Disruptor & Shot Eraser";
+      if (ppg >= 25.0) return "High-Volume Primary Bucket";
+      if (apg >= 8.5) return "Elite Floor General / Pure Point";
+      if (rpg >= 10.5 && ppg >= 18.0) return "Dominant 20/10 Interior Force";
+
+      if (ppg < 12.0 && rpg >= 7.0 && apg >= 3.5 && stocks >= 1.8) {
+        return "Defensive Anchor & Glue Connector";
+      }
+      if (bpg >= 2.0 && rpg >= 8.5) return "Interior Defensive Eraser / Rim Anchor";
+      if (ppg < 14.0 && stocks >= 2.0) return "Lockdown Perimeter Disruptor";
+      if (ppg < 15.0 && apg >= 4.5 && rpg >= 5.5) return "High-IQ Point Forward / Playmaking Connector";
+
+      if (bpg >= 1.8 && rpg >= 7.5) return "Interior Rim Protector / Anchor";
+      if (rpg >= 9.0) return "Glass Cleaner / Interior Finisher";
+      if (stocks >= 2.0) return "Perimeter Lockdown / Wing Stopper";
+      if (spg >= 1.7) return "Ballhawk / Perimeter Disruptor";
+      if (apg >= 5.5) return "Lead Playmaker / Floor General";
+      if (ppg >= 16.0) return "Secondary Scoring Threat / 2nd Option";
+      if (ppg >= 11.0 && stocks >= 1.4) return "Two-Way Starter / Versatile Wing";
+      if (apg >= 3.5) return "Secondary Playmaker / Combo Guard";
+      if (ppg >= 9.0) return "Rotational Sparkplug / Bench Scorer";
+      
+      return "Situational / Rotational Depth";
+    }
+
+    // --- ACCURATE REALISTIC BASKETBALL TIER ENGINE ---
+    function determinePlayerTier(total, ppg, rpg, apg, spg, bpg) {
+      const stocks = spg + bpg;
+
+      if (total >= 30.5 || (total >= 28.0 && ppg >= 24.0)) {
+        return { label: "Tier 1: MVP Frontrunner / Franchise Pillar", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" };
+      }
+      if (total >= 26.0) {
+        return { label: "Tier 2: 1st-Team All-NBA Core Star", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" };
+      }
+      if (total >= 22.5) {
+        if (ppg < 12.0) {
+          return { label: "Tier 4: Elite Two-Way Specialist / Glue Anchor", color: "bg-teal-500/10 text-teal-300 border-teal-500/20" };
+        }
+        return { label: "Tier 3: All-Star Starter / Primary Option", color: "bg-teal-500/10 text-teal-300 border-teal-500/20" };
+      }
+      if (total >= 19.0) {
+        if (ppg < 10.0) {
+          return { label: "Tier 5: High-Impact Defensive Anchor / Elite Connector", color: "bg-blue-500/10 text-blue-300 border-blue-500/20" };
+        }
+        return { label: "Tier 4: All-Star Caliber / Elite 2nd Option", color: "bg-blue-500/10 text-blue-300 border-blue-500/20" };
+      }
+      if (total >= 15.0) {
+        if (ppg < 8.0 && stocks >= 2.0) {
+          return { label: "Tier 5: Defensive Anchor & Connector", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" };
+        }
+        return { label: "Tier 5: High-Impact Starting 5 Contributor", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" };
+      }
+      if (total >= 11.0) {
+        return { label: "Tier 6: Starting Rotation / 6th Man Contender", color: "bg-amber-500/10 text-amber-300 border-amber-500/20" };
+      }
+      if (total >= 7.0) {
+        return { label: "Tier 7: Core Bench Rotation Piece", color: "bg-slate-500/10 text-slate-300 border-slate-500/20" };
+      }
+      if (total >= 4.0) {
+        return { label: "Tier 8: Specialist / Situational Depth", color: "bg-slate-700/30 text-slate-400 border-slate-600/30" };
+      }
+      return { label: "Tier 9: Deep Bench / Developing Reserve", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" };
+    }
+
+    // --- MODAL INSPECT HANDLERS ---
+    function inspectPlayer(rank) {
+      const p = masterData.find(player => player.rank === rank);
+      if (!p) return;
+
+      currentInspectingRank = rank;
+
+      document.getElementById('modal-rank').textContent = `#${p.rank}`;
+      document.getElementById('modal-name').textContent = p.name;
+      document.getElementById('modal-team').textContent = p.team;
+      
+      const changeEl = document.getElementById('modal-change');
+      if (p.rankChange > 0) {
+        changeEl.textContent = `▲ +${p.rankChange} today`;
+        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-emerald-400";
+      } else if (p.rankChange < 0) {
+        changeEl.textContent = `▼ ${p.rankChange} today`;
+        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-rose-400";
+      } else {
+        changeEl.textContent = "• Unchanged";
+        changeEl.className = "text-[10px] sm:text-xs font-mono text-slate-400";
+      }
+
+      document.getElementById('modal-total').textContent = p.total.toFixed(2);
+      
+      const role = determinePlayerArchetype(p);
+      document.getElementById('modal-role-badge').textContent = role;
+
+      const totalScore = p.total > 0 ? p.total : 1;
+      const ptsPct = Math.round((p.ssPpg / totalScore) * 100);
+      const rebPct = Math.round((p.ssRpg / totalScore) * 100);
+      const astPct = Math.round((p.ssApg / totalScore) * 100);
+      const defPct = Math.round(((p.ssSpg + p.ssBpg) / totalScore) * 100);
+
+      document.getElementById('bar-scoring').style.width = `${ptsPct}%`;
+      document.getElementById('bar-rebounding').style.width = `${rebPct}%`;
+      document.getElementById('bar-playmaking').style.width = `${astPct}%`;
+      document.getElementById('bar-defense').style.width = `${defPct}%`;
+
+      document.getElementById('pct-scoring').textContent = `${ptsPct}%`;
+      document.getElementById('pct-rebounding').textContent = `${rebPct}%`;
+      document.getElementById('pct-playmaking').textContent = `${astPct}%`;
+      document.getElementById('pct-defense').textContent = `${defPct}%`;
+
+      const drivers = [
+        { name: "Scoring Volume", val: ptsPct },
+        { name: "Rebounding Control", val: rebPct },
+        { name: "Playmaking Engine", val: astPct },
+        { name: "Defensive Scarcity", val: defPct }
+      ].sort((a,b) => b.val - a.val);
+
+      document.getElementById('modal-primary-driver').textContent = `Primary Driver: ${drivers[0].name} (${drivers[0].val}%)`;
+
+      document.getElementById('modal-ppg').textContent = p.ppg.toFixed(1);
+      document.getElementById('modal-ss-ppg').textContent = `+${p.ssPpg.toFixed(2)}`;
+      document.getElementById('modal-rpg').textContent = p.rpg.toFixed(1);
+      document.getElementById('modal-ss-rpg').textContent = `+${p.ssRpg.toFixed(2)}`;
+      document.getElementById('modal-apg').textContent = p.apg.toFixed(1);
+      document.getElementById('modal-ss-apg').textContent = `+${p.ssApg.toFixed(2)}`;
+      document.getElementById('modal-spg').textContent = p.spg.toFixed(1);
+      document.getElementById('modal-ss-spg').textContent = `+${p.ssSpg.toFixed(2)}`;
+      document.getElementById('modal-bpg').textContent = p.bpg.toFixed(1);
+      document.getElementById('modal-ss-bpg').textContent = `+${p.ssBpg.toFixed(2)}`;
+
+      const isInCompare = comparePlayerRanks.includes(p.rank);
+      const compareText = document.getElementById('modal-compare-text');
+      if (isInCompare) {
+        compareText.textContent = "Remove from Compare";
+      } else {
+        compareText.textContent = "Add to Compare ⚔️";
+      }
+
+      document.getElementById('player-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('player-modal').classList.add('hidden');
+    }
+
+    function handleBackdropClick(event) {
+      if (event.target.id === 'player-modal') {
+        closeModal();
+      }
+    }
+
+    // --- EXPANDED 10-PLAYER COMPARISON TOOL LOGIC ---
+    function openComparisonModal() {
+      renderCompareSlots();
+      renderCompareMatrix();
+      document.getElementById('compare-modal').classList.remove('hidden');
+    }
+
+    function closeComparisonModal() {
+      document.getElementById('compare-modal').classList.add('hidden');
+    }
+
+    function handleCompareBackdropClick(event) {
+      if (event.target.id === 'compare-modal') {
+        closeComparisonModal();
+      }
+    }
+
+    function renderCompareSlots() {
+      const container = document.getElementById('compare-slots-container');
+      if (!container) return;
+
+      let html = '';
+
+      if (isPlusUser) {
+        comparePlayerRanks.forEach((rank, idx) => {
+          html += `
+            <div class="bg-court-850 border border-court-border rounded-xl p-2.5 sm:p-3 relative">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[9px] text-amber-400 font-bold uppercase">Player ${idx + 1}</span>
+                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-500 hover:text-rose-400 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
+              </div>
+              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-court-800 border border-court-border rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400 font-mono">
+                <option value="">+ Select Player</option>
+                ${masterData.map(p => `<option value="${p.rank}" ${rank === p.rank ? 'selected' : ''}>#${p.rank} ${p.name} (${p.team})</option>`).join('')}
+              </select>
+            </div>
+          `;
+        });
+
+        if (comparePlayerRanks.length < 10) {
+          html += `
+            <div onclick="addPlusComparisonSlot()" class="bg-court-850/60 hover:bg-court-800 border border-dashed border-court-border hover:border-amber-400/50 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center cursor-pointer transition-all min-h-[75px] group">
+              <span class="text-base text-amber-400 group-hover:scale-110 transition-transform">➕</span>
+              <span class="text-[10px] font-mono text-slate-400 group-hover:text-amber-300 font-bold mt-1">+ Add Slot (${comparePlayerRanks.length}/10)</span>
+            </div>
+          `;
+        }
+      } else {
+        for (let idx = 0; idx < 3; idx++) {
+          const rank = comparePlayerRanks[idx] || null;
+          html += `
+            <div class="bg-court-850 border border-court-border rounded-xl p-2.5 sm:p-3 relative">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[9px] text-slate-400 font-bold uppercase">Player ${idx + 1}</span>
+                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-500 hover:text-rose-400 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
+              </div>
+              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-court-800 border border-court-border rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-400 font-mono">
+                <option value="">+ Select Player</option>
+                ${masterData.map(p => `<option value="${p.rank}" ${rank === p.rank ? 'selected' : ''}>#${p.rank} ${p.name} (${p.team})</option>`).join('')}
+              </select>
+            </div>
+          `;
+        }
+
+        html += `
+          <div onclick="openPlusModal('slot4_lock')" class="bg-gradient-to-br from-amber-500/10 via-court-850 to-court-850 border border-amber-500/30 hover:border-amber-400 rounded-xl p-2.5 sm:p-3 relative cursor-pointer transition-all group">
+            <div class="flex justify-between items-center mb-1.5 font-mono">
+              <span class="text-[9px] text-amber-400 font-extrabold uppercase flex items-center gap-1">
+                <span>🔒</span> PLAYER 4-10
+              </span>
+              <span class="text-[8px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.2 rounded font-sans">PLUS</span>
+            </div>
+            <div class="w-full bg-court-800/80 border border-amber-500/20 group-hover:border-amber-400 rounded-lg px-2 py-1.5 text-xs text-amber-200/80 flex items-center justify-between font-mono">
+              <span class="truncate">Unlock up to 10</span>
+              <span class="text-amber-400">⚡</span>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function addPlusComparisonSlot() {
+      if (!isPlusUser) {
+        openPlusModal('limit_add');
+        return;
+      }
+      if (comparePlayerRanks.length < 10) {
+        comparePlayerRanks.push(null);
+        renderCompareSlots();
+        updateCompareCountBadge();
+        renderCompareMatrix();
+      }
+    }
+
+    function handleCompareSelect(slotIndex, rankVal) {
+      const rank = parseInt(rankVal);
+      if (isNaN(rank)) {
+        comparePlayerRanks[slotIndex] = null;
+      } else {
+        comparePlayerRanks[slotIndex] = rank;
+      }
+      updateCompareCountBadge();
+      renderCompareSlots();
+      renderCompareMatrix();
+    }
+
+    function clearCompareSlot(slotIndex) {
+      if (isPlusUser && comparePlayerRanks.length > 3) {
+        comparePlayerRanks.splice(slotIndex, 1);
+      } else {
+        comparePlayerRanks[slotIndex] = null;
+      }
+      updateCompareCountBadge();
+      renderCompareSlots();
+      renderCompareMatrix();
+    }
+
+    function updateCompareCountBadge() {
+      const activeCount = comparePlayerRanks.filter(r => r !== null).length;
+      const maxLimit = isPlusUser ? 10 : 3;
+      document.getElementById('header-compare-count').textContent = `${activeCount}/${maxLimit}`;
+    }
+
+    function addCurrentModalPlayerToCompare() {
+      if (currentInspectingRank === null) return;
+
+      const existingIndex = comparePlayerRanks.indexOf(currentInspectingRank);
+      if (existingIndex !== -1) {
+        clearCompareSlot(existingIndex);
+        inspectPlayer(currentInspectingRank);
+        return;
+      }
+
+      const maxLimit = isPlusUser ? 10 : 3;
+      const emptySlot = comparePlayerRanks.slice(0, maxLimit).findIndex(r => r === null);
+      
+      if (emptySlot !== -1) {
+        comparePlayerRanks[emptySlot] = currentInspectingRank;
+        updateCompareCountBadge();
+        inspectPlayer(currentInspectingRank);
+        closeModal();
+        openComparisonModal();
+      } else if (isPlusUser && comparePlayerRanks.length < 10) {
+        comparePlayerRanks.push(currentInspectingRank);
+        updateCompareCountBadge();
+        inspectPlayer(currentInspectingRank);
+        closeModal();
+        openComparisonModal();
+      } else {
+        closeModal();
+        openPlusModal('compare_limit');
+      }
+    }
+
+    function renderCompareMatrix() {
+      const table = document.getElementById('compare-table');
+      const activePlayers = comparePlayerRanks.map(r => masterData.find(p => p.rank === r)).filter(Boolean);
+      const exportBtn = document.getElementById('export-battle-btn');
+
+      if (exportBtn) {
+        if (activePlayers.length >= 2) {
+          exportBtn.classList.remove('hidden');
+        } else {
+          exportBtn.classList.add('hidden');
+        }
+      }
+
+      if (activePlayers.length === 0) {
+        table.innerHTML = `
+          <tbody>
+            <tr>
+              <td class="text-center py-16 text-slate-500 font-sans">
+                <span class="text-3xl block mb-2">⚔️</span>
+                Select players from the dropdowns above to compare stats head-to-head.
+              </td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      const categories = [
+        { label: "SCHRIFT SCORE TOTAL", key: "total", format: (v) => v.toFixed(2), highlight: true },
+        { label: "Points (PPG)", key: "ppg", format: (v) => v.toFixed(1), weightKey: "ssPpg" },
+        { label: "Rebounds (TRB)", key: "rpg", format: (v) => v.toFixed(1), weightKey: "ssRpg" },
+        { label: "Assists (AST)", key: "apg", format: (v) => v.toFixed(1), weightKey: "ssApg" },
+        { label: "Steals (SPG)", key: "spg", format: (v) => v.toFixed(1), weightKey: "ssSpg" },
+        { label: "Blocks (BPG)", key: "bpg", format: (v) => v.toFixed(1), weightKey: "ssBpg" },
+        { label: "Games Played (GP)", key: "gp", format: (v) => String(v), weightKey: "ssGp" },
+      ];
+
+      let html = `
+        <thead>
+          <tr class="border-b border-court-border bg-court-850 text-slate-400">
+            <th class="py-3 px-3 text-left w-36 min-w-[130px]">Metric</th>
+            ${activePlayers.map(p => `
+              <th class="py-3 px-3 text-right min-w-[130px]">
+                <div class="text-white font-extrabold text-sm truncate">${p.name}</div>
+                <div class="flex items-center justify-end gap-1.5 mt-0.5">
+                  <span class="text-[10px] text-slate-400">#${p.rank}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-court-800 text-[9px] text-slate-300 font-bold">${p.team}</span>
+                </div>
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-court-border/40">
+          <tr class="bg-court-950/40">
+            <td class="py-2.5 px-3 text-slate-400 font-bold uppercase text-[10px]">Evaluated Role</td>
+            ${activePlayers.map(p => `
+              <td class="py-2.5 px-3 text-right">
+                <span class="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded leading-tight block truncate">
+                  ${determinePlayerArchetype(p)}
+                </span>
+              </td>
+            `).join('')}
+          </tr>
+      `;
+
+      categories.forEach(cat => {
+        const maxVal = Math.max(...activePlayers.map(p => p[cat.key]));
+
+        html += `
+          <tr class="${cat.highlight ? 'bg-emerald-500/5' : 'hover:bg-court-800/40'}">
+            <td class="py-3 px-3 text-slate-300 font-bold ${cat.highlight ? 'text-emerald-400 font-extrabold text-sm' : ''}">
+              ${cat.label}
+            </td>
+            ${activePlayers.map(p => {
+              const val = p[cat.key];
+              const isWinner = (activePlayers.length > 1 && val === maxVal && val > 0);
+              const weightSub = cat.weightKey ? `+${p[cat.weightKey].toFixed(2)} SS` : '';
+
+              return `
+                <td class="py-3 px-3 text-right ${isWinner ? 'bg-emerald-500/15 font-bold text-emerald-300' : 'text-slate-200'}">
+                  <div class="flex items-center justify-end gap-1.5">
+                    ${isWinner ? '<span class="text-[9px] text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold">👑 WIN</span>' : ''}
+                    <span class="${cat.highlight ? 'text-base font-black text-emerald-400' : 'text-sm font-bold'}">${cat.format(val)}</span>
+                  </div>
+                  ${weightSub ? `<div class="text-[9px] text-emerald-400/80 font-mono mt-0.5">${weightSub}</div>` : ''}
+                </td>
+              `;
+            }).join('')}
+          </tr>
+        `;
+      });
+
+      html += `</tbody>`;
+      table.innerHTML = html;
+    }
+
+    // --- VIRAL SOCIAL IMAGE EXPORT ENGINE (Fixed & Bulletproof) ---
+    async function exportSinglePlayerCard() {
+      if (currentInspectingRank === null) {
+        alert("Please select a player to export.");
+        return;
+      }
+      const p = masterData.find(player => player.rank === currentInspectingRank);
+      if (!p) return;
+
+      const template = document.getElementById('export-single-template');
+      if (!template) {
+        alert("Export template not found.");
+        return;
+      }
+      
+      document.getElementById('export-season-label').textContent = `${activeSeason} • POWER LEADERBOARD`;
+      document.getElementById('export-rank').textContent = `#${p.rank}`;
+      document.getElementById('export-name').textContent = p.name;
+      document.getElementById('export-team').textContent = p.team;
+      document.getElementById('export-role').textContent = determinePlayerArchetype(p);
+      document.getElementById('export-total').textContent = p.total.toFixed(2);
+      
+      const changeEl = document.getElementById('export-change');
+      if (p.rankChange > 0) {
+        changeEl.textContent = `▲ +${p.rankChange} today`;
+        changeEl.className = "text-xs font-bold text-emerald-400";
+      } else if (p.rankChange < 0) {
+        changeEl.textContent = `▼ ${p.rankChange} today`;
+        changeEl.className = "text-xs font-bold text-rose-400";
+      } else {
+        changeEl.textContent = "• Standing Unchanged";
+        changeEl.className = "text-xs font-bold text-slate-400";
+      }
+
+      document.getElementById('export-ppg').textContent = p.ppg.toFixed(1);
+      document.getElementById('export-ss-ppg').textContent = `+${p.ssPpg.toFixed(2)} SS`;
+      document.getElementById('export-rpg').textContent = p.rpg.toFixed(1);
+      document.getElementById('export-ss-rpg').textContent = `+${p.ssRpg.toFixed(2)} SS`;
+      document.getElementById('export-apg').textContent = p.apg.toFixed(1);
+      document.getElementById('export-ss-apg').textContent = `+${p.ssApg.toFixed(2)} SS`;
+      document.getElementById('export-spg').textContent = p.spg.toFixed(1);
+      document.getElementById('export-ss-spg').textContent = `+${p.ssSpg.toFixed(2)} SS`;
+      document.getElementById('export-bpg').textContent = p.bpg.toFixed(1);
+      document.getElementById('export-ss-bpg').textContent = `+${p.ssBpg.toFixed(2)} SS`;
+      document.getElementById('export-gp').textContent  = `${p.gp} G`;
+      document.getElementById('export-ss-gp').textContent  = `+${p.ssGp.toFixed(2)} SS`;
+
+      const totalScore = p.total > 0 ? p.total : 1;
+      const ptsPct = Math.round((p.ssPpg / totalScore) * 100);
+      const rebPct = Math.round((p.ssRpg / totalScore) * 100);
+      const astPct = Math.round((p.ssApg / totalScore) * 100);
+      const defPct = Math.round(((p.ssSpg + p.ssBpg) / totalScore) * 100);
+
+      document.getElementById('export-bar-pts').style.width = `${ptsPct}%`;
+      document.getElementById('export-bar-reb').style.width = `${rebPct}%`;
+      document.getElementById('export-bar-ast').style.width = `${astPct}%`;
+      document.getElementById('export-bar-def').style.width = `${defPct}%`;
+
+      document.getElementById('export-pct-pts').textContent = `${ptsPct}%`;
+      document.getElementById('export-pct-reb').textContent = `${rebPct}%`;
+      document.getElementById('export-pct-ast').textContent = `${astPct}%`;
+      document.getElementById('export-pct-def').textContent = `${defPct}%`;
+
+      try {
+        const canvas = await html2canvas(template, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#070a11'
+        });
+
+        const fileName = `${p.name.replace(/[^a-zA-Z0-9]/g, '_')}_SchriftScore.png`;
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: `${p.name} Schrift Score Card`,
+                text: `${p.name} ranks #${p.rank} on the NBA Schrift Score Leaderboard with a score of ${p.total.toFixed(2)}!\n\nCheck live ratings: https://schriftscore.vercel.app/`,
+                files: [file]
+              });
+              return;
+            } catch (shareErr) {}
+          }
+
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, 'image/png');
+      } catch (err) {
+        console.error("Export failed:", err);
+        alert("Image generation failed. Please try again.");
+      }
+    }
+
+    async function exportComparisonBattleCard() {
+      const activePlayers = comparePlayerRanks.map(r => masterData.find(p => p.rank === r)).filter(Boolean);
+      if (activePlayers.length < 2) {
+        alert("Please select at least 2 players in the comparison tool to export a battle card.");
+        return;
+      }
+
+      const p1 = activePlayers[0];
+      const p2 = activePlayers[1];
+      const template = document.getElementById('export-battle-template');
+      if (!template) {
+        alert("Battle template not found.");
+        return;
+      }
+
+      document.getElementById('battle-headline-sub').textContent = `${activeSeason} • HEAD-TO-HEAD BATTLE`;
+      document.getElementById('battle-quote-headline').textContent = `Look at ${p1.name}'s Schrift Score compared to ${p2.name}!`;
+
+      document.getElementById('battle-p1-rank').textContent = `#${p1.rank} OVERALL`;
+      document.getElementById('battle-p1-name').textContent = p1.name;
+      document.getElementById('battle-p1-team').textContent = p1.team;
+      document.getElementById('battle-p1-score').textContent = p1.total.toFixed(2);
+
+      document.getElementById('battle-p2-rank').textContent = `#${p2.rank} OVERALL`;
+      document.getElementById('battle-p2-name').textContent = p2.name;
+      document.getElementById('battle-p2-team').textContent = p2.team;
+      document.getElementById('battle-p2-score').textContent = p2.total.toFixed(2);
+
+      const diff = Math.abs(p1.total - p2.total).toFixed(2);
+      if (p1.total >= p2.total) {
+        document.getElementById('battle-p1-badge').textContent = "👑 LEADER";
+        document.getElementById('battle-p1-badge').className = "text-xs font-bold text-amber-300 block";
+        document.getElementById('battle-p2-badge').textContent = `TRAILS BY ${diff}`;
+        document.getElementById('battle-p2-badge').className = "text-xs font-bold text-slate-400 block";
+      } else {
+        document.getElementById('battle-p2-badge').textContent = "👑 LEADER";
+        document.getElementById('battle-p2-badge').className = "text-xs font-bold text-amber-300 block";
+        document.getElementById('battle-p1-badge').textContent = `TRAILS BY ${diff}`;
+        document.getElementById('battle-p1-badge').className = "text-xs font-bold text-slate-400 block";
+      }
+
+      const battleTable = document.getElementById('battle-render-table');
+      const cats = [
+        { label: "SCHRIFT SCORE TOTAL", k: "total", fmt: v => v.toFixed(2), hl: true },
+        { label: "Points (PPG)", k: "ppg", fmt: v => v.toFixed(1), wk: "ssPpg" },
+        { label: "Rebounds (TRB)", k: "rpg", fmt: v => v.toFixed(1), wk: "ssRpg" },
+        { label: "Assists (AST)", k: "apg", fmt: v => v.toFixed(1), wk: "ssApg" },
+        { label: "Steals (SPG)", k: "spg", fmt: v => v.toFixed(1), wk: "ssSpg" },
+        { label: "Blocks (BPG)", k: "bpg", fmt: v => v.toFixed(1), wk: "ssBpg" },
+        { label: "Games Played (GP)", k: "gp", fmt: v => String(v), wk: "ssGp" }
+      ];
+
+      let tableHtml = `
+        <thead>
+          <tr class="border-b border-court-border bg-court-850 text-slate-400 text-xs">
+            <th class="py-2.5 px-3 text-left">Category</th>
+            <th class="py-2.5 px-3 text-right">${p1.name}</th>
+            <th class="py-2.5 px-3 text-right">${p2.name}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-court-border/40 text-xs">
+      `;
+
+      cats.forEach(c => {
+        const v1 = p1[c.k];
+        const v2 = p2[c.k];
+        const p1Wins = v1 > v2;
+        const p2Wins = v2 > v1;
+
+        tableHtml += `
+          <tr class="${c.hl ? 'bg-emerald-500/10 font-bold' : ''}">
+            <td class="py-2.5 px-3 ${c.hl ? 'text-emerald-400 font-extrabold text-sm' : 'text-slate-300 font-bold'}">${c.label}</td>
+            <td class="py-2.5 px-3 text-right ${p1Wins ? 'text-emerald-300 font-bold bg-emerald-500/15' : 'text-slate-300'}">
+              ${p1Wins ? '👑 ' : ''}${c.fmt(v1)} ${c.wk ? `<span class="text-[10px] text-emerald-400/80">(+${p1[c.wk].toFixed(2)})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-3 text-right ${p2Wins ? 'text-emerald-300 font-bold bg-emerald-500/15' : 'text-slate-300'}">
+              ${p2Wins ? '👑 ' : ''}${c.fmt(v2)} ${c.wk ? `<span class="text-[10px] text-emerald-400/80">(+${p2[c.wk].toFixed(2)})</span>` : ''}
+            </td>
+          </tr>
+        `;
+      });
+      tableHtml += `</tbody>`;
+      battleTable.innerHTML = tableHtml;
+
+      try {
+        const canvas = await html2canvas(template, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#070a11'
+        });
+
+        const fileName = `${p1.name.replace(/\s+/g, '')}_vs_${p2.name.replace(/\s+/g, '')}_SchriftScoreBattle.png`;
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: `${p1.name} vs. ${p2.name} Schrift Score Battle`,
+                text: `Look at ${p1.name}'s Schrift Score compared to ${p2.name}! ⚔️\n\nWho ya got? Compare any NBA players live: https://schriftscore.vercel.app/`,
+                files: [file]
+              });
+              return;
+            } catch (shareErr) {}
+          }
+
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, 'image/png');
+      } catch (err) {
+        console.error("Battle export failed:", err);
+        alert("Failed to generate matchup card. Please try again.");
+      }
+    }
+
+    // --- PLUS PAYWALL MODAL LOGIC & STRIPE CHECKOUT ---
+    function openPlusModal(triggerReason) {
+      document.getElementById('plus-modal').classList.remove('hidden');
+    }
+
+    function closePlusModal() {
+      document.getElementById('plus-modal').classList.add('hidden');
+    }
+
+    function handlePlusBackdropClick(event) {
+      if (event.target.id === 'plus-modal') {
+        closePlusModal();
+      }
+    }
+
+    function selectPlusPlan(planType) {
+      selectedPlusPlan = planType;
+      const mCard = document.getElementById('plan-monthly');
+      const aCard = document.getElementById('plan-annual');
+
+      if (planType === 'monthly') {
+        mCard.className = "cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center transition-all";
+        aCard.className = "cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all relative";
+      } else {
+        aCard.className = "cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center transition-all relative";
+        mCard.className = "cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all";
+      }
+    }
+
+    function handlePlusCheckout() {
+      const targetUrl = (selectedPlusPlan === 'monthly') ? STRIPE_MONTHLY_URL : STRIPE_ANNUAL_URL;
+      window.location.href = targetUrl;
+    }
+
+    // --- STAT CALCULATOR HANDLERS (No 050 typing bug!) ---
+    function toggleCalculator() {
+      const drawer = document.getElementById('calc-drawer');
+      drawer.classList.toggle('hidden');
+    }
+
+    function sanitizeInput(elId) {
+      const el = document.getElementById(elId);
+      if (!el || el.value.trim() === "") return 0;
+      let val = parseFloat(el.value);
+      if (isNaN(val)) return 0;
+      if (val < 0) {
+        el.value = 0;
+        return 0;
+      }
+      return val;
+    }
+
+    function ensureInputFormat(el) {
+      if (el.value.trim() === "") {
+        el.value = "0";
+      } else {
+        let val = parseFloat(el.value);
+        if (isNaN(val) || val < 0) {
+          el.value = "0";
+        } else {
+          el.value = String(val);
+        }
+      }
+      runCalculator();
+    }
+
+    function runCalculator() {
+      const ppg = sanitizeInput('calc-ppg');
+      const rpg = sanitizeInput('calc-rpg');
+      const apg = sanitizeInput('calc-apg');
+      const spg = sanitizeInput('calc-spg');
+      const bpg = sanitizeInput('calc-bpg');
+      const gp  = sanitizeInput('calc-gp');
+
+      const weights = SEASONS[activeSeason].weights;
+
+      const ssPpg = ppg * weights.ppg;
+      const ssRpg = rpg * weights.rpg;
+      const ssApg = apg * weights.apg;
+      const ssSpg = spg * weights.spg;
+      const ssBpg = bpg * weights.bpg;
+      const ssGp  = gp  * weights.gp;
+      const total = ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp;
+
+      document.getElementById('calc-result').textContent = total.toFixed(2);
+
+      const mockPlayer = { ppg, rpg, apg, spg, bpg, total };
+      const roleText = determinePlayerArchetype(mockPlayer);
+      document.getElementById('calc-role').textContent = `Role: ${roleText}`;
+
+      const tier = determinePlayerTier(total, ppg, rpg, apg, spg, bpg);
+      const tierEl = document.getElementById('calc-tier');
+      tierEl.textContent = tier.label;
+      tierEl.className = `text-[10px] sm:text-xs font-mono border px-2.5 py-1 rounded-full font-bold truncate ${tier.color}`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeComparisonModal();
+        closePlusModal();
+      }
+    });
+
+    window.onload = init;
+  </script>
+
+  <!-- Vercel Analytics -->
+  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+</body>
+</html>
