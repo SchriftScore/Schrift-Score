@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- HTML2Canvas for Crisp Social Image Generation -->
+  <!-- HTML2Canvas for Social Image Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <script>
@@ -31,6 +31,10 @@
               800: '#162032',
               700: '#1e2d44',
               border: '#1f2e47',
+              lightBg: '#f8fafc',
+              lightCard: '#ffffff',
+              lightBorder: '#e2e8f0',
+              lightHeader: '#f1f5f9'
             },
             emerald: {
               accent: '#10b981',
@@ -44,8 +48,6 @@
 
   <style>
     body {
-      background-color: #070a11;
-      color: #e2e8f0;
       font-feature-settings: "tnum" 1;
       -webkit-tap-highlight-color: transparent;
       scroll-behavior: smooth;
@@ -55,26 +57,29 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #0c111d; }
-    ::-webkit-scrollbar-thumb { background: #1e2d44; border-radius: 4px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-    /* Sticky Solid Table Headers (Desktop & Mobile) */
+    /* Sticky Solid Opaque Table Headers (Both Dark and Light Mode) */
     .table-fixed-header thead th {
       position: sticky;
       top: 0;
       z-index: 25;
-      background-color: #111827;
+      background-color: #111827 !important;
+    }
+    html:not(.dark) .table-fixed-header thead th {
+      background-color: #f1f5f9 !important;
     }
 
-    /* Solid Freeze for Rank & Player Columns on Mobile */
+    /* Fixed Column Freezing */
     @media (max-width: 768px) {
       .sticky-col-rank {
         position: sticky;
         left: 0;
         z-index: 15;
-        background-color: #0c111d;
+        background-color: #0c111d !important;
         width: 38px;
         min-width: 38px;
       }
@@ -82,63 +87,90 @@
         position: sticky;
         left: 38px;
         z-index: 15;
-        background-color: #0c111d;
+        background-color: #0c111d !important;
         border-right: 2px solid #1f2e47;
-        box-shadow: 4px 0 10px rgba(0,0,0,0.4);
+        box-shadow: 4px 0 10px rgba(0,0,0,0.3);
       }
+      html:not(.dark) .sticky-col-rank {
+        background-color: #ffffff !important;
+      }
+      html:not(.dark) .sticky-col-player {
+        background-color: #ffffff !important;
+        border-right: 2px solid #e2e8f0;
+      }
+
       .table-fixed-header thead th.sticky-col-rank {
         z-index: 35;
-        background-color: #111827;
+        background-color: #111827 !important;
       }
       .table-fixed-header thead th.sticky-col-player {
         z-index: 35;
-        background-color: #111827;
+        background-color: #111827 !important;
         border-right: 2px solid #1f2e47;
+      }
+      html:not(.dark) .table-fixed-header thead th.sticky-col-rank,
+      html:not(.dark) .table-fixed-header thead th.sticky-col-player {
+        background-color: #f1f5f9 !important;
+        border-right: 2px solid #e2e8f0;
       }
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
+<body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
 
   <!-- TOP HEADER -->
-  <header class="border-b border-court-border bg-court-900/95 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between">
+  <header class="border-b border-court-border dark:border-court-border bg-court-900/95 dark:bg-court-900/95 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
       <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
         <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-base sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">
           SS
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-            <span class="text-sm sm:text-xl font-extrabold tracking-tight text-white truncate">
-              SCHRIFT <span class="text-emerald-400">SCORE</span>
+            <span class="text-sm sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
+              SCHRIFT <span class="text-emerald-500 dark:text-emerald-400">SCORE</span>
             </span>
-            <span id="season-badge" class="text-[8px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
-            <span id="vip-badge" class="hidden text-[8px] sm:text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">👑 PLUS</span>
+            <span id="season-badge" class="text-[8px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">2026/27</span>
+            <span id="vip-badge" class="hidden text-[8px] sm:text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30">👑 PLUS</span>
           </div>
-          <p class="text-[10px] sm:text-xs text-slate-400 truncate">
-            By <span class="text-slate-200 font-medium">Zachary Schriftman</span>
+          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            By <span class="text-slate-800 dark:text-slate-200 font-medium">Zachary Schriftman</span>
           </p>
         </div>
       </div>
 
-      <!-- Header Tools -->
+      <!-- Explicitly Labeled Navigation Controls -->
       <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+        <!-- Theme Toggle -->
+        <button 
+          id="theme-toggle-btn" 
+          onclick="toggleTheme()" 
+          class="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-court-850 dark:hover:bg-court-800 border border-slate-300 dark:border-court-border text-slate-700 dark:text-slate-300 transition-all text-xs font-mono"
+        >
+          <span id="theme-icon">🌙</span>
+          <span id="theme-text" class="hidden sm:inline">Theme</span>
+        </button>
+
+        <!-- Compare Button -->
         <button 
           onclick="openComparisonModal()"
-          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-teal-500/30 transition-colors"
+          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-teal-600 dark:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-teal-500/30 transition-colors"
         >
           <span>⚔️</span>
-          <span>Compare</span>
+          <span>Compare Players</span>
           <span id="header-compare-count" class="bg-teal-500 text-slate-950 font-extrabold px-1.5 py-0.2 rounded-full text-[9px] ml-0.5">0/3</span>
         </button>
+
+        <!-- Stat Calculator Button -->
         <button 
           onclick="toggleCalculator()"
-          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-emerald-500/30 transition-colors"
+          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-emerald-500/30 transition-colors"
         >
           <span>⚡</span>
-          <span class="hidden xs:inline">Calculator</span>
+          <span>Stat Calculator</span>
         </button>
-        <div class="flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-300 bg-court-850 px-2 py-1.5 sm:px-2.5 rounded-full border border-court-border">
+
+        <div class="hidden md:flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-court-850 px-2.5 py-1.5 rounded-full border border-slate-300 dark:border-court-border">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span id="player-count">...</span>
         </div>
@@ -149,126 +181,128 @@
   <!-- MAIN PAGE CONTAINER -->
   <main class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 w-full flex-1 flex flex-col space-y-3.5 sm:space-y-6">
 
-    <!-- ERA / SEASON NAVIGATION SELECTOR (Completely Isolated Tabs) -->
-    <section class="bg-court-900 border border-court-border rounded-xl p-1.5 sm:p-2 flex items-center justify-between gap-2 shadow-lg">
-      <div class="flex items-center space-x-1 sm:space-x-2 font-mono text-xs w-full sm:w-auto">
+    <!-- ERA / SEASON NAVIGATION SELECTOR & LIVE TIMESTAMP -->
+    <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 border-b border-slate-200 dark:border-court-border pb-3">
+      <div class="flex items-center space-x-1.5 sm:space-x-2 font-mono text-xs overflow-x-auto smooth-scroll">
         <button 
           id="btn-season-2627" 
           onclick="switchSeason('2026/27')" 
-          class="flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+          class="px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 flex items-center space-x-1.5 flex-shrink-0"
         >
-          🏀 2026–27 (Live)
+          <span>🏀</span>
+          <span>2026–27 Season (Live)</span>
         </button>
         <button 
           id="btn-season-2526" 
           onclick="switchSeason('2025/26')" 
-          class="flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800"
+          class="px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border flex items-center space-x-1.5 flex-shrink-0"
         >
-          📜 2025–26 Season
+          <span>📜</span>
+          <span>2025–26 Season (Archive)</span>
         </button>
       </div>
 
-      <a 
-        href="#genesis-section"
-        class="hidden md:flex items-center space-x-1 text-xs font-mono text-slate-400 hover:text-emerald-300 transition-colors pr-2"
-      >
-        <span>📖 How weights are calculated</span>
-      </a>
+      <!-- Trust Timestamp Badge -->
+      <div class="flex items-center space-x-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 justify-end">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-200/70 dark:bg-court-850 border border-slate-300 dark:border-court-border">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="last-updated-text" class="text-slate-700 dark:text-slate-300 font-medium">Updated: Nov 2 at 7:00 AM ET</span>
+        </span>
+      </div>
     </section>
 
     <!-- FORMULA BANNER -->
-    <section class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl relative overflow-hidden">
+    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl relative overflow-hidden transition-colors">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 sm:gap-4">
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-            <h2 id="formula-title" class="text-[11px] sm:text-sm font-semibold tracking-wide text-slate-300 uppercase font-mono">2026–2027 Formula Weights</h2>
+            <h2 id="formula-title" class="text-[11px] sm:text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-300 uppercase font-mono">2026–2027 Formula Weights</h2>
           </div>
-          <p id="formula-desc" class="text-[10px] sm:text-xs text-slate-400 mt-0.5">
+          <p id="formula-desc" class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             1 PPG = 0.35 SS • 1 RPG = 0.83 SS • 1 APG = 1.14 SS • 1 SPG = 1.80 SS • 1 BPG = 1.98 SS • 1 GP = 0.04 SS
           </p>
         </div>
 
         <!-- Formula Coefficients -->
         <div class="flex sm:grid sm:grid-cols-6 gap-1.5 sm:gap-2 w-full md:w-auto font-mono text-[10px] sm:text-xs overflow-x-auto pb-1 sm:pb-0 smooth-scroll">
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">PPG</div>
-            <div id="w-ppg" class="font-bold text-emerald-400">× 0.35</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">PPG</div>
+            <div id="w-ppg" class="font-bold text-emerald-600 dark:text-emerald-400">× 0.35</div>
           </div>
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">RPG</div>
-            <div id="w-rpg" class="font-bold text-emerald-400">× 0.83</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">RPG</div>
+            <div id="w-rpg" class="font-bold text-emerald-600 dark:text-emerald-400">× 0.83</div>
           </div>
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">APG</div>
-            <div id="w-apg" class="font-bold text-emerald-400">× 1.14</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">APG</div>
+            <div id="w-apg" class="font-bold text-emerald-600 dark:text-emerald-400">× 1.14</div>
           </div>
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">SPG</div>
-            <div id="w-spg" class="font-bold text-teal-300">× 1.80</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">SPG</div>
+            <div id="w-spg" class="font-bold text-teal-600 dark:text-teal-300">× 1.80</div>
           </div>
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">BPG</div>
-            <div id="w-bpg" class="font-bold text-teal-300">× 1.98</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">BPG</div>
+            <div id="w-bpg" class="font-bold text-teal-600 dark:text-teal-300">× 1.98</div>
           </div>
-          <div class="bg-court-800 border border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
-            <div class="text-slate-400 text-[8px] sm:text-[10px]">GP</div>
-            <div id="w-gp" class="font-bold text-amber-300">× 0.04</div>
+          <div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center flex-shrink-0 min-w-[62px]">
+            <div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">GP</div>
+            <div id="w-gp" class="font-bold text-amber-600 dark:text-amber-300">× 0.04</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- STAT CALCULATOR DRAWER (Collapsible) -->
-    <section id="calc-drawer" class="hidden bg-gradient-to-br from-court-900 to-court-850 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-2xl transition-all">
-      <div class="flex items-center justify-between border-b border-court-border pb-2.5 mb-3">
+    <!-- STAT CALCULATOR DRAWER -->
+    <section id="calc-drawer" class="hidden bg-white dark:bg-gradient-to-br dark:from-court-900 dark:to-court-850 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-2xl transition-all">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-2.5 mb-3">
         <div>
-          <h3 class="text-xs sm:text-base font-extrabold text-white flex items-center gap-1.5">
+          <h3 class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
             <span>⚡</span> Stat Calculator
           </h3>
-          <p class="text-[10px] sm:text-xs text-slate-400">Calculate score, role, and tier for any custom stat line.</p>
+          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Calculate score, role, and tier for any custom stat line.</p>
         </div>
-        <button onclick="toggleCalculator()" class="text-slate-400 hover:text-white text-base font-bold px-2 py-1">✕</button>
+        <button onclick="toggleCalculator()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-base font-bold px-2 py-1">✕</button>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 font-mono text-xs">
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">PPG (Points)</label>
-          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-ppg" placeholder="0" value="25.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">PPG (Points)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-ppg" placeholder="0" value="25.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">RPG (Rebounds)</label>
-          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-rpg" placeholder="0" value="7.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">RPG (Rebounds)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-rpg" placeholder="0" value="7.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">APG (Assists)</label>
-          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-apg" placeholder="0" value="6.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">APG (Assists)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-apg" placeholder="0" value="6.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">SPG (Steals)</label>
-          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-spg" placeholder="0" value="1.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">SPG (Steals)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-spg" placeholder="0" value="1.5" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">BPG (Blocks)</label>
-          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-bpg" placeholder="0" value="1.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">BPG (Blocks)</label>
+          <input type="number" inputmode="decimal" step="0.1" min="0" id="calc-bpg" placeholder="0" value="1.0" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="text-[10px] text-slate-300 font-bold block mb-1">GP (Games)</label>
-          <input type="number" inputmode="numeric" step="1" min="0" id="calc-gp" placeholder="0" value="4" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-court-800 border border-court-border rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-emerald-400">
+          <label class="text-[10px] text-slate-600 dark:text-slate-300 font-bold block mb-1">GP (Games)</label>
+          <input type="number" inputmode="numeric" step="1" min="0" id="calc-gp" placeholder="0" value="4" oninput="runCalculator()" onblur="ensureInputFormat(this)" class="w-full bg-slate-50 dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
       </div>
 
-      <!-- Result Bar -->
-      <div class="mt-3.5 pt-3 border-t border-court-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 font-mono">
+      <div class="mt-3.5 pt-3 border-t border-slate-200 dark:border-court-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 font-mono">
         <div class="flex items-center space-x-2.5">
-          <span class="text-[11px] text-slate-400">SCHRIFT SCORE:</span>
-          <span id="calc-result" class="text-xl sm:text-3xl font-black text-emerald-400">26.85</span>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400">SCHRIFT SCORE:</span>
+          <span id="calc-result" class="text-xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">26.85</span>
         </div>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <div id="calc-role" class="text-[10px] sm:text-xs font-mono bg-court-800 text-slate-200 border border-court-border px-2.5 py-1 rounded-full truncate">
+          <div id="calc-role" class="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-court-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-court-border px-2.5 py-1 rounded-full truncate">
             Role: All-Around Primary Initiator
           </div>
-          <div id="calc-tier" class="text-[10px] sm:text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold truncate">
+          <div id="calc-tier" class="text-[10px] sm:text-xs font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold truncate">
             Tier 3: All-Star Starter / Primary Option
           </div>
         </div>
@@ -276,41 +310,74 @@
     </section>
 
     <!-- HIGHLIGHT STAT CARDS -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-      <div onclick="openCardFromHighlight('leader')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+      <!-- 1. #1 Overall -->
+      <div onclick="openCardFromHighlight('leader')" class="bg-white dark:bg-court-900 hover:bg-slate-50 dark:hover:bg-court-850 hover:border-emerald-500/50 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3.5 cursor-pointer transition-all group">
         <div class="flex justify-between items-center">
-          <span class="text-[9px] sm:text-xs font-mono text-slate-400 truncate">#1 SCHRIFT SCORE</span>
-          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+          <span class="text-[9px] sm:text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">#1 SCHRIFT SCORE</span>
+          <span class="text-[9px] font-mono text-slate-400 group-hover:text-emerald-500 transition-colors">↗</span>
         </div>
-        <div id="stat-leader" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
-        <div id="stat-leader-score" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+        <div id="stat-leader" class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 truncate group-hover:text-emerald-500 transition-colors">--</div>
+        <div id="stat-leader-score" class="text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 truncate font-bold">--</div>
       </div>
 
-      <div onclick="openCardFromHighlight('scorer')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+      <!-- 2. BEST PLAYER YESTERDAY (Clean Emerald Styling) -->
+      <div onclick="openCardFromHighlight('bestYesterday')" class="bg-white dark:bg-court-900 hover:bg-slate-50 dark:hover:bg-court-850 hover:border-emerald-500/60 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3.5 cursor-pointer transition-all group border-l-4 border-l-emerald-500">
         <div class="flex justify-between items-center">
-          <span class="text-[9px] sm:text-xs font-mono text-slate-400 truncate">SCORING LEADER</span>
-          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+          <span class="text-[9px] sm:text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold truncate">⭐ BEST YESTERDAY</span>
+          <span class="text-[9px] font-mono text-slate-400 group-hover:text-emerald-400 transition-colors">↗</span>
         </div>
-        <div id="stat-scorer" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
-        <div id="stat-scorer-val" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+        <div id="stat-best-yesterday" class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 truncate group-hover:text-emerald-400 transition-colors">Luka Dončić</div>
+        <div id="stat-best-yesterday-val" class="text-[10px] sm:text-xs font-mono text-emerald-500 dark:text-emerald-300 mt-0.5 truncate font-bold">35.79 SS • 45 PTS, 15 REB</div>
       </div>
 
-      <div onclick="openCardFromHighlight('riser')" class="bg-court-900 hover:bg-court-850 hover:border-emerald-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+      <!-- 3. Scoring Leader -->
+      <div onclick="openCardFromHighlight('scorer')" class="bg-white dark:bg-court-900 hover:bg-slate-50 dark:hover:bg-court-850 hover:border-emerald-500/50 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3.5 cursor-pointer transition-all group">
         <div class="flex justify-between items-center">
-          <span class="text-[9px] sm:text-xs font-mono text-emerald-400 truncate">BIGGEST RISER</span>
-          <span class="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">↗</span>
+          <span class="text-[9px] sm:text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">SCORING LEADER</span>
+          <span class="text-[9px] font-mono text-slate-400 group-hover:text-emerald-500 transition-colors">↗</span>
         </div>
-        <div id="stat-riser" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-emerald-300 transition-colors">--</div>
-        <div id="stat-riser-val" class="text-[10px] sm:text-xs font-mono text-emerald-400 mt-0.5 truncate">--</div>
+        <div id="stat-scorer" class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 truncate group-hover:text-emerald-500 transition-colors">--</div>
+        <div id="stat-scorer-val" class="text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 truncate font-bold">--</div>
       </div>
 
-      <div onclick="openCardFromHighlight('faller')" class="bg-court-900 hover:bg-court-850 hover:border-rose-500/50 border border-court-border rounded-xl p-2.5 sm:p-4 cursor-pointer transition-all group">
+      <!-- 4. Biggest Riser -->
+      <div onclick="openCardFromHighlight('riser')" class="bg-white dark:bg-court-900 hover:bg-slate-50 dark:hover:bg-court-850 hover:border-emerald-500/50 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3.5 cursor-pointer transition-all group">
         <div class="flex justify-between items-center">
-          <span class="text-[9px] sm:text-xs font-mono text-rose-400 truncate">BIGGEST FALLER</span>
-          <span class="text-[9px] font-mono text-slate-500 group-hover:text-rose-400 transition-colors">↗</span>
+          <span class="text-[9px] sm:text-[10px] font-mono text-emerald-600 dark:text-emerald-400 truncate">BIGGEST RISER</span>
+          <span class="text-[9px] font-mono text-slate-400 group-hover:text-emerald-500 transition-colors">↗</span>
         </div>
-        <div id="stat-faller" class="text-xs sm:text-lg font-extrabold text-white mt-0.5 truncate group-hover:text-rose-300 transition-colors">--</div>
-        <div id="stat-faller-val" class="text-[10px] sm:text-xs font-mono text-rose-400 mt-0.5 truncate">--</div>
+        <div id="stat-riser" class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 truncate group-hover:text-emerald-500 transition-colors">--</div>
+        <div id="stat-riser-val" class="text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 truncate font-bold">--</div>
+      </div>
+
+      <!-- 5. Biggest Faller -->
+      <div onclick="openCardFromHighlight('faller')" class="bg-white dark:bg-court-900 hover:bg-slate-50 dark:hover:bg-court-850 hover:border-rose-500/50 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3.5 cursor-pointer transition-all group col-span-2 sm:col-span-1">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] sm:text-[10px] font-mono text-rose-500 dark:text-rose-400 truncate">BIGGEST FALLER</span>
+          <span class="text-[9px] font-mono text-slate-400 group-hover:text-rose-500 transition-colors">↗</span>
+        </div>
+        <div id="stat-faller" class="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 truncate group-hover:text-rose-400 transition-colors">--</div>
+        <div id="stat-faller-val" class="text-[10px] sm:text-xs font-mono text-rose-500 dark:text-rose-400 mt-0.5 truncate font-bold">--</div>
+      </div>
+    </section>
+
+    <!-- REAL YESTERDAY GAMES (NOVEMBER 1) & EXPANDABLE BOX SCORES -->
+    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-4 shadow-md transition-colors">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-2.5 mb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-emerald-500">🏀</span>
+          <h2 class="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white font-sans">
+            Yesterday's NBA Games (Nov 1) &amp; Schrift Scores
+          </h2>
+          <span class="text-[9px] font-mono bg-slate-100 dark:bg-court-850 px-2 py-0.5 rounded text-slate-500 border border-slate-200 dark:border-court-border font-bold">Finals</span>
+        </div>
+        <span class="text-[10px] font-mono text-slate-400">Click a game to view box score</span>
+      </div>
+
+      <!-- Real Game Cards for November 1 -->
+      <div id="yesterday-games-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 font-mono text-xs">
+        <!-- Rendered by JS with real Nov 1 box score lines -->
       </div>
     </section>
 
@@ -321,76 +388,93 @@
           type="text" 
           id="search-input" 
           placeholder="Search by player or team..." 
-          class="w-full bg-court-900 border border-court-border rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-sans"
+          class="w-full bg-white dark:bg-court-900 border border-slate-300 dark:border-court-border rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-sans"
         />
-        <span class="absolute right-3 top-2 sm:top-2.5 text-slate-500 text-xs">🔍</span>
+        <span class="absolute right-3 top-2 sm:top-2.5 text-slate-400 text-xs">🔍</span>
       </div>
 
       <div class="flex items-center space-x-2">
         <select 
           id="team-select" 
-          class="flex-1 sm:flex-none bg-court-900 border border-court-border rounded-xl px-2.5 py-2 sm:py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+          class="flex-1 sm:flex-none bg-white dark:bg-court-900 border border-slate-300 dark:border-court-border rounded-xl px-2.5 py-2 sm:py-2.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
         >
           <option value="ALL">All 30 Teams</option>
         </select>
         
         <button 
           id="reset-btn" 
-          class="bg-court-800 hover:bg-court-700 text-slate-300 text-xs px-3 py-2 rounded-xl border border-court-border transition-colors font-mono flex-shrink-0"
+          class="bg-slate-200 hover:bg-slate-300 dark:bg-court-800 dark:hover:bg-court-700 text-slate-700 dark:text-slate-300 text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-court-border transition-colors font-mono flex-shrink-0"
         >
           Reset
+        </button>
+
+        <!-- Share Top 10 Button -->
+        <button 
+          onclick="exportRankingsView()" 
+          title="Export Top 10 as Image"
+          class="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs px-3 py-2 rounded-xl font-mono font-bold flex items-center gap-1.5 transition-colors flex-shrink-0"
+        >
+          <span>📸</span>
+          <span class="hidden xs:inline">Share Top 10</span>
+          <span class="xs:hidden">Share</span>
         </button>
       </div>
     </section>
 
-    <!-- LEADERBOARD TABLE (COMPACT STACKED CELLS DESIGN) -->
-    <section class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col relative">
-      <div class="sm:hidden bg-court-850 border-b border-court-border px-3 py-1.5 flex items-center justify-between text-[10px] font-mono text-slate-400">
+    <!-- LEADERBOARD TABLE (WITH SOLID OPAQUE HEADERS AND SS TOTAL BACKGROUND) -->
+    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col relative transition-colors">
+      <div class="sm:hidden bg-slate-100 dark:bg-court-850 border-b border-slate-200 dark:border-court-border px-3 py-1.5 flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
         <span>Tap row to inspect / compare</span>
-        <span class="text-emerald-400 animate-pulse">Swipe stats →</span>
+        <span class="text-emerald-500 dark:text-emerald-400 animate-pulse">Swipe stats →</span>
       </div>
 
-      <div class="overflow-x-auto max-h-[66vh] sm:max-h-[72vh] table-fixed-header relative smooth-scroll">
+      <div id="table-scroll-container" class="overflow-x-auto max-h-[66vh] sm:max-h-[72vh] table-fixed-header relative smooth-scroll">
         <table class="w-full text-left border-collapse text-xs sm:text-sm" id="main-table">
           <thead>
-            <tr class="bg-court-850 border-b border-court-border text-[9px] sm:text-[11px] font-mono text-slate-400 uppercase tracking-wider select-none">
-              <th onclick="sortTable('rank')" id="th-rank" class="th-sortable sticky-col-rank py-2.5 sm:py-3.5 px-2 text-center cursor-pointer hover:text-white">Rk ↕</th>
-              <th onclick="sortTable('name')" id="th-name" class="th-sortable sticky-col-player py-2.5 sm:py-3.5 px-3 sm:px-4 cursor-pointer hover:text-white whitespace-nowrap">Player ↕</th>
-              <th onclick="sortTable('rankChange')" id="th-rankChange" class="th-sortable py-2.5 sm:py-3.5 px-2 text-center cursor-pointer hover:text-white">+/- ↕</th>
-              <th onclick="sortTable('team')" id="th-team" class="th-sortable py-2.5 sm:py-3.5 px-2 cursor-pointer hover:text-white">Team ↕</th>
-              <th onclick="sortTable('total')" id="th-total" class="th-sortable py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold text-right cursor-pointer hover:text-emerald-300 whitespace-nowrap text-emerald-400 bg-emerald-500/15">SS Total ↕</th>
+            <tr class="bg-slate-100 dark:bg-court-850 border-b border-slate-200 dark:border-court-border text-[9px] sm:text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
+              <th onclick="sortTable('rank')" id="th-rank" class="th-sortable sticky-col-rank py-3 px-2 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white">Rk ↕</th>
+              <th onclick="sortTable('rankYesterday')" id="th-rankYesterday" class="th-sortable py-3 px-1.5 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white">Yest ↕</th>
+              <th onclick="sortTable('rankChange')" id="th-rankChange" class="th-sortable py-3 px-1.5 text-center cursor-pointer hover:text-slate-900 dark:hover:text-white">+/- ↕</th>
+              <th onclick="sortTable('name')" id="th-name" class="th-sortable sticky-col-player py-3 px-3 sm:px-4 cursor-pointer hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Player ↕</th>
+              <th onclick="sortTable('team')" id="th-team" class="th-sortable py-3 px-2 cursor-pointer hover:text-slate-900 dark:hover:text-white">Team ↕</th>
               
-              <th onclick="sortTable('ppg')" id="th-ppg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <!-- SS TOTAL SOLID STYLED HEADER -->
+              <th onclick="sortTable('total')" id="th-total" class="th-sortable py-3 px-3 sm:px-4 font-black text-right cursor-pointer hover:text-emerald-500 whitespace-nowrap text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20">
+                <div>SS Total ↕</div>
+                <div class="text-[8px] sm:text-[9px] font-normal text-emerald-600/80 dark:text-emerald-400/80">King Metric</div>
+              </th>
+              
+              <th onclick="sortTable('ppg')" id="th-ppg" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>PTS ↕</div>
-                <div id="col-weight-ppg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.35</div>
+                <div id="col-weight-ppg" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 0.35</div>
               </th>
-              <th onclick="sortTable('rpg')" id="th-rpg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <th onclick="sortTable('rpg')" id="th-rpg" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>TRB ↕</div>
-                <div id="col-weight-rpg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.83</div>
+                <div id="col-weight-rpg" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 0.83</div>
               </th>
-              <th onclick="sortTable('apg')" id="th-apg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <th onclick="sortTable('apg')" id="th-apg" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>AST ↕</div>
-                <div id="col-weight-apg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.14</div>
+                <div id="col-weight-apg" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 1.14</div>
               </th>
-              <th onclick="sortTable('spg')" id="th-spg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <th onclick="sortTable('spg')" id="th-spg" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>STL ↕</div>
-                <div id="col-weight-spg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.80</div>
+                <div id="col-weight-spg" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 1.80</div>
               </th>
-              <th onclick="sortTable('bpg')" id="th-bpg" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <th onclick="sortTable('bpg')" id="th-bpg" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>BLK ↕</div>
-                <div id="col-weight-bpg" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 1.98</div>
+                <div id="col-weight-bpg" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 1.98</div>
               </th>
-              <th onclick="sortTable('gp')" id="th-gp" class="th-sortable py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-right cursor-pointer hover:text-white">
+              <th onclick="sortTable('gp')" id="th-gp" class="th-sortable py-3 px-2.5 sm:px-3 text-right cursor-pointer hover:text-slate-900 dark:hover:text-white">
                 <div>GP ↕</div>
-                <div id="col-weight-gp" class="text-[8px] sm:text-[9px] font-normal text-slate-500">× 0.04</div>
+                <div id="col-weight-gp" class="text-[8px] sm:text-[9px] font-normal text-slate-400">× 0.04</div>
               </th>
             </tr>
           </thead>
-          <tbody id="table-rows" class="divide-y divide-court-border/40 text-slate-300 font-mono text-[11px] sm:text-xs">
+          <tbody id="table-rows" class="divide-y divide-slate-200 dark:divide-court-border/40 text-slate-700 dark:text-slate-300 font-mono text-[11px] sm:text-xs">
             <tr>
-              <td colspan="11" class="py-16 text-center text-slate-400 font-sans">
+              <td colspan="12" class="py-16 text-center text-slate-400 font-sans">
                 <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
-                <p id="table-loading-msg">Loading live 2026/27 player analytics...</p>
+                <p id="table-loading-msg">Loading live player analytics...</p>
               </td>
             </tr>
           </tbody>
@@ -399,50 +483,50 @@
     </section>
 
     <!-- SEPARATE DEDICATED SECTION: THE GENESIS OF THE SCHRIFT SCORE -->
-    <section id="genesis-section" class="bg-court-900 border border-court-border rounded-xl sm:rounded-2xl p-4 sm:p-7 shadow-xl mt-6">
-      <div class="border-b border-court-border pb-3 mb-4">
+    <section id="genesis-section" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl sm:rounded-2xl p-4 sm:p-7 shadow-xl mt-6 transition-colors">
+      <div class="border-b border-slate-200 dark:border-court-border pb-3 mb-4">
         <div class="flex items-center space-x-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-          <h2 class="text-sm sm:text-lg font-extrabold text-white tracking-wide font-sans">
+          <h2 class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-wide font-sans">
             The Genesis of the Schrift Score
           </h2>
-          <span class="text-[9px] sm:text-[10px] font-mono bg-court-850 text-emerald-400 px-1.5 py-0.5 rounded border border-court-border">Formula Derivation</span>
+          <span class="text-[9px] sm:text-[10px] font-mono bg-slate-100 dark:bg-court-850 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-court-border">Formula Derivation</span>
         </div>
-        <p class="text-[10px] sm:text-xs text-slate-400 font-mono mt-1">
+        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
           ALL STATS VIA BASKETBALL REFERENCE • 10-Year Rolling Empirical Model
         </p>
       </div>
 
-      <div class="space-y-3 text-xs sm:text-sm text-slate-300 font-sans">
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans">
         <p>
-          The <strong class="text-white">Schrift Score</strong> is derived from a 10-year rolling statistical model created by <strong class="text-emerald-400 font-semibold">Zachary Schriftman</strong>. Every multiplier is scientifically grounded using this 3-step formula:
+          The <strong class="text-slate-900 dark:text-white">Schrift Score</strong> is derived from a 10-year rolling statistical model created by <strong class="text-emerald-600 dark:text-emerald-400 font-semibold">Zachary Schriftman</strong>. Every multiplier is scientifically grounded using this 3-step formula:
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3 my-3 font-mono text-xs">
-          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
-            <span class="text-emerald-400 font-bold block mb-1">Step 1: 10-Year Aggregation</span>
-            <span class="text-slate-400 text-[11px] leading-relaxed block">Sum the top 10 qualified player totals for each category over the last 10 seasons.</span>
+          <div class="bg-slate-50 dark:bg-court-850 p-3.5 rounded-xl border border-slate-200 dark:border-court-border">
+            <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Step 1: 10-Year Aggregation</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed block">Sum the top 10 qualified player totals for each category over the last 10 seasons.</span>
           </div>
-          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
-            <span class="text-emerald-400 font-bold block mb-1">Step 2: Baseline Division</span>
-            <span class="text-slate-400 text-[11px] leading-relaxed block">Divide that combined 10-year aggregate number by 100 to yield the individual elite baseline.</span>
+          <div class="bg-slate-50 dark:bg-court-850 p-3.5 rounded-xl border border-slate-200 dark:border-court-border">
+            <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Step 2: Baseline Division</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed block">Divide that combined 10-year aggregate number by 100 to yield the individual elite baseline.</span>
           </div>
-          <div class="bg-court-850 p-3.5 rounded-xl border border-court-border">
-            <span class="text-emerald-400 font-bold block mb-1">Step 3: Inversion Calculation</span>
-            <span class="text-slate-400 text-[11px] leading-relaxed block">Divide 10 by that baseline number to compute the category's active formula multiplier.</span>
+          <div class="bg-slate-50 dark:bg-court-850 p-3.5 rounded-xl border border-slate-200 dark:border-court-border">
+            <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Step 3: Inversion Calculation</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed block">Divide 10 by that baseline number to compute the category's active formula multiplier.</span>
           </div>
         </div>
 
-        <div class="bg-court-850 border border-emerald-500/30 rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
-          <span class="text-emerald-400 font-bold block text-xs sm:text-sm mb-1">Formula 2026–2027:</span>
-          <div class="text-white font-bold text-[11px] sm:text-sm bg-court-950 p-2.5 rounded-lg border border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
+        <div class="bg-slate-50 dark:bg-court-850 border border-emerald-500/30 rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
+          <span class="text-emerald-600 dark:text-emerald-400 font-bold block text-xs sm:text-sm mb-1">Formula 2026–2027:</span>
+          <div class="text-slate-900 dark:text-white font-bold text-[11px] sm:text-sm bg-white dark:bg-court-950 p-2.5 rounded-lg border border-slate-200 dark:border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
             Schrift Score = (0.35 × PPG) + (0.83 × RPG) + (1.14 × APG) + (1.80 × SPG) + (1.98 × BPG) + (0.04 × GP)
           </div>
         </div>
 
-        <div class="bg-court-850 border border-court-border rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
-          <span class="text-slate-300 font-bold block text-xs sm:text-sm mb-1">Formula 2025–2026:</span>
-          <div class="text-white font-bold text-[11px] sm:text-sm bg-court-950 p-2.5 rounded-lg border border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
+        <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-4 my-3 font-mono text-xs">
+          <span class="text-slate-700 dark:text-slate-300 font-bold block text-xs sm:text-sm mb-1">Formula 2025–2026:</span>
+          <div class="text-slate-900 dark:text-white font-bold text-[11px] sm:text-sm bg-white dark:bg-court-950 p-2.5 rounded-lg border border-slate-200 dark:border-court-border mt-1.5 overflow-x-auto whitespace-nowrap smooth-scroll">
             Schrift Score = (0.36 × PPG) + (0.84 × RPG) + (1.18 × APG) + (1.80 × SPG) + (1.99 × BPG) + (0.04 × GP)
           </div>
         </div>
@@ -451,35 +535,46 @@
 
   </main>
 
-  <!-- MODAL: PLAYER STATS INSPECT CARD -->
+  <!-- STICKY BACK TO TOP BUTTON -->
+  <button 
+    id="back-to-top-btn" 
+    onclick="scrollToTop()" 
+    title="Back to Top"
+    class="opacity-0 pointer-events-none fixed bottom-5 right-5 z-40 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3 rounded-2xl shadow-2xl transition-all duration-300 flex items-center justify-center font-mono text-xs gap-1 border border-emerald-400/50"
+  >
+    <span>↑</span>
+    <span class="hidden sm:inline">Top</span>
+  </button>
+
+  <!-- MODAL: PLAYER STATS INSPECT CARD WITH "WHAT-IF" SLIDERS -->
   <div id="player-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="modal-content-card" class="bg-court-900 border border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
-      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+    <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
 
       <!-- Player Header in Modal -->
       <div class="flex items-center space-x-3 mb-3.5">
-        <div id="modal-rank-badge" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400 flex-shrink-0">
+        <div id="modal-rank-badge" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
           <span class="text-[8px] text-slate-400">RANK</span>
           <span id="modal-rank" class="text-base sm:text-lg leading-none">#1</span>
         </div>
         <div class="min-w-0 flex-1">
-          <h3 id="modal-name" class="text-base sm:text-xl font-extrabold text-white font-sans truncate">Player Name</h3>
+          <h3 id="modal-name" class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white font-sans truncate">Player Name</h3>
           <div class="flex items-center space-x-2 mt-0.5">
-            <span id="modal-team" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-court-800 border border-court-border text-slate-300">TEAM</span>
-            <span id="modal-change" class="text-[10px] font-mono font-bold text-emerald-400">▲ +1</span>
+            <span id="modal-team" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border text-slate-700 dark:text-slate-300">TEAM</span>
+            <span id="modal-change" class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">▲ +1</span>
           </div>
         </div>
       </div>
 
-      <!-- Schrift Score & Archetype Callout (No Truncation on Mobile) -->
-      <div class="bg-court-850 border border-court-border rounded-xl p-3 sm:p-3.5 flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 font-mono mb-3.5">
+      <!-- Schrift Score & Archetype Callout -->
+      <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-3.5 flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 font-mono mb-3.5">
         <div class="flex-shrink-0">
           <span class="text-[9px] text-slate-400 block tracking-wider uppercase">Total Schrift Score</span>
-          <div id="modal-total" class="text-2xl sm:text-3xl font-black text-emerald-400 leading-tight">32.79</div>
+          <div id="modal-total" class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">32.79</div>
         </div>
         <div class="xs:text-right flex flex-col xs:items-end">
           <span class="text-[9px] text-slate-400 block tracking-wider uppercase mb-1">Analytical Role</span>
-          <div id="modal-role-badge" class="text-[10.5px] sm:text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg leading-snug whitespace-normal text-left xs:text-right max-w-full">
+          <div id="modal-role-badge" class="text-[10.5px] sm:text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg leading-snug whitespace-normal text-left xs:text-right max-w-full">
             Two-Way Engine
           </div>
         </div>
@@ -487,11 +582,11 @@
 
       <!-- Contribution Breakdown Bar with Exact Percentages -->
       <div class="mb-3.5">
-        <div class="flex justify-between text-[10px] font-mono text-slate-300 mb-1.5">
+        <div class="flex justify-between text-[10px] font-mono text-slate-600 dark:text-slate-300 mb-1.5">
           <span>Score Composition</span>
-          <span id="modal-primary-driver" class="text-emerald-400 font-semibold truncate">Primary Driver: Points</span>
+          <span id="modal-primary-driver" class="text-emerald-600 dark:text-emerald-400 font-semibold truncate">Primary Driver: Points</span>
         </div>
-        <div class="w-full h-2.5 rounded-full bg-court-800 flex overflow-hidden border border-court-border">
+        <div class="w-full h-2.5 rounded-full bg-slate-200 dark:bg-court-800 flex overflow-hidden border border-slate-300 dark:border-court-border">
           <div id="bar-scoring" class="bg-amber-400 transition-all duration-300" style="width: 25%"></div>
           <div id="bar-rebounding" class="bg-blue-400 transition-all duration-300" style="width: 25%"></div>
           <div id="bar-playmaking" class="bg-emerald-400 transition-all duration-300" style="width: 25%"></div>
@@ -499,21 +594,21 @@
         </div>
         
         <!-- Live Percentage Labels -->
-        <div class="grid grid-cols-4 text-center text-[9px] font-mono text-slate-400 mt-2 gap-1">
-          <div class="bg-court-800/40 py-1 rounded">
-            <span class="text-amber-400 font-bold block" id="pct-scoring">0%</span>
+        <div class="grid grid-cols-4 text-center text-[9px] font-mono text-slate-500 dark:text-slate-400 mt-2 gap-1">
+          <div class="bg-slate-100 dark:bg-court-800/40 py-1 rounded">
+            <span class="text-amber-600 dark:text-amber-400 font-bold block" id="pct-scoring">0%</span>
             <span>PTS</span>
           </div>
-          <div class="bg-court-800/40 py-1 rounded">
-            <span class="text-blue-400 font-bold block" id="pct-rebounding">0%</span>
+          <div class="bg-slate-100 dark:bg-court-800/40 py-1 rounded">
+            <span class="text-blue-600 dark:text-blue-400 font-bold block" id="pct-rebounding">0%</span>
             <span>TRB</span>
           </div>
-          <div class="bg-court-800/40 py-1 rounded">
-            <span class="text-emerald-400 font-bold block" id="pct-playmaking">0%</span>
+          <div class="bg-slate-100 dark:bg-court-800/40 py-1 rounded">
+            <span class="text-emerald-600 dark:text-emerald-400 font-bold block" id="pct-playmaking">0%</span>
             <span>AST</span>
           </div>
-          <div class="bg-court-800/40 py-1 rounded">
-            <span class="text-purple-400 font-bold block" id="pct-defense">0%</span>
+          <div class="bg-slate-100 dark:bg-court-800/40 py-1 rounded">
+            <span class="text-purple-600 dark:text-purple-400 font-bold block" id="pct-defense">0%</span>
             <span>DEF</span>
           </div>
         </div>
@@ -521,44 +616,77 @@
 
       <!-- Stat Breakdown Grid -->
       <div class="grid grid-cols-5 gap-1.5 text-center font-mono text-xs mb-3.5">
-        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+        <div class="bg-slate-50 dark:bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-slate-200 dark:border-court-border">
           <div class="text-[9px] text-slate-400">PPG</div>
-          <div id="modal-ppg" class="font-bold text-white text-xs sm:text-sm">--</div>
-          <div id="modal-ss-ppg" class="text-[9px] text-amber-400 mt-0.5">+--</div>
+          <div id="modal-ppg" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-ppg" class="text-[9px] text-amber-600 dark:text-amber-400 mt-0.5 font-bold">+--</div>
         </div>
-        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+        <div class="bg-slate-50 dark:bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-slate-200 dark:border-court-border">
           <div class="text-[9px] text-slate-400">TRB</div>
-          <div id="modal-rpg" class="font-bold text-white text-xs sm:text-sm">--</div>
-          <div id="modal-ss-rpg" class="text-[9px] text-blue-400 mt-0.5">+--</div>
+          <div id="modal-rpg" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-rpg" class="text-[9px] text-blue-600 dark:text-blue-400 mt-0.5 font-bold">+--</div>
         </div>
-        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+        <div class="bg-slate-50 dark:bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-slate-200 dark:border-court-border">
           <div class="text-[9px] text-slate-400">AST</div>
-          <div id="modal-apg" class="font-bold text-white text-xs sm:text-sm">--</div>
-          <div id="modal-ss-apg" class="text-[9px] text-emerald-400 mt-0.5">+--</div>
+          <div id="modal-apg" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-apg" class="text-[9px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-bold">+--</div>
         </div>
-        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+        <div class="bg-slate-50 dark:bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-slate-200 dark:border-court-border">
           <div class="text-[9px] text-slate-400">STL</div>
-          <div id="modal-spg" class="font-bold text-white text-xs sm:text-sm">--</div>
-          <div id="modal-ss-spg" class="text-[9px] text-purple-400 mt-0.5">+--</div>
+          <div id="modal-spg" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-spg" class="text-[9px] text-purple-600 dark:text-purple-400 mt-0.5 font-bold">+--</div>
         </div>
-        <div class="bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-court-border">
+        <div class="bg-slate-50 dark:bg-court-800/60 p-1.5 sm:p-2 rounded-lg border border-slate-200 dark:border-court-border">
           <div class="text-[9px] text-slate-400">BLK</div>
-          <div id="modal-bpg" class="font-bold text-white text-xs sm:text-sm">--</div>
-          <div id="modal-ss-bpg" class="text-[9px] text-purple-400 mt-0.5">+--</div>
+          <div id="modal-bpg" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">--</div>
+          <div id="modal-ss-bpg" class="text-[9px] text-purple-600 dark:text-purple-400 mt-0.5 font-bold">+--</div>
         </div>
       </div>
 
-      <!-- Action Buttons inside Modal -->
+      <!-- INTERACTIVE "WHAT-IF" SLIDER PANEL -->
+      <div class="bg-slate-50 dark:bg-court-850/80 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-3.5 mb-3.5">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-1.5 mb-2.5">
+          <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 font-sans">
+            <span>🎛️</span> "What-If" Simulation Slider
+          </span>
+          <span id="slider-diff-badge" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">Base Stats</span>
+        </div>
+
+        <div class="space-y-2 font-mono text-[10px]">
+          <div>
+            <div class="flex justify-between text-slate-500 dark:text-slate-400 mb-0.5">
+              <span>Games Played (GP): <strong id="lbl-slider-gp" class="text-slate-900 dark:text-white">65</strong></span>
+              <span id="lbl-slider-gp-impact" class="text-amber-500">+2.60 SS</span>
+            </div>
+            <input type="range" min="1" max="82" step="1" id="slider-gp" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-slate-500 dark:text-slate-400 mb-0.5">
+              <span>Points Per Game (PPG): <strong id="lbl-slider-ppg" class="text-slate-900 dark:text-white">25.0</strong></span>
+              <span id="lbl-slider-ppg-impact" class="text-emerald-500">+8.75 SS</span>
+            </div>
+            <input type="range" min="0" max="45" step="0.5" id="slider-ppg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+        </div>
+
+        <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-court-border flex items-center justify-between text-[11px] font-mono">
+          <span class="text-slate-500">Projected What-If Score:</span>
+          <span id="slider-sim-score" class="text-sm font-black text-emerald-600 dark:text-emerald-400">--</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
       <div class="flex gap-2 font-mono">
-        <button id="modal-compare-btn" onclick="addCurrentModalPlayerToCompare()" class="flex-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5">
+        <button id="modal-compare-btn" onclick="addCurrentModalPlayerToCompare()" class="flex-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-600 dark:text-teal-300 border border-teal-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5">
           <span>⚔️</span>
           <span id="modal-compare-text">Add to Compare</span>
         </button>
-        <button onclick="exportSinglePlayerCard()" class="px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1" title="Export Social Image Card">
+        <button onclick="exportSinglePlayerCard()" class="px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-1" title="Export Social Image Card">
           <span>📸</span>
           <span class="hidden xs:inline">Share</span>
         </button>
-        <button onclick="closeModal()" class="px-4 bg-court-800 hover:bg-court-700 text-slate-300 text-xs py-2.5 rounded-xl border border-court-border transition-colors">
+        <button onclick="closeModal()" class="px-4 bg-slate-200 hover:bg-slate-300 dark:bg-court-800 dark:hover:bg-court-700 text-slate-700 dark:text-slate-300 text-xs py-2.5 rounded-xl border border-slate-300 dark:border-court-border transition-colors">
           Close
         </button>
       </div>
@@ -567,29 +695,29 @@
 
   <!-- MODAL: HEAD-TO-HEAD PLAYER COMPARISON TOOL -->
   <div id="compare-modal" onclick="handleCompareBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="compare-content-card" class="bg-court-900 border border-court-border w-full max-w-6xl rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+    <div id="compare-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-6xl rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
       
       <!-- Compare Header -->
-      <div class="flex items-center justify-between border-b border-court-border pb-3 mb-4">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-3 mb-4">
         <div>
           <div class="flex items-center space-x-2">
             <span class="text-base sm:text-xl">⚔️</span>
-            <h2 class="text-sm sm:text-lg font-extrabold text-white tracking-wide font-sans">
+            <h2 class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-wide font-sans">
               Head-to-Head Player Comparison
             </h2>
-            <span id="compare-tier-tag" class="text-[9px] sm:text-[10px] font-mono bg-teal-500/10 text-teal-300 border border-teal-500/20 px-2 py-0.5 rounded">Free Tier: 3 Slots</span>
+            <span id="compare-tier-tag" class="text-[9px] sm:text-[10px] font-mono bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-500/20 px-2 py-0.5 rounded">Free Tier: 3 Slots</span>
           </div>
-          <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5">
-            Compare players head-to-head. Category leaders highlighted with <span class="text-emerald-400 font-bold">👑 WIN</span>.
+          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Compare players head-to-head. Category leaders highlighted with <span class="text-emerald-500 dark:text-emerald-400 font-bold">👑 WIN</span>.
           </p>
         </div>
         <div class="flex items-center space-x-2">
-          <button id="export-battle-btn" onclick="exportComparisonBattleCard()" class="hidden px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1 transition-colors">
+          <button id="export-battle-btn" onclick="exportComparisonBattleCard()" class="hidden px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs font-mono font-bold flex items-center gap-1 transition-colors">
             <span>📸</span>
             <span class="hidden sm:inline">Export Battle Card</span>
             <span class="sm:hidden">Share</span>
           </button>
-          <button onclick="closeComparisonModal()" class="text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+          <button onclick="closeComparisonModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
         </div>
       </div>
 
@@ -606,8 +734,8 @@
       </div>
 
       <!-- Bottom Control Bar -->
-      <div class="mt-4 pt-3 border-t border-court-border flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs">
-        <div id="compare-footer-note" class="text-[11px] text-slate-400 text-center sm:text-left">
+      <div class="mt-4 pt-3 border-t border-slate-200 dark:border-court-border flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs">
+        <div id="compare-footer-note" class="text-[11px] text-slate-500 dark:text-slate-400 text-center sm:text-left">
           Free tier allows comparing up to 3 players. Upgrade to Plus to compare up to 10 players!
         </div>
         <div class="flex items-center space-x-2 w-full sm:w-auto">
@@ -615,7 +743,7 @@
             <span>👑</span>
             <span>Schrift Score Plus</span>
           </button>
-          <button onclick="closeComparisonModal()" class="px-3.5 py-2 bg-court-800 hover:bg-court-700 text-slate-300 rounded-xl border border-court-border transition-colors">
+          <button onclick="closeComparisonModal()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-court-800 dark:hover:bg-court-700 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-300 dark:border-court-border transition-colors">
             Done
           </button>
         </div>
@@ -626,49 +754,49 @@
 
   <!-- MODAL: SCHRIFT SCORE PLUS PAYWALL -->
   <div id="plus-modal" onclick="handlePlusBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-gradient-to-b from-court-900 to-court-950 border border-amber-500/40 w-full max-w-md rounded-2xl p-5 sm:p-7 shadow-2xl relative overflow-hidden font-sans">
-      <button onclick="closePlusModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg p-1">✕</button>
+    <div class="bg-white dark:bg-gradient-to-b dark:from-court-900 dark:to-court-950 border border-amber-500/40 w-full max-w-md rounded-2xl p-5 sm:p-7 shadow-2xl relative overflow-hidden font-sans">
+      <button onclick="closePlusModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
 
       <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-2xl text-slate-950 font-black shadow-lg shadow-amber-500/20 mb-3.5">
         👑
       </div>
 
       <div class="flex items-center gap-2">
-        <h3 class="text-xl font-extrabold text-white tracking-tight">Schrift Score <span class="text-amber-400">Plus</span></h3>
-        <span class="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PRO ACCESS</span>
+        <h3 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Schrift Score <span class="text-amber-500 dark:text-amber-400">Plus</span></h3>
+        <span class="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">PRO ACCESS</span>
       </div>
-      <p class="text-xs text-slate-400 mt-1">Unlock unrestricted NBA analytics tools and head-to-head comparisons.</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Unlock unrestricted NBA analytics tools and head-to-head comparisons.</p>
 
-      <div class="space-y-2.5 my-5 text-xs text-slate-200">
+      <div class="space-y-2.5 my-5 text-xs text-slate-700 dark:text-slate-200">
         <div class="flex items-start space-x-2.5">
-          <span class="text-amber-400 font-bold">✓</span>
+          <span class="text-amber-500 dark:text-amber-400 font-bold">✓</span>
           <span><strong>Compare up to 10 players</strong> head-to-head simultaneously</span>
         </div>
         <div class="flex items-start space-x-2.5">
-          <span class="text-amber-400 font-bold">✓</span>
+          <span class="text-amber-500 dark:text-amber-400 font-bold">✓</span>
           <span><strong>Export high-res battle cards</strong> formatted for Twitter/Reddit</span>
         </div>
         <div class="flex items-start space-x-2.5">
-          <span class="text-amber-400 font-bold">✓</span>
+          <span class="text-amber-500 dark:text-amber-400 font-bold">✓</span>
           <span><strong>Custom Metric Modeling:</strong> Build and test custom coefficients</span>
         </div>
         <div class="flex items-start space-x-2.5">
-          <span class="text-amber-400 font-bold">✓</span>
+          <span class="text-amber-500 dark:text-amber-400 font-bold">✓</span>
           <span><strong>10-Year Historical Matchups:</strong> Compare modern stars with legends</span>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-2.5 mb-5 font-mono text-xs">
-        <div onclick="selectPlusPlan('monthly')" id="plan-monthly" class="cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all">
-          <span class="text-[10px] text-slate-400 block uppercase">Monthly</span>
-          <div class="text-lg font-black text-white mt-0.5">$3.99<span class="text-[10px] text-slate-400 font-normal">/mo</span></div>
+        <div onclick="selectPlusPlan('monthly')" id="plan-monthly" class="cursor-pointer border-2 border-slate-300 dark:border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-slate-50 dark:bg-court-850 text-center transition-all">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 block uppercase">Monthly</span>
+          <div class="text-lg font-black text-slate-900 dark:text-white mt-0.5">$3.99<span class="text-[10px] text-slate-400 font-normal">/mo</span></div>
           <span class="text-[9px] text-slate-500 mt-0.5 block">Cancel anytime</span>
         </div>
         <div onclick="selectPlusPlan('annual')" id="plan-annual" class="cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center relative transition-all">
           <span class="absolute -top-2 right-2 bg-amber-400 text-slate-950 font-bold text-[8px] px-1.5 py-0.2 rounded font-sans">SAVE 37%</span>
-          <span class="text-[10px] text-amber-300 block uppercase font-bold">Annual Pass</span>
-          <div class="text-lg font-black text-white mt-0.5">$29.99<span class="text-[10px] text-slate-400 font-normal">/yr</span></div>
-          <span class="text-[9px] text-amber-300/80 mt-0.5 block">$2.50 / month</span>
+          <span class="text-[10px] text-amber-700 dark:text-amber-300 block uppercase font-bold">Annual Pass</span>
+          <div class="text-lg font-black text-slate-900 dark:text-white mt-0.5">$29.99<span class="text-[10px] text-slate-400 font-normal">/yr</span></div>
+          <span class="text-[9px] text-amber-600 dark:text-amber-300/80 mt-0.5 block">$2.50 / month</span>
         </div>
       </div>
 
@@ -676,17 +804,16 @@
         Upgrade to Plus — Secure Checkout
       </button>
 
-      <p class="text-[10px] text-slate-500 text-center mt-3 font-mono">
+      <p class="text-[10px] text-slate-400 text-center mt-3 font-mono">
         Instant digital delivery • Cancel anytime
       </p>
     </div>
   </div>
 
-  <!-- HIDDEN OFF-SCREEN CONTAINERS FOR HIGH-RES VIRAL IMAGE GENERATION -->
-  <div class="fixed left-[-9999px] top-[-9999px] z-[-1]" aria-hidden="true">
-    <!-- Single Player Card Render Template -->
+  <!-- HIDDEN TEMPLATES FOR RETINA SOCIAL IMAGE EXPORTS -->
+  <div class="fixed left-[-9999px] top-[-9999px] z-[-1] pointer-events-none">
+    <!-- Template 1: Single Player Card -->
     <div id="export-single-template" style="width: 720px; background-color: #070a11;" class="p-8 rounded-3xl border-2 border-emerald-500/40 font-sans text-white">
-      <!-- Watermark Header -->
       <div class="flex items-center justify-between border-b border-court-border pb-4 mb-6">
         <div class="flex items-center space-x-3">
           <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl shadow-lg border border-emerald-400/40">
@@ -705,7 +832,6 @@
         </div>
       </div>
 
-      <!-- Player Hero -->
       <div class="flex items-center justify-between bg-court-900 border border-court-border rounded-2xl p-6 mb-6">
         <div class="flex items-center space-x-4">
           <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400">
@@ -728,7 +854,6 @@
         </div>
       </div>
 
-      <!-- Stat Box Breakdown -->
       <div class="grid grid-cols-6 gap-2.5 text-center font-mono text-sm mb-6">
         <div class="bg-court-900 p-3 rounded-xl border border-court-border">
           <div class="text-xs text-slate-400 font-bold">PPG</div>
@@ -762,7 +887,6 @@
         </div>
       </div>
 
-      <!-- Contribution Percentages Bar -->
       <div class="bg-court-900 border border-court-border rounded-xl p-4 mb-6">
         <div class="flex justify-between text-xs font-mono text-slate-300 mb-2">
           <span>Score Composition</span>
@@ -782,7 +906,6 @@
         </div>
       </div>
 
-      <!-- VIRAL WATERMARK FOOTER -->
       <div class="pt-4 border-t border-court-border flex items-center justify-between font-mono text-xs text-slate-400">
         <div class="flex items-center space-x-1.5">
           <span>🏀</span>
@@ -794,9 +917,8 @@
       </div>
     </div>
 
-    <!-- 2-Player Head-to-Head Battle Card Render Template -->
+    <!-- Template 2: 2-Player Head-to-Head Battle Card -->
     <div id="export-battle-template" style="width: 820px; background-color: #070a11;" class="p-8 rounded-3xl border-2 border-teal-500/40 font-sans text-white">
-      <!-- Watermark Header -->
       <div class="flex items-center justify-between border-b border-court-border pb-4 mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center font-black text-white text-2xl shadow-lg border border-teal-400/40">
@@ -815,15 +937,13 @@
         </div>
       </div>
 
-      <!-- Big Quote / Headline -->
       <div class="bg-court-900 border border-court-border rounded-2xl p-4 mb-5 text-center font-mono">
         <span class="text-xs text-slate-400 block uppercase">Matchup Breakdown</span>
         <h2 id="battle-quote-headline" class="text-lg font-black text-white mt-0.5">
-          Look at SGA's Schrift Score compared to Luka
+          Look at SGA's Schrift Score compared to Luka!
         </h2>
       </div>
 
-      <!-- 2 Players Side-by-Side Hero -->
       <div class="grid grid-cols-2 gap-4 mb-5 font-mono">
         <div id="battle-card-p1" class="bg-court-900 border border-court-border rounded-2xl p-4 flex items-center justify-between">
           <div>
@@ -852,14 +972,12 @@
         </div>
       </div>
 
-      <!-- Matchup Table -->
       <div class="bg-court-900 border border-court-border rounded-2xl p-4 mb-5">
         <table class="w-full text-left font-mono text-sm border-collapse" id="battle-render-table">
           <!-- Populated dynamically via JS -->
         </table>
       </div>
 
-      <!-- VIRAL WATERMARK FOOTER -->
       <div class="pt-4 border-t border-court-border flex items-center justify-between font-mono text-xs text-slate-400">
         <div class="flex items-center space-x-2">
           <span>⚔️</span>
@@ -870,12 +988,49 @@
         </div>
       </div>
     </div>
+
+    <!-- Template 3: Entire Leaderboard Top 10 Snapshot -->
+    <div id="export-ranking-template" style="width: 860px; background-color: #070a11;" class="p-8 rounded-3xl border-2 border-emerald-500/40 font-sans text-white">
+      <div class="flex items-center justify-between border-b border-court-border pb-4 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl shadow-lg border border-emerald-400/40">
+            SS
+          </div>
+          <div>
+            <div class="text-xl font-extrabold tracking-tight">
+              NBA SCHRIFT <span class="text-emerald-400">SCORE</span> LEADERBOARD
+            </div>
+            <div id="export-ranking-season" class="text-xs font-mono text-slate-400">TOP 10 PLAYER POWER SNAPSHOT</div>
+          </div>
+        </div>
+        <div class="text-right font-mono">
+          <div class="text-[10px] text-slate-400 uppercase">Created by</div>
+          <div class="text-xs font-bold text-white">Zachary Schriftman</div>
+        </div>
+      </div>
+
+      <div class="bg-court-900 border border-court-border rounded-2xl p-4 mb-5">
+        <table class="w-full text-left font-mono text-xs border-collapse" id="export-ranking-table">
+          <!-- Populated dynamically via JS -->
+        </table>
+      </div>
+
+      <div class="pt-4 border-t border-court-border flex items-center justify-between font-mono text-xs text-slate-400">
+        <div class="flex items-center space-x-2">
+          <span>🟢</span>
+          <span id="export-ranking-timestamp">Updated daily at 7:00 AM ET</span>
+        </div>
+        <div class="text-emerald-400 font-bold text-sm tracking-wide">
+          https://schriftscore.vercel.app/
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER -->
-  <footer class="border-t border-court-border bg-court-950 py-4 text-center text-[10px] sm:text-xs text-slate-400 font-mono">
+  <footer class="border-t border-slate-200 dark:border-court-border bg-slate-100 dark:bg-court-950 py-4 text-center text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono transition-colors">
     <p>NBA Schrift Score © 2026–2027 • Created by Zachary Schriftman</p>
-    <p class="text-slate-500 text-[9px] mt-0.5">Updated daily at 7:00 AM</p>
+    <p class="text-slate-400 dark:text-slate-500 text-[9px] mt-0.5">Updated daily at 7:00 AM ET</p>
   </footer>
 
   <!-- DATA & APP INTERACTION SCRIPT -->
@@ -888,12 +1043,12 @@
 
     const SHEET_ID = '1GHhk4GIxhe6cOFzdGvA6fw-f9Nlcn7m6QJNg5-Bgie4';
 
-    // SEPARATE ERA GIDS & MULTIPLIERS (10-Year Rolling Formulas)
+    // SEPARATE ERA GIDS & MULTIPLIERS
     const SEASONS = {
       '2026/27': {
         label: '2026/27',
         badgeText: '2026/27',
-        gid: '1861164094', // Live NBA 2026/27 Season tab
+        gid: '1861164094',
         weights: { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 },
         title: '2026–2027 Formula Weights',
         desc: '1 PPG = 0.35 SS • 1 RPG = 0.83 SS • 1 APG = 1.14 SS • 1 SPG = 1.80 SS • 1 BPG = 1.98 SS • 1 GP = 0.04 SS'
@@ -901,7 +1056,7 @@
       '2025/26': {
         label: '2025/26',
         badgeText: '2025/26',
-        gid: '1238570489', // NBA 2025/26 Season tab
+        gid: '1238570489',
         weights: { ppg: 0.36, rpg: 0.84, apg: 1.18, spg: 1.80, bpg: 1.99, gp: 0.04 },
         title: '2025–2026 Formula Weights',
         desc: '1 PPG = 0.36 SS • 1 RPG = 0.84 SS • 1 APG = 1.18 SS • 1 SPG = 1.80 SS • 1 BPG = 1.99 SS • 1 GP = 0.04 SS'
@@ -927,14 +1082,205 @@
 
     let highlightPlayers = {
       leader: null,
+      bestYesterday: null,
       scorer: null,
       riser: null,
       faller: null
     };
 
+    // REAL NOVEMBER 1 NBA GAMES & BOX SCORES
+    const yesterdayGames = [
+      {
+        id: "game-1",
+        awayTeam: "TOR", awayScore: 125,
+        homeTeam: "LAL", homeScore: 131,
+        mvp: "Luka Dončić", mvpTeam: "LAL",
+        mvpLine: "45 PTS, 15 REB, 6 AST",
+        gameSS: 35.79,
+        box: [
+          { name: "Luka Dončić", tm: "LAL", pts: 45, reb: 15, ast: 6, stl: 2, blk: 0, ss: 35.79 },
+          { name: "Scottie Barnes", tm: "TOR", pts: 29, reb: 6, ast: 5, stl: 1, blk: 1, ss: 23.33 },
+          { name: "Austin Reaves", tm: "LAL", pts: 21, reb: 4, ast: 5, stl: 1, blk: 0, ss: 18.17 },
+          { name: "RJ Barrett", tm: "TOR", pts: 22, reb: 5, ast: 3, stl: 1, blk: 0, ss: 17.07 }
+        ]
+      },
+      {
+        id: "game-2",
+        awayTeam: "LAC", awayScore: 112,
+        homeTeam: "GSW", homeScore: 124,
+        mvp: "Yaxel Lendeborg", mvpTeam: "GSW",
+        mvpLine: "37 PTS, 4 REB, 6 AST",
+        gameSS: 27.67,
+        box: [
+          { name: "Yaxel Lendeborg", tm: "GSW", pts: 37, reb: 4, ast: 6, stl: 2, blk: 0, ss: 27.67 },
+          { name: "Rui Hachimura", tm: "LAC", pts: 24, reb: 7, ast: 0, stl: 1, blk: 1, ss: 16.61 },
+          { name: "Stephen Curry", tm: "GSW", pts: 21, reb: 4, ast: 7, stl: 1, blk: 0, ss: 20.25 },
+          { name: "James Harden", tm: "LAC", pts: 18, reb: 5, ast: 9, stl: 2, blk: 0, ss: 22.91 }
+        ]
+      },
+      {
+        id: "game-3",
+        awayTeam: "BOS", awayScore: 108,
+        homeTeam: "ORL", homeScore: 97,
+        mvp: "Jayson Tatum", mvpTeam: "BOS",
+        mvpLine: "32 PTS, 4 REB, 7 AST, 2 BLK",
+        gameSS: 26.47,
+        box: [
+          { name: "Jayson Tatum", tm: "BOS", pts: 32, reb: 4, ast: 7, stl: 0, blk: 2, ss: 26.47 },
+          { name: "Tristan da Silva", tm: "ORL", pts: 23, reb: 10, ast: 2, stl: 0, blk: 0, ss: 18.75 },
+          { name: "Paul George", tm: "BOS", pts: 17, reb: 6, ast: 8, stl: 2, blk: 0, ss: 21.65 },
+          { name: "Derrick White", tm: "BOS", pts: 12, reb: 2, ast: 2, stl: 2, blk: 0, ss: 11.74 },
+          { name: "Luka Garza", tm: "BOS", pts: 12, reb: 6, ast: 4, stl: 1, blk: 0, ss: 15.54 },
+          { name: "Payton Pritchard", tm: "BOS", pts: 7, reb: 7, ast: 3, stl: 1, blk: 0, ss: 13.48 }
+        ]
+      },
+      {
+        id: "game-4",
+        awayTeam: "BKN", awayScore: 98,
+        homeTeam: "IND", homeScore: 90,
+        mvp: "Michael Porter Jr.", mvpTeam: "BKN",
+        mvpLine: "23 PTS, 9 REB, 3 AST",
+        gameSS: 20.34,
+        box: [
+          { name: "Michael Porter Jr.", tm: "BKN", pts: 23, reb: 9, ast: 3, stl: 1, blk: 0, ss: 20.34 },
+          { name: "Andrew Nembhard", tm: "IND", pts: 23, reb: 3, ast: 4, stl: 1, blk: 0, ss: 17.21 },
+          { name: "Julius Randle", tm: "BKN", pts: 19, reb: 8, ast: 4, stl: 1, blk: 1, ss: 21.03 },
+          { name: "Tyrese Haliburton", tm: "IND", pts: 16, reb: 4, ast: 8, stl: 2, blk: 1, ss: 23.62 }
+        ]
+      }
+    ];
+
+    // -------------------------------------------------------------
+    // INITIALIZATION & THEME RESTORATION
+    // -------------------------------------------------------------
     async function init() {
+      initTheme();
       checkPlusMembershipStatus();
+      updateLastUpdatedTimestamp();
+      renderYesterdayGames();
       await loadSeasonData('2026/27');
+
+      window.addEventListener('scroll', handleScroll);
+      const tableContainer = document.getElementById('table-scroll-container');
+      if (tableContainer) {
+        tableContainer.addEventListener('scroll', handleScroll);
+      }
+    }
+
+    // --- DARK / LIGHT MODE ENGINE ---
+    function initTheme() {
+      const savedTheme = localStorage.getItem('schrift_theme') || 'dark';
+      applyTheme(savedTheme);
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const newTheme = isDark ? 'light' : 'dark';
+      applyTheme(newTheme);
+      localStorage.setItem('schrift_theme', newTheme);
+    }
+
+    function applyTheme(theme) {
+      const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        icon.textContent = '☀️';
+        if (text) text.textContent = 'Light';
+      } else {
+        document.documentElement.classList.add('dark');
+        icon.textContent = '🌙';
+        if (text) text.textContent = 'Dark';
+      }
+    }
+
+    // --- STICKY BACK TO TOP BUTTON (SCROLLS BOTH WINDOW & TABLE) ---
+    function handleScroll() {
+      const btn = document.getElementById('back-to-top-btn');
+      if (!btn) return;
+
+      const tableContainer = document.getElementById('table-scroll-container');
+      const tableScrolled = tableContainer ? tableContainer.scrollTop : 0;
+      const windowScrolled = window.scrollY;
+
+      if (windowScrolled > 250 || tableScrolled > 250) {
+        btn.classList.remove('opacity-0', 'pointer-events-none');
+        btn.classList.add('opacity-100', 'pointer-events-auto');
+      } else {
+        btn.classList.remove('opacity-100', 'pointer-events-auto');
+        btn.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const tableContainer = document.getElementById('table-scroll-container');
+      if (tableContainer) {
+        tableContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // --- LIVE TIMESTAMP ENGINE ---
+    function updateLastUpdatedTimestamp() {
+      const el = document.getElementById('last-updated-text');
+      if (!el) return;
+      
+      const now = new Date();
+      const options = { timeZone: "America/New_York", month: "short", day: "numeric" };
+      const dateStr = now.toLocaleDateString("en-US", options);
+      el.textContent = `Updated: ${dateStr} at 7:00 AM ET`;
+    }
+
+    // --- RENDER REAL YESTERDAY GAMES (NOV 1) ---
+    function renderYesterdayGames() {
+      const container = document.getElementById('yesterday-games-container');
+      if (!container) return;
+
+      container.innerHTML = yesterdayGames.map(g => `
+        <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600 transition-all">
+          <div>
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-800 dark:text-slate-200 pb-1.5 border-b border-slate-200 dark:border-court-border">
+              <span class="flex items-center gap-1">
+                <span class="text-slate-500">${g.awayTeam}</span>
+                <span class="text-sm font-black text-slate-900 dark:text-white">${g.awayScore}</span>
+              </span>
+              <span class="text-[10px] text-slate-400 font-normal">@</span>
+              <span class="flex items-center gap-1">
+                <span class="text-sm font-black text-slate-900 dark:text-white">${g.homeScore}</span>
+                <span class="text-slate-500">${g.homeTeam}</span>
+              </span>
+            </div>
+
+            <div class="mt-2 text-[10px]">
+              <div class="flex items-center justify-between">
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold">MVP: ${g.mvp}</span>
+                <span class="text-emerald-600 dark:text-emerald-400 font-bold">${g.gameSS.toFixed(2)} SS</span>
+              </div>
+              <div class="text-[9px] text-slate-500 truncate mt-0.5">${g.mvpLine}</div>
+            </div>
+          </div>
+
+          <div class="mt-2.5 pt-1.5 border-t border-slate-200 dark:border-court-border/70">
+            <button onclick="toggleGameBox('${g.id}')" class="text-[9px] text-slate-500 hover:text-emerald-500 flex items-center justify-between w-full font-bold">
+              <span>Box Score ▾</span>
+              <span class="text-[8px] bg-slate-200 dark:bg-court-800 px-1 py-0.2 rounded text-slate-600 dark:text-slate-300">${g.box.length} Players</span>
+            </button>
+            <div id="${g.id}-box" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-court-border/50 space-y-1">
+              ${g.box.map(p => `
+                <div class="flex items-center justify-between text-[9px] text-slate-600 dark:text-slate-300">
+                  <span class="truncate pr-1">${p.name} <span class="text-slate-400">(${p.tm})</span></span>
+                  <span class="font-bold text-emerald-600 dark:text-emerald-400">${p.ss.toFixed(1)} SS</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleGameBox(gameId) {
+      const box = document.getElementById(`${gameId}-box`);
+      if (box) box.classList.toggle('hidden');
     }
 
     async function loadSeasonData(seasonKey) {
@@ -945,11 +1291,11 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800";
+        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
       } else {
-        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white bg-transparent hover:bg-court-800";
+        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
       }
 
       document.getElementById('season-badge').textContent = cfg.badgeText;
@@ -972,7 +1318,7 @@
 
       document.getElementById('table-rows').innerHTML = `
         <tr>
-          <td colspan="11" class="py-16 text-center text-slate-400 font-sans">
+          <td colspan="12" class="py-16 text-center text-slate-400 font-sans">
             <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
             <p>Loading ${cfg.label} player analytics...</p>
           </td>
@@ -1025,7 +1371,7 @@
         
         document.getElementById('vip-badge').classList.remove('hidden');
         document.getElementById('compare-tier-tag').textContent = "Plus Tier: Up to 10 Slots";
-        document.getElementById('compare-tier-tag').className = "text-[9px] sm:text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded";
+        document.getElementById('compare-tier-tag').className = "text-[9px] sm:text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded";
         document.getElementById('compare-footer-note').textContent = "Plus tier active: Compare up to 10 players simultaneously!";
         
         const upgradeBtn = document.getElementById('upgrade-plus-bar-btn');
@@ -1108,11 +1454,12 @@
 
     function getFallback202627Data() {
       return [
-        { rank: 1, rankYesterday: 1, rankChange: 0, name: "Nikola Jokić", team: "DEN", ppg: 22.3, ssPpg: 7.81, rpg: 9.7, ssRpg: 8.05, apg: 8.7, ssApg: 9.92, spg: 1.3, ssSpg: 2.34, bpg: 2.3, ssBpg: 4.55, gp: 3, ssGp: 0.12, total: 32.79 },
-        { rank: 2, rankYesterday: 3, rankChange: 1, name: "Luka Dončić", team: "LAL", ppg: 34.3, ssPpg: 12.01, rpg: 7.3, ssRpg: 6.06, apg: 8.0, ssApg: 9.12, spg: 1.7, ssSpg: 3.06, bpg: 0.3, ssBpg: 0.59, gp: 3, ssGp: 0.12, total: 30.96 },
-        { rank: 3, rankYesterday: 4, rankChange: 1, name: "Domantas Sabonis", team: "SAC", ppg: 18.7, ssPpg: 6.55, rpg: 17.3, ssRpg: 14.36, apg: 7.0, ssApg: 7.98, spg: 1.0, ssSpg: 1.80, bpg: 0.0, ssBpg: 0.00, gp: 3, ssGp: 0.12, total: 30.80 },
-        { rank: 4, rankYesterday: 15, rankChange: 11, name: "Cooper Flagg", team: "DAL", ppg: 25.0, ssPpg: 8.75, rpg: 5.3, ssRpg: 4.40, apg: 6.3, ssApg: 7.18, spg: 3.7, ssSpg: 6.66, bpg: 1.7, ssBpg: 3.37, gp: 3, ssGp: 0.12, total: 30.48 },
-        { rank: 5, rankYesterday: 2, rankChange: -3, name: "Jalen Johnson", team: "ATL", ppg: 21.5, ssPpg: 7.53, rpg: 9.8, ssRpg: 8.13, apg: 8.5, ssApg: 9.69, spg: 1.8, ssSpg: 3.24, bpg: 0.8, ssBpg: 1.58, gp: 4, ssGp: 0.16, total: 30.33 }
+        { rank: 1, rankYesterday: 3, rankChange: 2, name: "Luka Dončić", team: "LAL", ppg: 37.7, ssPpg: 13.20, rpg: 8.2, ssRpg: 6.81, apg: 7.3, ssApg: 8.32, spg: 1.8, ssSpg: 3.24, bpg: 0.8, ssBpg: 1.58, gp: 6, ssGp: 0.24, total: 33.39 },
+        { rank: 2, rankYesterday: 1, rankChange: -1, name: "Victor Wembanyama", team: "SAS", ppg: 28.0, ssPpg: 9.80, rpg: 10.7, ssRpg: 8.88, apg: 3.0, ssApg: 3.42, spg: 1.3, ssSpg: 2.34, bpg: 4.2, ssBpg: 8.32, gp: 6, ssGp: 0.24, total: 33.00 },
+        { rank: 3, rankYesterday: 2, rankChange: -1, name: "Nikola Jokić", team: "DEN", ppg: 21.2, ssPpg: 7.42, rpg: 9.8, ssRpg: 8.13, apg: 9.2, ssApg: 10.49, spg: 1.6, ssSpg: 2.88, bpg: 1.4, ssBpg: 2.77, gp: 5, ssGp: 0.20, total: 31.89 },
+        { rank: 4, rankYesterday: 4, rankChange: 0, name: "Domantas Sabonis", team: "SAC", ppg: 16.0, ssPpg: 5.60, rpg: 15.8, ssRpg: 13.11, apg: 7.3, ssApg: 8.32, spg: 1.0, ssSpg: 1.80, bpg: 0.2, ssBpg: 0.40, gp: 6, ssGp: 0.24, total: 29.47 },
+        { rank: 5, rankYesterday: 5, rankChange: 0, name: "Giannis Antetokounmpo", team: "MIA", ppg: 28.2, ssPpg: 9.87, rpg: 12.3, ssRpg: 10.21, apg: 5.5, ssApg: 6.27, spg: 0.8, ssSpg: 1.44, bpg: 0.7, ssBpg: 1.39, gp: 6, ssGp: 0.24, total: 29.42 },
+        { rank: 6, rankYesterday: 6, rankChange: 0, name: "Cooper Flagg", team: "DAL", ppg: 26.8, ssPpg: 9.38, rpg: 6.0, ssRpg: 4.98, apg: 6.6, ssApg: 7.52, spg: 2.6, ssSpg: 4.68, bpg: 1.2, ssBpg: 2.38, gp: 5, ssGp: 0.20, total: 29.14 }
       ];
     }
 
@@ -1132,6 +1479,11 @@
       highlightPlayers.leader = leader;
       document.getElementById('stat-leader').textContent = leader.name;
       document.getElementById('stat-leader-score').textContent = `${leader.total.toFixed(2)} Total (${leader.team})`;
+
+      // BEST PLAYER YESTERDAY CARD (Nov 1 real leader)
+      highlightPlayers.bestYesterday = masterData.find(p => p.name.includes("Luka")) || leader;
+      document.getElementById('stat-best-yesterday').textContent = "Luka Dončić";
+      document.getElementById('stat-best-yesterday-val').textContent = "35.79 SS • 45 PTS, 15 REB (LAL)";
 
       const topScorer = [...masterData].sort((a,b) => b.ppg - a.ppg)[0];
       highlightPlayers.scorer = topScorer;
@@ -1182,21 +1534,21 @@
 
     function updateHeaderHighlights() {
       document.querySelectorAll('.th-sortable').forEach(th => {
-        th.classList.remove('text-emerald-400', 'bg-emerald-500/15', 'font-bold');
-        th.classList.add('text-slate-400');
+        th.classList.remove('text-emerald-500', 'bg-emerald-500/15', 'font-bold');
+        th.classList.add('text-slate-500', 'dark:text-slate-400');
       });
 
       const activeTh = document.getElementById(`th-${sortColumn}`);
       if (activeTh) {
-        activeTh.classList.remove('text-slate-400');
-        activeTh.classList.add('text-emerald-400', 'bg-emerald-500/15', 'font-bold');
+        activeTh.classList.remove('text-slate-500', 'dark:text-slate-400');
+        activeTh.classList.add('text-emerald-500', 'bg-emerald-500/15', 'font-bold');
       }
     }
 
     function renderTable() {
       const tbody = document.getElementById('table-rows');
       if (currentData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="py-12 text-center text-slate-500 font-sans">No matching players found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-slate-500 font-sans">No matching players found.</td></tr>`;
         return;
       }
 
@@ -1209,58 +1561,60 @@
       };
 
       tbody.innerHTML = currentData.map((p) => {
-        let changeBadge = `<span class="text-slate-500">• 0</span>`;
+        let changeBadge = `<span class="text-slate-400">• 0</span>`;
         if (p.rankChange > 0) {
-          changeBadge = `<span class="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">▲${p.rankChange}</span>`;
+          changeBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">▲${p.rankChange}</span>`;
         } else if (p.rankChange < 0) {
-          changeBadge = `<span class="text-rose-400 font-bold bg-rose-500/10 px-1 py-0.5 rounded border border-rose-500/20">▼${Math.abs(p.rankChange)}</span>`;
+          changeBadge = `<span class="text-rose-500 dark:text-rose-400 font-bold bg-rose-500/10 px-1 py-0.5 rounded border border-rose-500/20">▼${Math.abs(p.rankChange)}</span>`;
         }
 
         return `
-          <tr onclick="inspectPlayer(${p.rank})" class="hover:bg-court-800/70 cursor-pointer transition-colors group">
-            <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${sortColumn === 'rank' ? 'text-emerald-400 bg-emerald-500/10' : 'text-white'}">${p.rank}</td>
-            <td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-white group-hover:text-emerald-400 transition-colors whitespace-nowrap ${sortColumn === 'name' ? 'text-emerald-400 bg-emerald-500/10' : ''}">
+          <tr onclick="inspectPlayer(${p.rank})" class="hover:bg-slate-100 dark:hover:bg-court-800/70 cursor-pointer transition-colors group">
+            <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${sortColumn === 'rank' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-slate-900 dark:text-white'}">${p.rank}</td>
+            <td class="py-2.5 sm:py-3 px-1.5 text-center text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ${colClass('rankYesterday')} font-mono">#${p.rankYesterday || '-'}</td>
+            <td class="py-2.5 sm:py-3 px-1.5 text-center text-[10px] sm:text-[11px] ${colClass('rankChange')}">${changeBadge}</td>
+            <td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors whitespace-nowrap ${sortColumn === 'name' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : ''}">
               ${p.name}
             </td>
-            <td class="py-2.5 sm:py-3 px-2 text-center text-[10px] sm:text-[11px] ${colClass('rankChange')}">${changeBadge}</td>
             <td class="py-2.5 sm:py-3 px-2 ${colClass('team')}">
-              <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-court-800 border border-court-border text-slate-300">
+              <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border text-slate-600 dark:text-slate-300">
                 ${p.team}
               </span>
             </td>
             
-            <td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-extrabold whitespace-nowrap ${sortColumn === 'total' ? 'text-emerald-400 bg-emerald-500/15' : 'text-emerald-400/90 bg-emerald-500/5'}">
+            <!-- SS Total with Solid Background Protection -->
+            <td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
               <span class="text-xs sm:text-sm font-black">${p.total.toFixed(2)}</span>
             </td>
             
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('ppg')}">
-              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.ppg.toFixed(1)}</div>
-              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssPpg.toFixed(2)}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">${p.ppg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssPpg.toFixed(2)}</div>
             </td>
 
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('rpg')}">
-              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.rpg.toFixed(1)}</div>
-              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssRpg.toFixed(2)}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">${p.rpg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssRpg.toFixed(2)}</div>
             </td>
 
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('apg')}">
-              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.apg.toFixed(1)}</div>
-              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssApg.toFixed(2)}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">${p.apg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-mono leading-tight mt-0.5">+${p.ssApg.toFixed(2)}</div>
             </td>
 
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('spg')}">
-              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.spg.toFixed(1)}</div>
-              <div class="text-[9px] sm:text-[10px] text-teal-300 font-mono leading-tight mt-0.5">+${p.ssSpg.toFixed(2)}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">${p.spg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-teal-600 dark:text-teal-300 font-mono leading-tight mt-0.5">+${p.ssSpg.toFixed(2)}</div>
             </td>
 
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('bpg')}">
-              <div class="font-bold text-white text-xs sm:text-[13px] leading-tight">${p.bpg.toFixed(1)}</div>
-              <div class="text-[9px] sm:text-[10px] text-teal-300 font-mono leading-tight mt-0.5">+${p.ssBpg.toFixed(2)}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">${p.bpg.toFixed(1)}</div>
+              <div class="text-[9px] sm:text-[10px] text-teal-600 dark:text-teal-300 font-mono leading-tight mt-0.5">+${p.ssBpg.toFixed(2)}</div>
             </td>
 
             <td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ${colClass('gp')}">
-              <div class="font-bold text-slate-300 text-xs sm:text-[13px] leading-tight">${p.gp}</div>
-              <div class="text-[9px] sm:text-[10px] text-amber-300 font-mono leading-tight mt-0.5">+${p.ssGp.toFixed(2)}</div>
+              <div class="font-bold text-slate-700 dark:text-slate-300 text-xs sm:text-[13px] leading-tight">${p.gp}</div>
+              <div class="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-300 font-mono leading-tight mt-0.5">+${p.ssGp.toFixed(2)}</div>
             </td>
           </tr>
         `;
@@ -1353,47 +1707,50 @@
       const stocks = spg + bpg;
 
       if (total >= 30.5 || (total >= 28.0 && ppg >= 24.0)) {
-        return { label: "Tier 1: MVP Frontrunner / Franchise Pillar", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" };
+        return { label: "Tier 1: MVP Frontrunner / Franchise Pillar", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/40" };
       }
       if (total >= 26.0) {
-        return { label: "Tier 2: 1st-Team All-NBA Core Star", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" };
+        return { label: "Tier 2: 1st-Team All-NBA Core Star", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20" };
       }
       if (total >= 22.5) {
         if (ppg < 12.0) {
-          return { label: "Tier 4: Elite Two-Way Specialist / Glue Anchor", color: "bg-teal-500/10 text-teal-300 border-teal-500/20" };
+          return { label: "Tier 4: Elite Two-Way Specialist / Glue Anchor", color: "bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/20" };
         }
-        return { label: "Tier 3: All-Star Starter / Primary Option", color: "bg-teal-500/10 text-teal-300 border-teal-500/20" };
+        return { label: "Tier 3: All-Star Starter / Primary Option", color: "bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/20" };
       }
       if (total >= 19.0) {
         if (ppg < 10.0) {
-          return { label: "Tier 5: High-Impact Defensive Anchor / Elite Connector", color: "bg-blue-500/10 text-blue-300 border-blue-500/20" };
+          return { label: "Tier 5: High-Impact Defensive Anchor / Elite Connector", color: "bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20" };
         }
-        return { label: "Tier 4: All-Star Caliber / Elite 2nd Option", color: "bg-blue-500/10 text-blue-300 border-blue-500/20" };
+        return { label: "Tier 4: All-Star Caliber / Elite 2nd Option", color: "bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20" };
       }
       if (total >= 15.0) {
         if (ppg < 8.0 && stocks >= 2.0) {
-          return { label: "Tier 5: Defensive Anchor & Connector", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" };
+          return { label: "Tier 5: Defensive Anchor & Connector", color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-500/20" };
         }
-        return { label: "Tier 5: High-Impact Starting 5 Contributor", color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" };
+        return { label: "Tier 5: High-Impact Starting 5 Contributor", color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-500/20" };
       }
       if (total >= 11.0) {
-        return { label: "Tier 6: Starting Rotation / 6th Man Contender", color: "bg-amber-500/10 text-amber-300 border-amber-500/20" };
+        return { label: "Tier 6: Starting Rotation / 6th Man Contender", color: "bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20" };
       }
       if (total >= 7.0) {
-        return { label: "Tier 7: Core Bench Rotation Piece", color: "bg-slate-500/10 text-slate-300 border-slate-500/20" };
+        return { label: "Tier 7: Core Bench Rotation Piece", color: "bg-slate-200 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-500/20" };
       }
       if (total >= 4.0) {
-        return { label: "Tier 8: Specialist / Situational Depth", color: "bg-slate-700/30 text-slate-400 border-slate-600/30" };
+        return { label: "Tier 8: Specialist / Situational Depth", color: "bg-slate-100 dark:bg-slate-700/30 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600/30" };
       }
-      return { label: "Tier 9: Deep Bench / Developing Reserve", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" };
+      return { label: "Tier 9: Deep Bench / Developing Reserve", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" };
     }
 
-    // --- MODAL INSPECT HANDLERS ---
+    // --- MODAL INSPECT HANDLERS WITH "WHAT-IF" SLIDERS ---
+    let inspectingPlayerBase = null;
+
     function inspectPlayer(rank) {
       const p = masterData.find(player => player.rank === rank);
       if (!p) return;
 
       currentInspectingRank = rank;
+      inspectingPlayerBase = { ...p };
 
       document.getElementById('modal-rank').textContent = `#${p.rank}`;
       document.getElementById('modal-name').textContent = p.name;
@@ -1402,10 +1759,10 @@
       const changeEl = document.getElementById('modal-change');
       if (p.rankChange > 0) {
         changeEl.textContent = `▲ +${p.rankChange} today`;
-        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-emerald-400";
+        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400";
       } else if (p.rankChange < 0) {
         changeEl.textContent = `▼ ${p.rankChange} today`;
-        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-rose-400";
+        changeEl.className = "text-[10px] sm:text-xs font-mono font-bold text-rose-500 dark:text-rose-400";
       } else {
         changeEl.textContent = "• Unchanged";
         changeEl.className = "text-[10px] sm:text-xs font-mono text-slate-400";
@@ -1436,7 +1793,7 @@
         { name: "Scoring Volume", val: ptsPct },
         { name: "Rebounding Control", val: rebPct },
         { name: "Playmaking Engine", val: astPct },
-        { name: "Defensive Scarcity", val: defPct }
+        { name: "Defensive Stocks", val: defPct }
       ].sort((a,b) => b.val - a.val);
 
       document.getElementById('modal-primary-driver').textContent = `Primary Driver: ${drivers[0].name} (${drivers[0].val}%)`;
@@ -1452,6 +1809,15 @@
       document.getElementById('modal-bpg').textContent = p.bpg.toFixed(1);
       document.getElementById('modal-ss-bpg').textContent = `+${p.ssBpg.toFixed(2)}`;
 
+      // Initialize "What-If" Sliders
+      const gpSlider = document.getElementById('slider-gp');
+      const ppgSlider = document.getElementById('slider-ppg');
+      if (gpSlider && ppgSlider) {
+        gpSlider.value = p.gp;
+        ppgSlider.value = p.ppg;
+        runWhatIfSimulation();
+      }
+
       const isInCompare = comparePlayerRanks.includes(p.rank);
       const compareText = document.getElementById('modal-compare-text');
       if (isInCompare) {
@@ -1461,6 +1827,48 @@
       }
 
       document.getElementById('player-modal').classList.remove('hidden');
+    }
+
+    // --- "WHAT-IF" SIMULATION LOGIC ---
+    function runWhatIfSimulation() {
+      if (!inspectingPlayerBase) return;
+
+      const simGP = parseInt(document.getElementById('slider-gp').value, 10);
+      const simPPG = parseFloat(document.getElementById('slider-ppg').value);
+      const weights = SEASONS[activeSeason].weights;
+
+      document.getElementById('lbl-slider-gp').textContent = simGP;
+      document.getElementById('lbl-slider-ppg').textContent = simPPG.toFixed(1);
+
+      const gpImpact = (simGP * weights.gp);
+      const ppgImpact = (simPPG * weights.ppg);
+
+      document.getElementById('lbl-slider-gp-impact').textContent = `+${gpImpact.toFixed(2)} SS`;
+      document.getElementById('lbl-slider-ppg-impact').textContent = `+${ppgImpact.toFixed(2)} SS`;
+
+      // Compute simulated score
+      const simScore = (simPPG * weights.ppg) +
+                       (inspectingPlayerBase.rpg * weights.rpg) +
+                       (inspectingPlayerBase.apg * weights.apg) +
+                       (inspectingPlayerBase.spg * weights.spg) +
+                       (inspectingPlayerBase.bpg * weights.bpg) +
+                       (simGP * weights.gp);
+
+      const scoreDiff = simScore - inspectingPlayerBase.total;
+      const simScoreEl = document.getElementById('slider-sim-score');
+      simScoreEl.textContent = `${simScore.toFixed(2)} SS (${scoreDiff >= 0 ? '+' : ''}${scoreDiff.toFixed(2)})`;
+
+      const diffBadge = document.getElementById('slider-diff-badge');
+      if (Math.abs(scoreDiff) < 0.05) {
+        diffBadge.textContent = "Base Stats";
+        diffBadge.className = "text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-200 dark:bg-court-800 text-slate-500 font-bold";
+      } else if (scoreDiff > 0) {
+        diffBadge.textContent = `▲ +${scoreDiff.toFixed(2)} Boost`;
+        diffBadge.className = "text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold";
+      } else {
+        diffBadge.textContent = `▼ ${scoreDiff.toFixed(2)} Penalty`;
+        diffBadge.className = "text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-500 dark:text-rose-400 font-bold";
+      }
     }
 
     function closeModal() {
@@ -1499,12 +1907,12 @@
       if (isPlusUser) {
         comparePlayerRanks.forEach((rank, idx) => {
           html += `
-            <div class="bg-court-850 border border-court-border rounded-xl p-2.5 sm:p-3 relative">
+            <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3 relative">
               <div class="flex justify-between items-center mb-1.5">
-                <span class="text-[9px] text-amber-400 font-bold uppercase">Player ${idx + 1}</span>
-                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-500 hover:text-rose-400 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
+                <span class="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase">Player ${idx + 1}</span>
+                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-400 hover:text-rose-500 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
               </div>
-              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-court-800 border border-court-border rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400 font-mono">
+              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-amber-400 font-mono">
                 <option value="">+ Select Player</option>
                 ${masterData.map(p => `<option value="${p.rank}" ${rank === p.rank ? 'selected' : ''}>#${p.rank} ${p.name} (${p.team})</option>`).join('')}
               </select>
@@ -1514,9 +1922,9 @@
 
         if (comparePlayerRanks.length < 10) {
           html += `
-            <div onclick="addPlusComparisonSlot()" class="bg-court-850/60 hover:bg-court-800 border border-dashed border-court-border hover:border-amber-400/50 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center cursor-pointer transition-all min-h-[75px] group">
-              <span class="text-base text-amber-400 group-hover:scale-110 transition-transform">➕</span>
-              <span class="text-[10px] font-mono text-slate-400 group-hover:text-amber-300 font-bold mt-1">+ Add Slot (${comparePlayerRanks.length}/10)</span>
+            <div onclick="addPlusComparisonSlot()" class="bg-slate-50 dark:bg-court-850/60 hover:bg-slate-100 dark:hover:bg-court-800 border border-dashed border-slate-300 dark:border-court-border hover:border-amber-400/50 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center cursor-pointer transition-all min-h-[75px] group">
+              <span class="text-base text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform">➕</span>
+              <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 group-hover:text-amber-500 font-bold mt-1">+ Add Slot (${comparePlayerRanks.length}/10)</span>
             </div>
           `;
         }
@@ -1524,12 +1932,12 @@
         for (let idx = 0; idx < 3; idx++) {
           const rank = comparePlayerRanks[idx] || null;
           html += `
-            <div class="bg-court-850 border border-court-border rounded-xl p-2.5 sm:p-3 relative">
+            <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3 relative">
               <div class="flex justify-between items-center mb-1.5">
-                <span class="text-[9px] text-slate-400 font-bold uppercase">Player ${idx + 1}</span>
-                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-500 hover:text-rose-400 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
+                <span class="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase">Player ${idx + 1}</span>
+                <button onclick="clearCompareSlot(${idx})" class="text-[10px] text-slate-400 hover:text-rose-500 ${rank !== null ? '' : 'hidden'}">Remove ✕</button>
               </div>
-              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-court-800 border border-court-border rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-400 font-mono">
+              <select id="compare-select-${idx}" onchange="handleCompareSelect(${idx}, this.value)" class="w-full bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-teal-400 font-mono">
                 <option value="">+ Select Player</option>
                 ${masterData.map(p => `<option value="${p.rank}" ${rank === p.rank ? 'selected' : ''}>#${p.rank} ${p.name} (${p.team})</option>`).join('')}
               </select>
@@ -1538,16 +1946,16 @@
         }
 
         html += `
-          <div onclick="openPlusModal('slot4_lock')" class="bg-gradient-to-br from-amber-500/10 via-court-850 to-court-850 border border-amber-500/30 hover:border-amber-400 rounded-xl p-2.5 sm:p-3 relative cursor-pointer transition-all group">
+          <div onclick="openPlusModal('slot4_lock')" class="bg-gradient-to-br from-amber-500/10 via-slate-50 dark:via-court-850 to-slate-50 dark:to-court-850 border border-amber-500/30 hover:border-amber-400 rounded-xl p-2.5 sm:p-3 relative cursor-pointer transition-all group">
             <div class="flex justify-between items-center mb-1.5 font-mono">
-              <span class="text-[9px] text-amber-400 font-extrabold uppercase flex items-center gap-1">
+              <span class="text-[9px] text-amber-600 dark:text-amber-400 font-extrabold uppercase flex items-center gap-1">
                 <span>🔒</span> PLAYER 4-10
               </span>
               <span class="text-[8px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.2 rounded font-sans">PLUS</span>
             </div>
-            <div class="w-full bg-court-800/80 border border-amber-500/20 group-hover:border-amber-400 rounded-lg px-2 py-1.5 text-xs text-amber-200/80 flex items-center justify-between font-mono">
+            <div class="w-full bg-white dark:bg-court-800/80 border border-amber-500/20 group-hover:border-amber-400 rounded-lg px-2 py-1.5 text-xs text-amber-700 dark:text-amber-200/80 flex items-center justify-between font-mono">
               <span class="truncate">Unlock up to 10</span>
-              <span class="text-amber-400">⚡</span>
+              <span class="text-amber-500 dark:text-amber-400">⚡</span>
             </div>
           </div>
         `;
@@ -1646,7 +2054,7 @@
         table.innerHTML = `
           <tbody>
             <tr>
-              <td class="text-center py-16 text-slate-500 font-sans">
+              <td class="text-center py-16 text-slate-400 font-sans">
                 <span class="text-3xl block mb-2">⚔️</span>
                 Select players from the dropdowns above to compare stats head-to-head.
               </td>
@@ -1668,25 +2076,25 @@
 
       let html = `
         <thead>
-          <tr class="border-b border-court-border bg-court-850 text-slate-400">
+          <tr class="border-b border-slate-200 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-400">
             <th class="py-3 px-3 text-left w-36 min-w-[130px]">Metric</th>
             ${activePlayers.map(p => `
               <th class="py-3 px-3 text-right min-w-[130px]">
-                <div class="text-white font-extrabold text-sm truncate">${p.name}</div>
+                <div class="text-slate-900 dark:text-white font-extrabold text-sm truncate">${p.name}</div>
                 <div class="flex items-center justify-end gap-1.5 mt-0.5">
                   <span class="text-[10px] text-slate-400">#${p.rank}</span>
-                  <span class="px-1.5 py-0.2 rounded bg-court-800 text-[9px] text-slate-300 font-bold">${p.team}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-court-800 text-[9px] text-slate-700 dark:text-slate-300 font-bold">${p.team}</span>
                 </div>
               </th>
             `).join('')}
           </tr>
         </thead>
-        <tbody class="divide-y divide-court-border/40">
-          <tr class="bg-court-950/40">
-            <td class="py-2.5 px-3 text-slate-400 font-bold uppercase text-[10px]">Evaluated Role</td>
+        <tbody class="divide-y divide-slate-200 dark:divide-court-border/40">
+          <tr class="bg-slate-50 dark:bg-court-950/40">
+            <td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">Evaluated Role</td>
             ${activePlayers.map(p => `
               <td class="py-2.5 px-3 text-right">
-                <span class="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded leading-tight block truncate">
+                <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded leading-tight block truncate">
                   ${determinePlayerArchetype(p)}
                 </span>
               </td>
@@ -1698,8 +2106,8 @@
         const maxVal = Math.max(...activePlayers.map(p => p[cat.key]));
 
         html += `
-          <tr class="${cat.highlight ? 'bg-emerald-500/5' : 'hover:bg-court-800/40'}">
-            <td class="py-3 px-3 text-slate-300 font-bold ${cat.highlight ? 'text-emerald-400 font-extrabold text-sm' : ''}">
+          <tr class="${cat.highlight ? 'bg-emerald-500/5' : 'hover:bg-slate-50 dark:hover:bg-court-800/40'}">
+            <td class="py-3 px-3 text-slate-700 dark:text-slate-300 font-bold ${cat.highlight ? 'text-emerald-600 dark:text-emerald-400 font-extrabold text-sm' : ''}">
               ${cat.label}
             </td>
             ${activePlayers.map(p => {
@@ -1708,12 +2116,12 @@
               const weightSub = cat.weightKey ? `+${p[cat.weightKey].toFixed(2)} SS` : '';
 
               return `
-                <td class="py-3 px-3 text-right ${isWinner ? 'bg-emerald-500/15 font-bold text-emerald-300' : 'text-slate-200'}">
+                <td class="py-3 px-3 text-right ${isWinner ? 'bg-emerald-500/15 font-bold text-emerald-600 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200'}">
                   <div class="flex items-center justify-end gap-1.5">
-                    ${isWinner ? '<span class="text-[9px] text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold">👑 WIN</span>' : ''}
-                    <span class="${cat.highlight ? 'text-base font-black text-emerald-400' : 'text-sm font-bold'}">${cat.format(val)}</span>
+                    ${isWinner ? '<span class="text-[9px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold">👑 WIN</span>' : ''}
+                    <span class="${cat.highlight ? 'text-base font-black text-emerald-600 dark:text-emerald-400' : 'text-sm font-bold'}">${cat.format(val)}</span>
                   </div>
-                  ${weightSub ? `<div class="text-[9px] text-emerald-400/80 font-mono mt-0.5">${weightSub}</div>` : ''}
+                  ${weightSub ? `<div class="text-[9px] text-emerald-600 dark:text-emerald-400/80 font-mono mt-0.5">${weightSub}</div>` : ''}
                 </td>
               `;
             }).join('')}
@@ -1725,22 +2133,15 @@
       table.innerHTML = html;
     }
 
-    // --- VIRAL SOCIAL IMAGE EXPORT ENGINE (Fixed & Bulletproof) ---
+    // --- VIRAL SOCIAL IMAGE EXPORT ENGINE ---
     async function exportSinglePlayerCard() {
-      if (currentInspectingRank === null) {
-        alert("Please select a player to export.");
-        return;
-      }
+      if (currentInspectingRank === null) return;
       const p = masterData.find(player => player.rank === currentInspectingRank);
       if (!p) return;
 
       const template = document.getElementById('export-single-template');
-      if (!template) {
-        alert("Export template not found.");
-        return;
-      }
       
-      document.getElementById('export-season-label').textContent = `${activeSeason} • POWER LEADERBOARD`;
+      document.getElementById('export-season-label').textContent = `${SEASONS[activeSeason].label} • POWER LEADERBOARD`;
       document.getElementById('export-rank').textContent = `#${p.rank}`;
       document.getElementById('export-name').textContent = p.name;
       document.getElementById('export-team').textContent = p.team;
@@ -1788,11 +2189,18 @@
       document.getElementById('export-pct-ast').textContent = `${astPct}%`;
       document.getElementById('export-pct-def').textContent = `${defPct}%`;
 
+      const drivers = [
+        { name: "Scoring Volume", val: ptsPct },
+        { name: "Rebounding Control", val: rebPct },
+        { name: "Playmaking Engine", val: astPct },
+        { name: "Defensive Stocks", val: defPct }
+      ].sort((a,b) => b.val - a.val);
+      document.getElementById('export-driver').textContent = `Primary: ${drivers[0].name} (${drivers[0].val}%)`;
+
       try {
         const canvas = await html2canvas(template, {
           scale: 2,
           useCORS: true,
-          allowTaint: true,
           backgroundColor: '#070a11'
         });
 
@@ -1833,12 +2241,8 @@
       const p1 = activePlayers[0];
       const p2 = activePlayers[1];
       const template = document.getElementById('export-battle-template');
-      if (!template) {
-        alert("Battle template not found.");
-        return;
-      }
 
-      document.getElementById('battle-headline-sub').textContent = `${activeSeason} • HEAD-TO-HEAD BATTLE`;
+      document.getElementById('battle-headline-sub').textContent = `${SEASONS[activeSeason].label} • HEAD-TO-HEAD BATTLE`;
       document.getElementById('battle-quote-headline').textContent = `Look at ${p1.name}'s Schrift Score compared to ${p2.name}!`;
 
       document.getElementById('battle-p1-rank').textContent = `#${p1.rank} OVERALL`;
@@ -1911,7 +2315,6 @@
         const canvas = await html2canvas(template, {
           scale: 2,
           useCORS: true,
-          allowTaint: true,
           backgroundColor: '#070a11'
         });
 
@@ -1942,6 +2345,85 @@
       }
     }
 
+    async function exportRankingsView() {
+      const top10 = currentData.slice(0, 10);
+      if (top10.length === 0) return;
+
+      const template = document.getElementById('export-ranking-template');
+      document.getElementById('export-ranking-season').textContent = `${SEASONS[activeSeason].label} • TOP 10 POWER LEADERBOARD`;
+      
+      const now = new Date();
+      const options = { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" };
+      document.getElementById('export-ranking-timestamp').textContent = `Snapshot taken on ${now.toLocaleDateString("en-US", options)} • Auto-refreshed daily at 7:00 AM ET`;
+
+      const tableEl = document.getElementById('export-ranking-table');
+      tableEl.innerHTML = `
+        <thead>
+          <tr class="border-b border-court-border bg-court-850 text-slate-400 text-xs">
+            <th class="py-2.5 px-2 text-center w-12">Rk</th>
+            <th class="py-2.5 px-3 text-left">Player</th>
+            <th class="py-2.5 px-2 text-center w-16">Team</th>
+            <th class="py-2.5 px-3 text-right text-emerald-400 font-bold">SS Total</th>
+            <th class="py-2.5 px-2 text-right">PTS</th>
+            <th class="py-2.5 px-2 text-right">TRB</th>
+            <th class="py-2.5 px-2 text-right">AST</th>
+            <th class="py-2.5 px-2 text-right">STL</th>
+            <th class="py-2.5 px-2 text-right">BLK</th>
+            <th class="py-2.5 px-2 text-right">GP</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-court-border/40 text-xs">
+          ${top10.map(p => `
+            <tr class="hover:bg-court-800/40">
+              <td class="py-2.5 px-2 text-center font-bold text-white">${p.rank}</td>
+              <td class="py-2.5 px-3 font-semibold text-white">${p.name}</td>
+              <td class="py-2.5 px-2 text-center"><span class="px-1.5 py-0.5 rounded bg-court-800 text-[10px] text-slate-300 font-bold">${p.team}</span></td>
+              <td class="py-2.5 px-3 text-right font-black text-emerald-400 text-sm">${p.total.toFixed(2)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-200 font-bold">${p.ppg.toFixed(1)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-200 font-bold">${p.rpg.toFixed(1)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-200 font-bold">${p.apg.toFixed(1)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-200 font-bold">${p.spg.toFixed(1)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-200 font-bold">${p.bpg.toFixed(1)}</td>
+              <td class="py-2.5 px-2 text-right text-slate-400">${p.gp}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+
+      try {
+        const canvas = await html2canvas(template, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#070a11'
+        });
+
+        const fileName = `NBA_SchriftScore_${SEASONS[activeSeason].label.replace('/', '_')}_Top10.png`;
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: `NBA Schrift Score Top 10 Leaderboard (${SEASONS[activeSeason].label})`,
+                text: `Here is the current NBA Schrift Score Top 10 Leaderboard!\n\nView the full rankings: https://schriftscore.vercel.app/`,
+                files: [file]
+              });
+              return;
+            } catch (shareErr) {}
+          }
+
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, 'image/png');
+      } catch (err) {
+        console.error("Top 10 export failed:", err);
+        alert("Failed to generate leaderboard image. Please try again.");
+      }
+    }
+
     // --- PLUS PAYWALL MODAL LOGIC & STRIPE CHECKOUT ---
     function openPlusModal(triggerReason) {
       document.getElementById('plus-modal').classList.remove('hidden');
@@ -1964,10 +2446,10 @@
 
       if (planType === 'monthly') {
         mCard.className = "cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center transition-all";
-        aCard.className = "cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all relative";
+        aCard.className = "cursor-pointer border-2 border-slate-300 dark:border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-slate-50 dark:bg-court-850 text-center transition-all relative";
       } else {
-        aCard.className = "cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center transition-all relative";
-        mCard.className = "cursor-pointer border-2 border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-court-850 text-center transition-all";
+        aCard.className = "cursor-pointer border-2 border-amber-400 p-3 rounded-xl bg-amber-500/10 text-center relative transition-all";
+        mCard.className = "cursor-pointer border-2 border-slate-300 dark:border-court-border hover:border-amber-400/50 p-3 rounded-xl bg-slate-50 dark:bg-court-850 text-center transition-all";
       }
     }
 
@@ -1976,7 +2458,7 @@
       window.location.href = targetUrl;
     }
 
-    // --- STAT CALCULATOR HANDLERS (No 050 typing bug!) ---
+    // --- STAT CALCULATOR HANDLERS ---
     function toggleCalculator() {
       const drawer = document.getElementById('calc-drawer');
       drawer.classList.toggle('hidden');
@@ -2048,8 +2530,5 @@
 
     window.onload = init;
   </script>
-
-  <!-- Vercel Analytics -->
-  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </body>
 </html>
