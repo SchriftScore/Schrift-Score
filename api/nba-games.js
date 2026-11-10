@@ -3,8 +3,7 @@
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   const date = String(req.query?.date || '');
-  if (!/^\\d{8}$/.test(date)) return res.status(400).json({ error: 'Use date=YYYYMMDD.' });
-
+if (!/^\d{8}$/.test(date)) return res.status(400).json({ error: 'Use date=YYYYMMDD.' });
   const getJson = async (url) => {
     const response = await fetch(url, { headers: { 'User-Agent': 'SchriftScore/1.0' } });
     if (!response.ok) throw new Error(`Upstream returned HTTP ${response.status}`);
