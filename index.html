@@ -170,6 +170,8 @@
           <span>Stat Calculator</span>
         </button>
 
+        <button onclick="openDraftNight()" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-amber-500/30 transition-colors"><span>🏆</span><span>Draft Night</span></button>
+
         <div class="hidden md:flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-court-850 px-2.5 py-1.5 rounded-full border border-slate-300 dark:border-court-border">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span id="player-count">...</span>
@@ -192,14 +194,7 @@
           <span>🏀</span>
           <span>2026–27 Season (Live)</span>
         </button>
-        <button 
-          id="btn-season-2526" 
-          onclick="switchSeason('2025/26')" 
-          class="px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border flex items-center space-x-1.5 flex-shrink-0"
-        >
-          <span>📜</span>
-          <span>2025–26 Season (Archive)</span>
-        </button>
+        <span class="px-3.5 py-2 rounded-xl font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">2026–27 Season Only</span>
       </div>
 
       <!-- Trust Timestamp Badge -->
@@ -370,7 +365,6 @@
           <h2 class="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white font-sans">
             Yesterday's NBA Games (Nov 9, 2026) &amp; Schrift Scores
           </h2>
-          <span class="text-[9px] font-mono bg-slate-100 dark:bg-court-850 px-2 py-0.5 rounded text-slate-500 border border-slate-200 dark:border-court-border font-bold">Finals</span>
         </div>
         <span class="text-[10px] font-mono text-slate-400">Click a game to view box score</span>
       </div>
@@ -401,6 +395,9 @@
           <option value="ALL">All 30 Teams</option>
         </select>
         
+        <label class="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap px-2 py-2 rounded-xl border border-slate-300 dark:border-court-border bg-white dark:bg-court-900">
+          <input type="checkbox" id="rookies-only" onchange="applyFilters()" class="accent-emerald-500"> Rookies
+        </label>
         <button 
           id="reset-btn" 
           class="bg-slate-200 hover:bg-slate-300 dark:bg-court-800 dark:hover:bg-court-700 text-slate-700 dark:text-slate-300 text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-court-border transition-colors font-mono flex-shrink-0"
@@ -653,17 +650,17 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3 font-mono text-[10px]">
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-ppg" class="text-slate-500 dark:text-slate-400">Points (PTS)</label><input type="number" id="input-ppg" min="0" max="100" step="0.1" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('ppg',this.value)" onblur="normalizeWhatIfInput('ppg',this)"></div><input type="range" min="0" max="100" step="0.1" id="slider-ppg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-ppg-impact">+-- SS</div></div>
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-rpg" class="text-slate-500 dark:text-slate-400">Rebounds (REB)</label><input type="number" id="input-rpg" min="0" max="50" step="0.1" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('rpg',this.value)" onblur="normalizeWhatIfInput('rpg',this)"></div><input type="range" min="0" max="50" step="0.1" id="slider-rpg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-rpg-impact">+-- SS</div></div>
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-apg" class="text-slate-500 dark:text-slate-400">Assists (AST)</label><input type="number" id="input-apg" min="0" max="40" step="0.1" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('apg',this.value)" onblur="normalizeWhatIfInput('apg',this)"></div><input type="range" min="0" max="40" step="0.1" id="slider-apg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-apg-impact">+-- SS</div></div>
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-spg" class="text-slate-500 dark:text-slate-400">Steals (STL)</label><input type="number" id="input-spg" min="0" max="20" step="0.1" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('spg',this.value)" onblur="normalizeWhatIfInput('spg',this)"></div><input type="range" min="0" max="20" step="0.1" id="slider-spg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-spg-impact">+-- SS</div></div>
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-bpg" class="text-slate-500 dark:text-slate-400">Blocks (BLK)</label><input type="number" id="input-bpg" min="0" max="20" step="0.1" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('bpg',this.value)" onblur="normalizeWhatIfInput('bpg',this)"></div><input type="range" min="0" max="20" step="0.1" id="slider-bpg" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-bpg-impact">+-- SS</div></div>
-          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-gp" class="text-slate-500 dark:text-slate-400">Games Played (GP)</label><input type="number" id="input-gp" min="0" max="82" step="0.1" inputmode="decimal" class="w-32 sm:w-36 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('gp',this.value)" onblur="normalizeWhatIfInput('gp',this)"></div><input type="range" min="0" max="100" step="0.1" id="slider-gp" max="82" step="0.1" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-amber-500" id="lbl-slider-gp-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-ppg" class="text-slate-500 dark:text-slate-400">Points (PTS)</label><input type="number" id="input-ppg" min="0" max="100" step="0.1" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('ppg',this.value)" onblur="normalizeWhatIfInput('ppg',this)"></div><input type="range" min="0" max="100" step="0.1" id="slider-ppg" max="120" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-ppg-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-rpg" class="text-slate-500 dark:text-slate-400">Rebounds (REB)</label><input type="number" id="input-rpg" min="0" max="50" step="0.1" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('rpg',this.value)" onblur="normalizeWhatIfInput('rpg',this)"></div><input type="range" min="0" max="50" step="0.1" id="slider-rpg" max="60" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-rpg-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-apg" class="text-slate-500 dark:text-slate-400">Assists (AST)</label><input type="number" id="input-apg" min="0" max="40" step="0.1" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('apg',this.value)" onblur="normalizeWhatIfInput('apg',this)"></div><input type="range" min="0" max="40" step="0.1" id="slider-apg" max="50" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-apg-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-spg" class="text-slate-500 dark:text-slate-400">Steals (STL)</label><input type="number" id="input-spg" min="0" max="20" step="0.1" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('spg',this.value)" onblur="normalizeWhatIfInput('spg',this)"></div><input type="range" min="0" max="20" step="0.1" id="slider-spg" max="30" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-spg-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-bpg" class="text-slate-500 dark:text-slate-400">Blocks (BLK)</label><input type="number" id="input-bpg" min="0" max="20" step="0.1" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('bpg',this.value)" onblur="normalizeWhatIfInput('bpg',this)"></div><input type="range" min="0" max="20" step="0.1" id="slider-bpg" max="30" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-emerald-500" id="lbl-slider-bpg-impact">+-- SS</div></div>
+          <div class="min-w-0"><div class="flex items-center justify-between gap-2 mb-1"><label for="slider-gp" class="text-slate-500 dark:text-slate-400">Games Played (GP)</label><input type="number" id="input-gp" min="0" max="100" step="1" inputmode="numeric" class="w-28 sm:w-40 text-right rounded-md px-2 py-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border text-slate-900 dark:text-white" oninput="syncWhatIfInput('gp',this.value)" onblur="normalizeWhatIfInput('gp',this)"></div><input type="range" min="0" max="100" step="1" id="slider-gp" oninput="runWhatIfSimulation()" class="w-full accent-emerald-500 cursor-pointer"><div class="text-right text-amber-500" id="lbl-slider-gp-impact">+-- SS</div></div>
         </div>
 
         <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-court-border flex items-center justify-between text-[11px] font-mono">
           <span class="text-slate-500">Projected What-If Score:</span>
-          <span id="slider-sim-score" class="text-sm font-black text-emerald-600 dark:text-emerald-400">--</span>
+          <div class="text-right"><span id="slider-sim-score" class="text-sm font-black text-emerald-600 dark:text-emerald-400">--</span><div id="slider-live-rank" class="text-[10px] text-emerald-600 dark:text-emerald-300 font-bold mt-0.5">Projected leaderboard rank: --</div></div>
         </div>
       </div>
 
@@ -940,7 +937,7 @@
           <div>
             <span id="battle-p1-rank" class="text-xs text-slate-400 block font-bold">#1 OVERALL</span>
             <h3 id="battle-p1-name" class="text-xl font-black text-white">Player 1</h3>
-            <span id="battle-p1-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span>
+            <span id="battle-p1-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span><div id="battle-p1-breakdown" class="mt-2 w-full max-w-xs"><div class="h-2 rounded-full overflow-hidden flex bg-court-800"><span id="battle-p1-scoring" class="bg-emerald-400"></span><span id="battle-p1-rebounding" class="bg-sky-400"></span><span id="battle-p1-playmaking" class="bg-amber-400"></span><span id="battle-p1-defense" class="bg-violet-400"></span><span id="battle-p1-games" class="bg-slate-400"></span></div><div id="battle-p1-labels" class="text-[8px] text-slate-400 mt-1">Score composition</div></div>
           </div>
           <div class="text-right">
             <span class="text-[10px] text-slate-400 uppercase block font-bold">Schrift Score</span>
@@ -953,7 +950,7 @@
           <div>
             <span id="battle-p2-rank" class="text-xs text-slate-400 block font-bold">#2 OVERALL</span>
             <h3 id="battle-p2-name" class="text-xl font-black text-white">Player 2</h3>
-            <span id="battle-p2-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span>
+            <span id="battle-p2-team" class="text-xs font-bold px-2 py-0.5 rounded bg-court-800 text-slate-300 mt-1 inline-block">TEAM</span><div id="battle-p2-breakdown" class="mt-2 w-full max-w-xs"><div class="h-2 rounded-full overflow-hidden flex bg-court-800"><span id="battle-p2-scoring" class="bg-emerald-400"></span><span id="battle-p2-rebounding" class="bg-sky-400"></span><span id="battle-p2-playmaking" class="bg-amber-400"></span><span id="battle-p2-defense" class="bg-violet-400"></span><span id="battle-p2-games" class="bg-slate-400"></span></div><div id="battle-p2-labels" class="text-[8px] text-slate-400 mt-1">Score composition</div></div>
           </div>
           <div class="text-right">
             <span class="text-[10px] text-slate-400 uppercase block font-bold">Schrift Score</span>
@@ -1015,6 +1012,16 @@
           https://schriftscore.vercel.app/
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 2026-27 CURRENT-SEASON DRAFT NIGHT MODE -->
+  <div id="draft-night-modal" class="hidden fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6" onclick="if(event.target===this)closeDraftNight()">
+    <div class="bg-white dark:bg-court-900 border border-amber-500/30 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-3 mb-3"><div><h2 class="text-lg font-black text-slate-900 dark:text-white">🏆 Draft Night Mode</h2><p class="text-xs text-slate-500">2026–27 NBA player pool only · 12 rounds · you vs. AI manager</p></div><button onclick="closeDraftNight()" class="text-slate-400 text-xl">✕</button></div>
+      <div class="grid sm:grid-cols-2 gap-3 mb-4"><div class="bg-slate-50 dark:bg-court-850 rounded-xl p-3"><div class="font-bold text-sm">Your Team <span id="draft-user-score" class="text-emerald-500 float-right">0.00 SS</span></div><div id="draft-user-picks" class="text-xs text-slate-500 mt-2">No picks yet.</div></div><div class="bg-slate-50 dark:bg-court-850 rounded-xl p-3"><div class="font-bold text-sm">AI Manager <span id="draft-ai-score" class="text-amber-500 float-right">0.00 SS</span></div><div id="draft-ai-picks" class="text-xs text-slate-500 mt-2">Waiting for the first pick.</div></div></div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-3"><select id="draft-player-select" class="flex-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white"><option value="">Choose a player from the 2026–27 leaderboard</option></select><button id="draft-pick-btn" onclick="makeDraftPick()" class="bg-emerald-500 text-slate-950 font-bold rounded-lg px-4 py-2 text-sm">Make Your Pick</button><button onclick="resetDraftNight()" class="bg-slate-200 dark:bg-court-800 text-slate-700 dark:text-slate-200 rounded-lg px-4 py-2 text-sm">Restart Draft</button></div>
+      <div class="text-xs text-slate-500 mb-2" id="draft-status">You pick first. The AI manager selects the highest remaining Schrift Score player.</div><div id="draft-pick-log" class="space-y-1 text-xs font-mono"></div>
     </div>
   </div>
 
@@ -1080,18 +1087,102 @@
       faller: null
     };
 
-    // VERIFIED NOVEMBER 9, 2026 NBA FINALS. Scores and player lines are from Basketball-Reference daily leaders/game results.
-    // The expanded view shows the verified leading box-score line for each game; the source link opens the full B-Ref daily box-score index.
-    const yesterdayGames = [
-      { id:"game-1", awayTeam:"LAL", awayScore:124, homeTeam:"ATL", homeScore:114, mvp:"Luka Dončić", mvpLine:"32 PTS, 8 REB, 10 AST, 5 STL, 2 BLK", box:[{name:"Luka Dončić",tm:"LAL",pts:32,reb:8,ast:10,stl:5,blk:2}] },
-      { id:"game-2", awayTeam:"CLE", awayScore:112, homeTeam:"CHO", homeScore:124, mvp:"Grayson Allen", mvpLine:"27 PTS (game scoring leader)", box:[{name:"Grayson Allen",tm:"CHO",pts:27,reb:4,ast:6,stl:2,blk:0}] },
-      { id:"game-3", awayTeam:"IND", awayScore:122, homeTeam:"DAL", homeScore:125, mvp:"Cooper Flagg", mvpLine:"43 PTS, 10 REB, 6 AST, 3 STL, 1 BLK", box:[{name:"Cooper Flagg",tm:"DAL",pts:43,reb:10,ast:6,stl:3,blk:1},{name:"Pascal Siakam",tm:"IND",pts:29,reb:9,ast:8,stl:2,blk:0}] },
-      { id:"game-4", awayTeam:"WAS", awayScore:111, homeTeam:"DET", homeScore:122, mvp:"Anthony Davis", mvpLine:"44 PTS, 13 REB, 1 AST, 1 STL", box:[{name:"Anthony Davis",tm:"WAS",pts:44,reb:13,ast:1,stl:1,blk:0}] },
-      { id:"game-5", awayTeam:"NOP", awayScore:87, homeTeam:"GSW", homeScore:138, mvp:"Stephen Curry", mvpLine:"25 PTS (tied game-high)", box:[{name:"Stephen Curry",tm:"GSW",pts:25,reb:5,ast:2,stl:0,blk:0}] },
-      { id:"game-6", awayTeam:"DEN", awayScore:100, homeTeam:"HOU", homeScore:110, mvp:"Jamal Murray", mvpLine:"38 PTS, 2 REB, 2 AST, 1 STL, 2 BLK", box:[{name:"Jamal Murray",tm:"DEN",pts:38,reb:2,ast:2,stl:1,blk:2},{name:"Nikola Jokić",tm:"DEN",pts:25,reb:16,ast:9,stl:1,blk:2}] },
-      { id:"game-7", awayTeam:"SAS", awayScore:122, homeTeam:"PHO", homeScore:96, mvp:"Victor Wembanyama", mvpLine:"40 PTS, 11 REB, 3 AST, 9 BLK", box:[{name:"Victor Wembanyama",tm:"SAS",pts:40,reb:11,ast:3,stl:0,blk:9}] },
-      { id:"game-8", awayTeam:"MEM", awayScore:118, homeTeam:"TOR", homeScore:102, mvp:"Ty Jerome", mvpLine:"27 PTS (game scoring leader)", box:[{name:"Ty Jerome",tm:"MEM",pts:27,reb:null,ast:null,stl:null,blk:null}] }
-    ];
+    // 2026-27 daily game data is loaded from the ESPN scoreboard/box-score feed.
+    // Basketball-Reference day index is linked on every game for independent verification.
+    let yesterdayGames = [];
+    const GAME_WEIGHTS_2627 = { ppg:0.35, rpg:0.83, apg:1.14, spg:1.80, bpg:1.98, gp:0.04 };
+    const ROOKIE_NAMES_2627 = new Set([
+      "AJ Dybantsa","Darryn Peterson","Cameron Boozer","Caleb Wilson","Keaton Wagler","Mikel Brown Jr.","Darius Acuff Jr.","Kingston Flemings","Morez Johnson Jr.","Brayden Burries","Yaxel Lendeborg","Aday Mara","Nate Ament","Hannes Steinbach","Dailyn Swain","Bennett Stirtz","Christian Anderson Jr.","Karim Lopez","Labaron Philon Jr.","Cameron Carr","Meleek Thomas","Allen Graves","Jayden Quaintance","Zuby Ejiofor","Tarris Reed Jr.","Chris Cenac Jr.","Joshua Jefferson","Alex Karaban","Koa Peat","Bruce Thornton","Richie Saunders","Isaiah Evans","Trevon Brazile","Baba Miller","Ryan Conwell","Braden Smith","Dillon Mitchell","Otega Oweh","Ja'Kobi Gillespie","Tyler Bilodeau","Maliq Brown","Emanuel Sharp","Felix Okpara","Tobi Lawal","Jaden Bradley","Henri Veesaar","Ugonna Onyenso","Nick Martinelli","Jaron Pierre Jr.","Sergio de Larrea","Izaiyah Nelson","Tyler Nickel","Vsevolod Ishchenko","Narcisse Ngoy","Trey Kaufman-Renn","Malique Lewis","Jaden Akins","Jaron Pierre Jr.","Norchad Omier","Ernest Udeh Jr.","Carson Cooper","Nate Bittle","Ebuka Okorie","Bennett Stirtz","Josh Dix","Thomas Sorber","Graham Ike","Bogoljub Markovic","Malik Dia","Quadir Copeland","Yaxel Lendeborg"
+    ]);
+
+    // -------------------------------------------------------------
+    // 2026–27 DRAFT NIGHT MODE — fully interactive 12-round user vs AI draft
+    // -------------------------------------------------------------
+    let draftUserPicks = [];
+    let draftAiPicks = [];
+    let draftAvailablePlayers = [];
+    let draftRound = 1;
+    let draftFinished = false;
+
+    function getDraftPool() {
+      const source = (seasonsData['2026/27'] && seasonsData['2026/27'].length)
+        ? seasonsData['2026/27'] : (masterData || []);
+      return source.filter(p => p && p.name && Number.isFinite(Number(p.total)))
+        .map(p => ({...p, total:Number(p.total)}))
+        .sort((a,b)=>b.total-a.total);
+    }
+
+    function openDraftNight() {
+      const modal = document.getElementById('draft-night-modal');
+      if (!modal) { console.error('Draft Night modal element is missing'); return; }
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      if (!draftUserPicks.length && !draftAiPicks.length) resetDraftNight();
+      else renderDraftNight();
+    }
+
+    function closeDraftNight() {
+      const modal = document.getElementById('draft-night-modal');
+      if (modal) modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function resetDraftNight() {
+      draftUserPicks = [];
+      draftAiPicks = [];
+      draftAvailablePlayers = getDraftPool();
+      draftRound = 1;
+      draftFinished = false;
+      renderDraftNight();
+    }
+
+    function renderDraftNight() {
+      const userScore = draftUserPicks.reduce((sum,p)=>sum+Number(p.total||0),0);
+      const aiScore = draftAiPicks.reduce((sum,p)=>sum+Number(p.total||0),0);
+      const userScoreEl=document.getElementById('draft-user-score');
+      const aiScoreEl=document.getElementById('draft-ai-score');
+      const userPicksEl=document.getElementById('draft-user-picks');
+      const aiPicksEl=document.getElementById('draft-ai-picks');
+      const select=document.getElementById('draft-player-select');
+      const status=document.getElementById('draft-status');
+      const log=document.getElementById('draft-pick-log');
+      if(userScoreEl) userScoreEl.textContent=`${userScore.toFixed(2)} SS`;
+      if(aiScoreEl) aiScoreEl.textContent=`${aiScore.toFixed(2)} SS`;
+      if(userPicksEl) userPicksEl.innerHTML=draftUserPicks.length?draftUserPicks.map((p,i)=>`${i+1}. ${escapeDraftText(p.name)} <b>${Number(p.total).toFixed(2)}</b>`).join('<br>'):'No picks yet.';
+      if(aiPicksEl) aiPicksEl.innerHTML=draftAiPicks.length?draftAiPicks.map((p,i)=>`${i+1}. ${escapeDraftText(p.name)} <b>${Number(p.total).toFixed(2)}</b>`).join('<br>'):'Waiting for the first pick.';
+      if(select) {
+        const current=select.value;
+        select.innerHTML='<option value="">Choose a player from the 2026–27 leaderboard</option>'+draftAvailablePlayers.map(p=>`<option value="${escapeDraftText(p.name)}">${escapeDraftText(p.name)} — ${Number(p.total).toFixed(2)} SS</option>`).join('');
+        if(draftAvailablePlayers.some(p=>p.name===current)) select.value=current;
+      }
+      const pickButton=document.getElementById('draft-pick-btn');
+      if(pickButton) pickButton.disabled=draftFinished || draftUserPicks.length>=12 || !draftAvailablePlayers.length;
+      if(status) status.textContent=draftFinished?`Draft complete! ${userScore>aiScore?'You win!':userScore<aiScore?'AI Manager wins!':'It is a tie!'} Final team totals are based on 2026–27 Schrift Score.`:`Round ${draftUserPicks.length+1} of 12 — Your pick. The AI selects the highest remaining SS player after you.`;
+      if(log) log.innerHTML=[...draftUserPicks.map((p,i)=>({round:i+1,owner:'YOU',p})),...draftAiPicks.map((p,i)=>({round:i+1,owner:'AI',p}))].sort((a,b)=>a.round-b.round).map(x=>`<div class="flex justify-between gap-2 border-b border-slate-200 dark:border-court-border py-1"><span>Round ${x.round} · ${x.owner}: ${escapeDraftText(x.p.name)}</span><b>${Number(x.p.total).toFixed(2)} SS</b></div>`).join('');
+    }
+
+    function escapeDraftText(value) {
+      return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+
+    function makeDraftPick() {
+      if(draftFinished) return;
+      if(!draftAvailablePlayers.length) draftAvailablePlayers=getDraftPool();
+      const select=document.getElementById('draft-player-select');
+      const chosenName=select?.value;
+      const chosen=draftAvailablePlayers.find(p=>p.name===chosenName);
+      const status=document.getElementById('draft-status');
+      if(!chosen) { if(status) status.textContent='Select an available player before making your pick.'; return; }
+      draftUserPicks.push(chosen);
+      draftAvailablePlayers=draftAvailablePlayers.filter(p=>p.name!==chosen.name);
+      // AI takes the highest remaining 2026–27 Schrift Score player.
+      if(draftAvailablePlayers.length && draftAiPicks.length<12) {
+        const aiPick=draftAvailablePlayers.shift();
+        draftAiPicks.push(aiPick);
+      }
+      if(draftUserPicks.length>=12 || draftAiPicks.length>=12 || !draftAvailablePlayers.length) draftFinished=true;
+      renderDraftNight();
+    }
 
     // -------------------------------------------------------------
     // INITIALIZATION & THEME RESTORATION
@@ -1101,6 +1192,7 @@
       checkPlusMembershipStatus();
       updateLastUpdatedTimestamp();
       renderYesterdayGames();
+      await loadYesterdayGames();
       await loadSeasonData('2026/27');
 
       window.addEventListener('scroll', handleScroll);
@@ -1174,58 +1266,66 @@
       el.textContent = `Updated: ${dateStr} at 7:00 AM ET`;
     }
 
-    // --- RENDER VERIFIED YESTERDAY GAMES (NOV 9) ---
-    function renderYesterdayGames() {
+    // --- LIVE 2026-27 SCOREBOARD + COMPLETE BOX SCORES ---
+    function gameSchriftScore(p) {
+      const w = GAME_WEIGHTS_2627;
+      return p.pts*w.ppg + p.reb*w.rpg + p.ast*w.apg + p.stl*w.spg + p.blk*w.bpg + w.gp;
+    }
+    function dateKeyET(date) {
+      const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+      const get = t => parts.find(p=>p.type===t)?.value;
+      return `${get('year')}${get('month')}${get('day')}`;
+    }
+    async function loadYesterdayGames() {
+      const day = new Date(); day.setDate(day.getDate()-1);
+      const dateKey = dateKeyET(day);
+      const readable = day.toLocaleDateString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',year:'numeric'});
       const container = document.getElementById('yesterday-games-container');
-      if (!container) return;
-
-      container.innerHTML = yesterdayGames.map(g => `
-        <div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600 transition-all">
-          <div>
-            <div class="flex items-center justify-between text-[11px] font-bold text-slate-800 dark:text-slate-200 pb-1.5 border-b border-slate-200 dark:border-court-border">
-              <span class="flex items-center gap-1">
-                <span class="text-slate-500">${g.awayTeam}</span>
-                <span class="text-sm font-black text-slate-900 dark:text-white">${g.awayScore}</span>
-              </span>
-              <span class="text-[10px] text-slate-400 font-normal">@</span>
-              <span class="flex items-center gap-1">
-                <span class="text-sm font-black text-slate-900 dark:text-white">${g.homeScore}</span>
-                <span class="text-slate-500">${g.homeTeam}</span>
-              </span>
-            </div>
-
-            <div class="mt-2 text-[10px]">
-              <div class="flex items-center justify-between">
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold">MVP: ${g.mvp}</span>
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold">${g.mvpSS ? g.mvpSS.toFixed(2) + " SS" : "Box-score leader"}</span>
-              </div>
-              <div class="text-[9px] text-slate-500 truncate mt-0.5">${g.mvpLine}</div>
-            </div>
-          </div>
-
-          <div class="mt-2.5 pt-1.5 border-t border-slate-200 dark:border-court-border/70">
-            <button onclick="toggleGameBox('${g.id}')" class="text-[9px] text-slate-500 hover:text-emerald-500 flex items-center justify-between w-full font-bold">
-              <span>Box Score ▾</span>
-              <span class="text-[8px] bg-slate-200 dark:bg-court-800 px-1 py-0.2 rounded text-slate-600 dark:text-slate-300">${g.box.length} Players</span>
-            </button>
-            <div id="${g.id}-box" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-court-border/50 space-y-1">
-              ${g.box.map(p => `
-                <div class="flex items-center justify-between text-[9px] text-slate-600 dark:text-slate-300">
-                  <span class="truncate pr-1">${p.name} <span class="text-slate-400">(${p.tm})</span></span>
-                  <span class="font-bold text-slate-600 dark:text-slate-300">${p.pts} PTS · ${p.reb ?? "—"} REB · ${p.ast ?? "—"} AST · ${p.stl ?? "—"} STL · ${p.blk ?? "—"} BLK</span>
-                </div>
-              `).join('')}
-            </div>
-            <a href="https://www.basketball-reference.com/boxscores/index.fcgi" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-[9px] text-emerald-600 dark:text-emerald-400 hover:underline">Basketball-Reference box scores ↗</a>
-          </div>
-        </div>
-      `).join('');
+      const heading = container?.closest('section')?.querySelector('h2');
+      if (heading) heading.textContent = `Yesterday's NBA Games (${readable}) · 2026–27 Schrift Scores`;
+      if (container) container.innerHTML = '<div class="col-span-full text-center text-slate-500 py-6">Loading verified 2026–27 game results and box scores…</div>';
+      try {
+        // Vercel serverless endpoint avoids browser CORS failures and unreliable public CORS proxies.
+        const response = await fetch(`/api/nba-games?date=${dateKey}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`NBA data endpoint returned HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload || !Array.isArray(payload.games) || !payload.games.length) throw new Error(payload?.error || `No completed games returned for ${dateKey}`);
+        yesterdayGames = payload.games.map((g, idx) => ({
+          ...g,
+          id: `live-game-${idx}`,
+          box: (g.box || []).map(p => ({...p, ss: gameSchriftScore(p)})).sort((a,b)=>b.ss-a.ss),
+        }));
+        yesterdayGames.forEach(g => { g.mvp = g.box[0] || null; g.mvpLine = g.mvp ? `${g.mvp.pts} PTS, ${g.mvp.reb} REB, ${g.mvp.ast} AST, ${g.mvp.stl} STL, ${g.mvp.blk} BLK` : 'Box score unavailable'; });
+        renderYesterdayGames();
+        updateDailyBestFromGames();
+      } catch(err) {
+        console.error('2026-27 game feed failed',err);
+        if (container) container.innerHTML = `<div class="col-span-full text-center text-rose-500 py-6">Game data couldn't be loaded. Check that the Vercel <code>/api/nba-games</code> endpoint has been added and deployed. <button onclick="loadYesterdayGames()" class="underline ml-1">Try again</button><div class="mt-2"><a class="text-emerald-500 underline" target="_blank" rel="noopener" href="https://www.basketball-reference.com/boxscores/index.fcgi?month=${day.getMonth()+1}&day=${day.getDate()}&year=${day.getFullYear()}">Open Basketball-Reference results for ${readable}</a></div></div>`;
+      }
     }
-
-    function toggleGameBox(gameId) {
-      const box = document.getElementById(`${gameId}-box`);
-      if (box) box.classList.toggle('hidden');
+    function updateDailyBestFromGames() {
+      if (!yesterdayGames.length) return;
+      const best = yesterdayGames.flatMap(g=>g.box.map(p=>({...p,game:g}))).sort((a,b)=>b.ss-a.ss)[0];
+      if (!best) return;
+      highlightPlayers.bestYesterday = masterData.find(p=>p.name.toLowerCase()===best.name.toLowerCase()) || null;
+      const nameEl=document.getElementById('stat-best-yesterday');
+      const valEl=document.getElementById('stat-best-yesterday-val');
+      if(nameEl) nameEl.textContent=best.name;
+      if(valEl) valEl.textContent=`${best.ss.toFixed(2)} SS · ${best.pts} PTS, ${best.reb} REB, ${best.ast} AST, ${best.stl} STL, ${best.blk} BLK`;
     }
+    function renderYesterdayGames() {
+      const container=document.getElementById('yesterday-games-container'); if(!container)return;
+      if(!yesterdayGames.length){container.innerHTML='<div class="col-span-full text-center text-slate-500 py-4">No completed 2026–27 games found for yesterday.</div>';return;}
+      container.innerHTML=yesterdayGames.map(g=>{
+        const m=g.mvp;
+        const bref=`https://www.basketball-reference.com/boxscores/index.fcgi?month=${Number(g.dateKey.slice(4,6))}&day=${Number(g.dateKey.slice(6,8))}&year=${g.dateKey.slice(0,4)}`;
+        return `<div class="bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-xl p-2.5 sm:p-3 flex flex-col justify-between">
+          <div><div class="flex items-center justify-between text-[11px] font-bold pb-1.5 border-b border-slate-200 dark:border-court-border"><span>${g.awayTeam} <b class="text-sm">${g.awayScore}</b></span><span class="text-slate-400 font-normal">@</span><span><b class="text-sm">${g.homeScore}</b> ${g.homeTeam}</span></div>
+          <div class="mt-2 text-[10px]"><div class="flex justify-between gap-2"><span class="text-emerald-600 dark:text-emerald-400 font-bold">MVP: ${m?m.name:'Unavailable'}</span><span class="font-bold text-emerald-600 dark:text-emerald-400">${m?m.ss.toFixed(2)+' SS':'—'}</span></div><div class="text-[9px] text-slate-500 mt-0.5">${m?`${m.pts} PTS · ${m.reb} REB · ${m.ast} AST · ${m.stl} STL · ${m.blk} BLK`:'Complete box score unavailable'}</div><div class="text-[8px] text-slate-400 mt-0.5">MVP = highest single-game 2026–27 Schrift Score</div></div></div>
+          <div class="mt-2.5 pt-1.5 border-t border-slate-200 dark:border-court-border/70"><button onclick="toggleGameBox('${g.id}')" class="text-[9px] text-slate-500 hover:text-emerald-500 flex items-center justify-between w-full font-bold"><span>Full Box Score ▾</span><span>${g.box.length} players</span></button><div id="${g.id}-box" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-court-border/50 space-y-1 max-h-56 overflow-y-auto">${g.box.map(p=>`<div class="grid grid-cols-[1fr_auto] gap-2 text-[9px] text-slate-600 dark:text-slate-300"><span>${p.name} (${p.tm})</span><b class="text-right">${p.pts} PTS · ${p.reb} REB · ${p.ast} AST · ${p.stl} STL · ${p.blk} BLK · ${p.ss.toFixed(2)} SS</b></div>`).join('')}</div><a href="${bref}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-[9px] text-emerald-600 dark:text-emerald-400 hover:underline">Basketball-Reference game results ↗</a></div></div>`;
+      }).join('');
+    }
+    function toggleGameBox(gameId){const box=document.getElementById(`${gameId}-box`);if(box)box.classList.toggle('hidden');}
 
     // Fetch the current 2026/27 leaderboard from the deployed Apps Script Web App.
     // JSONP is used because Google Apps Script ContentService responses can be blocked by browser CORS.
@@ -1293,11 +1393,11 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
+        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
       } else {
-        btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
+        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
       }
 
       document.getElementById('season-badge').textContent = cfg.badgeText;
@@ -1382,7 +1482,7 @@
     }
 
     function switchSeason(seasonKey) {
-      if (seasonKey === activeSeason) return;
+      if (seasonKey !== '2026/27' || seasonKey === activeSeason) return;
       document.getElementById('search-input').value = "";
       loadSeasonData(seasonKey);
     }
@@ -1499,22 +1599,8 @@
       document.getElementById('stat-leader').textContent = leader.name;
       document.getElementById('stat-leader-score').textContent = `${leader.total.toFixed(2)} Total (${leader.team})`;
 
-      // Best single-game Schrift Score from verified Nov. 9 B-Ref box-score leaders.
-      // Current 2026/27 weights: PTS .35, REB .83, AST 1.14, STL 1.80, BLK 1.98, GP .04 (one game).
-      const dailyWeights = SEASONS['2026/27'].weights;
-      const dailyLeaders = [
-        {name:"Victor Wembanyama",team:"SAS",pts:40,reb:11,ast:3,stl:0,blk:9},
-        {name:"Anthony Davis",team:"WAS",pts:44,reb:13,ast:1,stl:1,blk:0},
-        {name:"Cooper Flagg",team:"DAL",pts:43,reb:10,ast:6,stl:3,blk:1},
-        {name:"Jamal Murray",team:"DEN",pts:38,reb:2,ast:2,stl:1,blk:2},
-        {name:"Luka Dončić",team:"LAL",pts:32,reb:8,ast:10,stl:5,blk:2},
-        {name:"Pascal Siakam",team:"IND",pts:29,reb:9,ast:8,stl:2,blk:0},
-        {name:"Nikola Jokić",team:"DEN",pts:25,reb:16,ast:9,stl:1,blk:2}
-      ].map(p => ({...p, score:p.pts*dailyWeights.ppg+p.reb*dailyWeights.rpg+p.ast*dailyWeights.apg+p.stl*dailyWeights.spg+p.blk*dailyWeights.bpg+dailyWeights.gp})).sort((a,b)=>b.score-a.score);
-      const dailyBest = dailyLeaders[0];
-      highlightPlayers.bestYesterday = masterData.find(p => p.name === dailyBest.name) || leader;
-      document.getElementById('stat-best-yesterday').textContent = dailyBest.name;
-      document.getElementById('stat-best-yesterday-val').textContent = `${dailyBest.score.toFixed(2)} SS • ${dailyBest.pts} PTS, ${dailyBest.reb} REB, ${dailyBest.ast} AST, ${dailyBest.blk} BLK (${dailyBest.team})`;
+      // Best Yesterday is calculated from the complete live 2026-27 box scores.
+      updateDailyBestFromGames();
 
       const topScorer = [...masterData].sort((a,b) => b.ppg - a.ppg)[0];
       highlightPlayers.scorer = topScorer;
@@ -1656,10 +1742,12 @@
       const q = document.getElementById('search-input').value.toLowerCase().trim();
       const team = document.getElementById('team-select').value;
 
+      const rookiesOnly = document.getElementById('rookies-only')?.checked || false;
       currentData = masterData.filter(p => {
-        const matchesQuery = p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q);
+        const matchesQuery = !q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q);
         const matchesTeam = (team === "ALL") || (p.team === team);
-        return matchesQuery && matchesTeam;
+        const isRookie = ROOKIE_NAMES_2627.has(p.name);
+        return matchesQuery && matchesTeam && (!rookiesOnly || isRookie);
       });
 
       renderTable();
@@ -1670,6 +1758,7 @@
     document.getElementById('reset-btn').addEventListener('click', () => {
       document.getElementById('search-input').value = "";
       document.getElementById('team-select').value = "ALL";
+      const rookieToggle=document.getElementById('rookies-only'); if(rookieToggle) rookieToggle.checked=false;
       currentData = [...masterData];
       renderTable();
     });
@@ -1844,7 +1933,7 @@
       ['ppg','rpg','apg','spg','bpg','gp'].forEach(key => {
         const slider = document.getElementById(`slider-${key}`);
         const input = document.getElementById(`input-${key}`);
-        if (slider && input) { slider.value = p[key]; input.value = Number(p[key]).toFixed(1); }
+        if (slider && input) { slider.value = key === 'gp' ? Math.round(Number(p[key])) : p[key]; input.value = key === 'gp' ? String(Math.round(Number(p[key]))) : Number(p[key]).toFixed(1); }
       });
       runWhatIfSimulation();
 
@@ -1870,7 +1959,7 @@
       const min = Number(slider.min || 0);
       const max = Number(slider.max || 100);
       const clamped = Math.max(min, Math.min(max, value));
-      slider.value = Math.round(clamped * 10) / 10;
+      slider.value = key === 'gp' ? Math.round(clamped) : Math.round(clamped * 10) / 10;
       runWhatIfSimulation();
     }
 
@@ -1883,9 +1972,9 @@
       const min = Number(slider.min || 0);
       const max = Number(slider.max || 100);
       const safe = Number.isFinite(current) ? Math.max(min, Math.min(max, current)) : Number(slider.value || 0);
-      const rounded = Math.round(safe * 10) / 10;
+      const rounded = key === 'gp' ? Math.round(safe) : Math.round(safe * 10) / 10;
       slider.value = rounded;
-      input.value = rounded.toFixed(1);
+      input.value = key === 'gp' ? String(rounded) : rounded.toFixed(1);
       runWhatIfSimulation();
     }
 
@@ -1898,15 +1987,18 @@
         const slider = document.getElementById(`slider-${key}`);
         const input = document.getElementById(`input-${key}`);
         values[key] = slider ? parseFloat(slider.value) || 0 : (inspectingPlayerBase[key] || 0);
-        if (input && document.activeElement !== input) input.value = values[key].toFixed(1);
+        if (input && document.activeElement !== input) input.value = key === 'gp' ? String(Math.round(values[key])) : values[key].toFixed(1);
         const label = document.getElementById(`lbl-slider-${key}`);
-        if (label) label.textContent = values[key].toFixed(1);
+        if (label) label.textContent = key === 'gp' ? String(Math.round(values[key])) : values[key].toFixed(1);
         const impact = document.getElementById(`lbl-slider-${key}-impact`);
         if (impact) impact.textContent = `+${(values[key] * weights[key]).toFixed(2)} SS`;
       });
       const simScore = keys.reduce((sum,key) => sum + values[key] * weights[key], 0);
       const scoreDiff = simScore - inspectingPlayerBase.total;
       document.getElementById('slider-sim-score').textContent = `${simScore.toFixed(2)} SS (${scoreDiff >= 0 ? '+' : ''}${scoreDiff.toFixed(2)})`;
+      const projectedRank = 1 + masterData.filter(player => player.total > simScore).length;
+      const rankEl = document.getElementById('slider-live-rank');
+      if (rankEl) rankEl.textContent = `This score would rank #${projectedRank} of ${masterData.length} on the live 2026–27 leaderboard`;
       const diffBadge = document.getElementById('slider-diff-badge');
       if (Math.abs(scoreDiff) < 0.05) {
         diffBadge.textContent = 'Base Stats';
@@ -2303,6 +2395,14 @@
       document.getElementById('battle-p2-name').textContent = p2.name;
       document.getElementById('battle-p2-team').textContent = p2.team;
       document.getElementById('battle-p2-score').textContent = p2.total.toFixed(2);
+      const setBattleBreakdown = (prefix,p) => {
+        const parts=[['scoring',p.ssPpg],['rebounding',p.ssRpg],['playmaking',p.ssApg],['defense',p.ssSpg+p.ssBpg],['games',p.ssGp]];
+        const total=parts.reduce((sum,x)=>sum+Math.max(0,x[1]),0)||1;
+        parts.forEach(([key,val])=>{const el=document.getElementById(`${prefix}-${key}`);if(el)el.style.width=`${Math.max(0,val)/total*100}%`;});
+        const labels=parts.map(([key,val])=>`${key[0].toUpperCase()+key.slice(1)} ${Math.round(Math.max(0,val)/total*100)}%`).join(' · ');
+        const labelEl=document.getElementById(`${prefix}-labels`);if(labelEl)labelEl.textContent=labels;
+      };
+      setBattleBreakdown('battle-p1',p1); setBattleBreakdown('battle-p2',p2);
 
       const diff = Math.abs(p1.total - p2.total).toFixed(2);
       if (p1.total >= p2.total) {
@@ -2485,6 +2585,7 @@
     function handlePlusBackdropClick(event) {
       if (event.target.id === 'plus-modal') {
         closePlusModal();
+        closeDraftNight();
       }
     }
 
