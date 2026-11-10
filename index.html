@@ -1015,13 +1015,242 @@
     </div>
   </div>
 
-  <!-- 2026-27 CURRENT-SEASON DRAFT NIGHT MODE -->
-  <div id="draft-night-modal" class="hidden fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6" onclick="if(event.target===this)closeDraftNight()">
-    <div class="bg-white dark:bg-court-900 border border-amber-500/30 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-court-border pb-3 mb-3"><div><h2 class="text-lg font-black text-slate-900 dark:text-white">🏆 Draft Night Mode</h2><p class="text-xs text-slate-500">2026–27 NBA player pool only · 12 rounds · you vs. AI manager</p></div><button onclick="closeDraftNight()" class="text-slate-400 text-xl">✕</button></div>
-      <div class="grid sm:grid-cols-2 gap-3 mb-4"><div class="bg-slate-50 dark:bg-court-850 rounded-xl p-3"><div class="font-bold text-sm">Your Team <span id="draft-user-score" class="text-emerald-500 float-right">0.00 SS</span></div><div id="draft-user-picks" class="text-xs text-slate-500 mt-2">No picks yet.</div></div><div class="bg-slate-50 dark:bg-court-850 rounded-xl p-3"><div class="font-bold text-sm">AI Manager <span id="draft-ai-score" class="text-amber-500 float-right">0.00 SS</span></div><div id="draft-ai-picks" class="text-xs text-slate-500 mt-2">Waiting for the first pick.</div></div></div>
-      <div class="flex flex-col sm:flex-row gap-2 mb-3"><select id="draft-player-select" class="flex-1 bg-white dark:bg-court-800 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white"><option value="">Choose a player from the 2026–27 leaderboard</option></select><button id="draft-pick-btn" onclick="makeDraftPick()" class="bg-emerald-500 text-slate-950 font-bold rounded-lg px-4 py-2 text-sm">Make Your Pick</button><button onclick="resetDraftNight()" class="bg-slate-200 dark:bg-court-800 text-slate-700 dark:text-slate-200 rounded-lg px-4 py-2 text-sm">Restart Draft</button></div>
-      <div class="text-xs text-slate-500 mb-2" id="draft-status">You pick first. The AI manager selects the highest remaining Schrift Score player.</div><div id="draft-pick-log" class="space-y-1 text-xs font-mono"></div>
+  <!-- 2026-27 DRAFT NIGHT — FULL REBUILD -->
+  <div id="draft-night-modal" class="hidden fixed inset-0 z-[70] bg-black/90 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-3" onclick="if(event.target===this)closeDraftNight()">
+    <div class="bg-court-950 border border-amber-500/30 rounded-2xl w-full max-w-7xl max-h-[96vh] overflow-hidden shadow-2xl flex flex-col text-slate-100">
+
+      <!-- ===== SETUP SCREEN ===== -->
+      <div id="draft-setup-screen" class="flex flex-col h-full">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-court-border">
+          <div>
+            <h2 class="text-xl font-black tracking-tight">🏆 Draft Night</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Build a 12-man roster. Beat the AI. Pure 2026–27 Schrift Score.</p>
+          </div>
+          <button onclick="closeDraftNight()" class="text-slate-400 hover:text-white text-2xl leading-none p-1">✕</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-5 sm:p-8">
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div>
+              <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">AI Difficulty</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="setDraftDifficulty('casual')" id="diff-casual" class="draft-diff-btn py-3 px-2 rounded-xl border-2 border-slate-600 bg-court-900 text-center transition-all">
+                  <div class="text-lg">😌</div>
+                  <div class="text-sm font-bold mt-1">Casual</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">Pure BPA</div>
+                </button>
+                <button onclick="setDraftDifficulty('competitive')" id="diff-competitive" class="draft-diff-btn py-3 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-center transition-all">
+                  <div class="text-lg">🔥</div>
+                  <div class="text-sm font-bold mt-1">Competitive</div>
+                  <div class="text-[10px] text-amber-300/80 mt-0.5">Needs + Value</div>
+                </button>
+                <button onclick="setDraftDifficulty('elite')" id="diff-elite" class="draft-diff-btn py-3 px-2 rounded-xl border-2 border-slate-600 bg-court-900 text-center transition-all">
+                  <div class="text-lg">🧠</div>
+                  <div class="text-sm font-bold mt-1">Elite</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">Scarcity + Anti-stack</div>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">Who Picks First?</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="setDraftOrder('user')" id="order-user" class="draft-order-btn py-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 font-bold text-sm">You</button>
+                <button onclick="setDraftOrder('ai')" id="order-ai" class="draft-order-btn py-2.5 rounded-xl border-2 border-slate-600 bg-court-900 font-bold text-sm">AI</button>
+                <button onclick="setDraftOrder('random')" id="order-random" class="draft-order-btn py-2.5 rounded-xl border-2 border-slate-600 bg-court-900 font-bold text-sm">Random</button>
+              </div>
+            </div>
+            <div class="bg-court-900 border border-court-border rounded-xl p-4">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">How it works</div>
+              <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                <li>• 12 rounds · snake draft (picks reverse every round)</li>
+                <li>• Score = sum of each player’s live 2026–27 Schrift Score</li>
+                <li>• AI difficulty changes how aggressively it fills needs and avoids stacking</li>
+                <li>• Highest total SS at the end wins</li>
+              </ul>
+            </div>
+            <button onclick="startDraftNight()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-base shadow-lg shadow-amber-500/20 transition-all">
+              Start Draft Night →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LIVE DRAFT SCREEN ===== -->
+      <div id="draft-live-screen" class="hidden flex flex-col h-full min-h-0">
+        <!-- Top bar -->
+        <div class="flex items-center justify-between gap-3 px-3 sm:px-5 py-2.5 border-b border-court-border bg-court-900/80 flex-shrink-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-base sm:text-lg">🏆</span>
+            <div class="min-w-0">
+              <div class="text-sm font-black truncate">Draft Night</div>
+              <div id="draft-live-sub" class="text-[10px] text-slate-400 truncate">Competitive · You first</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div id="draft-on-clock" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="draft-clock-text">Your pick</span>
+            </div>
+            <span id="draft-round-badge" class="text-[10px] sm:text-xs font-mono font-bold px-2 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">R1 · Pick 1</span>
+            <button onclick="closeDraftNight()" class="text-slate-400 hover:text-white text-xl leading-none p-1">✕</button>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="h-1 bg-court-800 flex-shrink-0">
+          <div id="draft-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 transition-all duration-500" style="width:0%"></div>
+        </div>
+
+        <!-- Score strip -->
+        <div class="flex items-center justify-between gap-3 px-3 sm:px-5 py-2 bg-court-900 border-b border-court-border flex-shrink-0 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">YOU</span>
+            <span id="draft-user-score" class="text-lg font-black text-emerald-400">0.00</span>
+            <span id="draft-user-count" class="text-slate-500">0/12</span>
+          </div>
+          <div id="draft-score-diff" class="text-slate-400 text-[11px]">—</div>
+          <div class="flex items-center gap-2">
+            <span id="draft-ai-count" class="text-slate-500">0/12</span>
+            <span id="draft-ai-score" class="text-lg font-black text-amber-400">0.00</span>
+            <span class="text-amber-400 font-bold">AI</span>
+          </div>
+        </div>
+
+        <!-- Main 3-column body -->
+        <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+
+          <!-- LEFT: Available Players -->
+          <div class="lg:col-span-4 border-r border-court-border flex flex-col min-h-0 max-h-[38vh] lg:max-h-none">
+            <div class="p-2.5 sm:p-3 border-b border-court-border space-y-2 flex-shrink-0">
+              <div class="flex items-center gap-2">
+                <input type="text" id="draft-search" placeholder="Search player / team..." oninput="filterDraftPool()"
+                  class="flex-1 bg-court-850 border border-court-border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                <span id="draft-pool-count" class="text-[10px] text-slate-500 font-mono whitespace-nowrap">—</span>
+              </div>
+              <div class="flex flex-wrap gap-1">
+                <button onclick="setDraftPoolFilter('all')" data-filter="all" class="draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-slate-950">All</button>
+                <button onclick="setDraftPoolFilter('tier1')" data-filter="tier1" class="draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono bg-court-800 text-slate-300">MVP Tier</button>
+                <button onclick="setDraftPoolFilter('tier2')" data-filter="tier2" class="draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono bg-court-800 text-slate-300">All-NBA</button>
+                <button onclick="setDraftPoolFilter('tier3')" data-filter="tier3" class="draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono bg-court-800 text-slate-300">All-Star</button>
+                <button onclick="setDraftPoolFilter('rest')" data-filter="rest" class="draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono bg-court-800 text-slate-300">Depth</button>
+              </div>
+            </div>
+            <div id="draft-player-list" class="flex-1 overflow-y-auto p-1.5 space-y-0.5 smooth-scroll"></div>
+            <div class="p-2 border-t border-court-border flex gap-1.5 flex-shrink-0">
+              <button id="draft-pick-btn" onclick="makeDraftPick()" disabled
+                class="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:bg-court-800 disabled:text-slate-600 text-slate-950 font-black rounded-lg px-2 py-2 text-xs transition-colors">
+                Select a player
+              </button>
+              <button id="draft-auto-btn" onclick="autoPickBest()" title="Auto best available"
+                class="bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 font-bold rounded-lg px-2.5 py-2 text-[10px]">
+                BPA
+              </button>
+            </div>
+          </div>
+
+          <!-- CENTER: Boards + Log -->
+          <div class="lg:col-span-5 flex flex-col min-h-0 border-r border-court-border overflow-hidden">
+            <!-- Team boards -->
+            <div class="grid grid-cols-2 gap-px bg-court-border flex-shrink-0">
+              <div class="bg-court-900 p-2.5">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-bold text-emerald-400">YOUR ROSTER</span>
+                  <span id="draft-user-needs" class="text-[9px] text-slate-500 font-mono truncate max-w-[55%]"></span>
+                </div>
+                <div id="draft-user-picks" class="space-y-0.5 max-h-[22vh] lg:max-h-[28vh] overflow-y-auto text-[11px] font-mono"></div>
+              </div>
+              <div class="bg-court-900 p-2.5">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-bold text-amber-400">AI ROSTER</span>
+                  <span id="draft-ai-needs" class="text-[9px] text-slate-500 font-mono truncate max-w-[55%]"></span>
+                </div>
+                <div id="draft-ai-picks" class="space-y-0.5 max-h-[22vh] lg:max-h-[28vh] overflow-y-auto text-[11px] font-mono"></div>
+              </div>
+            </div>
+            <!-- Category bars -->
+            <div id="draft-category-compare" class="hidden px-2.5 py-2 border-b border-court-border flex-shrink-0">
+              <div id="draft-cat-bars" class="space-y-1 text-[9px] font-mono"></div>
+            </div>
+            <!-- Pick feed -->
+            <div class="flex-1 min-h-0 flex flex-col p-2">
+              <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pick Feed</div>
+              <div id="draft-pick-log" class="flex-1 overflow-y-auto space-y-0.5 text-[11px] font-mono smooth-scroll"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Selected player preview / tips -->
+          <div class="lg:col-span-3 flex flex-col min-h-0 bg-court-900/50 overflow-y-auto">
+            <div id="draft-preview-empty" class="flex-1 flex flex-col items-center justify-center p-4 text-center text-slate-500">
+              <div class="text-3xl mb-2 opacity-40">👆</div>
+              <div class="text-xs">Select a player from the list to preview</div>
+            </div>
+            <div id="draft-preview-card" class="hidden p-3 sm:p-4 space-y-3">
+              <div>
+                <div id="preview-name" class="text-lg font-black text-white leading-tight"></div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span id="preview-team" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-court-800 text-slate-300"></span>
+                  <span id="preview-rank" class="text-[10px] font-mono text-slate-400"></span>
+                </div>
+              </div>
+              <div class="text-center py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                <div class="text-[10px] text-emerald-400/80 uppercase tracking-wider">Schrift Score</div>
+                <div id="preview-ss" class="text-3xl font-black text-emerald-400"></div>
+              </div>
+              <div class="grid grid-cols-5 gap-1 text-center text-[10px] font-mono">
+                <div class="bg-court-850 rounded-lg py-1.5"><div class="text-slate-500">PTS</div><div id="preview-ppg" class="font-bold text-white"></div></div>
+                <div class="bg-court-850 rounded-lg py-1.5"><div class="text-slate-500">REB</div><div id="preview-rpg" class="font-bold text-white"></div></div>
+                <div class="bg-court-850 rounded-lg py-1.5"><div class="text-slate-500">AST</div><div id="preview-apg" class="font-bold text-white"></div></div>
+                <div class="bg-court-850 rounded-lg py-1.5"><div class="text-slate-500">STL</div><div id="preview-spg" class="font-bold text-white"></div></div>
+                <div class="bg-court-850 rounded-lg py-1.5"><div class="text-slate-500">BLK</div><div id="preview-bpg" class="font-bold text-white"></div></div>
+              </div>
+              <div id="preview-role" class="text-[11px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5 text-center font-medium"></div>
+              <div id="preview-value-note" class="text-[10px] text-slate-400 text-center"></div>
+              <button onclick="makeDraftPick()" id="preview-draft-btn"
+                class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition-colors">
+                Draft This Player
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RESULTS SCREEN ===== -->
+      <div id="draft-results-screen" class="hidden flex flex-col h-full">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-court-border">
+          <div>
+            <h2 class="text-xl font-black" id="draft-result-title">Draft Complete</h2>
+            <p class="text-xs text-slate-400 mt-0.5" id="draft-result-sub"></p>
+          </div>
+          <button onclick="closeDraftNight()" class="text-slate-400 hover:text-white text-2xl leading-none p-1">✕</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          <div id="draft-result-banner" class="rounded-2xl p-5 text-center border"></div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div class="bg-court-900 border border-emerald-500/30 rounded-xl p-4">
+              <div class="flex justify-between items-center mb-3">
+                <span class="font-bold text-emerald-400">Your Team</span>
+                <span id="result-user-ss" class="text-2xl font-black text-emerald-400"></span>
+              </div>
+              <div id="result-user-list" class="space-y-1 text-xs font-mono"></div>
+            </div>
+            <div class="bg-court-900 border border-amber-500/30 rounded-xl p-4">
+              <div class="flex justify-between items-center mb-3">
+                <span class="font-bold text-amber-400">AI Manager</span>
+                <span id="result-ai-ss" class="text-2xl font-black text-amber-400"></span>
+              </div>
+              <div id="result-ai-list" class="space-y-1 text-xs font-mono"></div>
+            </div>
+          </div>
+          <div id="result-cat-compare" class="bg-court-900 border border-court-border rounded-xl p-4">
+            <div class="text-[11px] font-bold text-slate-400 uppercase mb-3">Category Breakdown</div>
+            <div id="result-cat-bars" class="space-y-2 text-[11px] font-mono"></div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="resetDraftNight()" class="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm">Draft Again</button>
+            <button onclick="closeDraftNight()" class="px-5 py-3 rounded-xl bg-court-800 hover:bg-court-700 text-slate-300 font-bold text-sm border border-court-border">Close</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1096,29 +1325,48 @@
     ]);
 
     // -------------------------------------------------------------
-    // 2026–27 DRAFT NIGHT MODE — fully interactive 12-round user vs AI draft
+    // 2026–27 DRAFT NIGHT — FULL REBUILD (setup → live snake draft → results)
     // -------------------------------------------------------------
     let draftUserPicks = [];
     let draftAiPicks = [];
     let draftAvailablePlayers = [];
-    let draftRound = 1;
     let draftFinished = false;
+    let draftSelectedName = null;
+    let draftPoolFilter = 'all';
+    let draftSearchQuery = '';
+    let draftDifficulty = 'competitive'; // casual | competitive | elite
+    let draftPickOrder = 'user'; // user | ai | random
+    let draftUserGoesFirst = true;
+    let draftPickNumber = 0; // global pick count (1..24)
+    let draftIsUserTurn = true;
+    let draftHistory = []; // {pickNum, round, owner, player}
 
     function getDraftPool() {
-      const source = (seasonsData['2026/27'] && seasonsData['2026/27'].length)
+      const source = (typeof seasonsData !== 'undefined' && seasonsData['2026/27'] && seasonsData['2026/27'].length)
         ? seasonsData['2026/27'] : (masterData || []);
-      return source.filter(p => p && p.name && Number.isFinite(Number(p.total)))
-        .map(p => ({...p, total:Number(p.total)}))
-        .sort((a,b)=>b.total-a.total);
+      return source
+        .filter(p => p && p.name && Number.isFinite(Number(p.total)))
+        .map(p => ({ ...p, total: Number(p.total) }))
+        .sort((a, b) => b.total - a.total);
     }
 
     function openDraftNight() {
       const modal = document.getElementById('draft-night-modal');
-      if (!modal) { console.error('Draft Night modal element is missing'); return; }
+      if (!modal) return;
       modal.classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
-      if (!draftUserPicks.length && !draftAiPicks.length) resetDraftNight();
-      else renderDraftNight();
+      // Always show setup when opening fresh (or if no active draft)
+      if (!draftUserPicks.length && !draftAiPicks.length && !draftFinished) {
+        showDraftScreen('setup');
+        setDraftDifficulty(draftDifficulty);
+        setDraftOrder(draftPickOrder);
+      } else if (draftFinished) {
+        showDraftScreen('results');
+        renderDraftResults();
+      } else {
+        showDraftScreen('live');
+        renderDraftNight();
+      }
     }
 
     function closeDraftNight() {
@@ -1127,61 +1375,594 @@
       document.body.classList.remove('overflow-hidden');
     }
 
+    function showDraftScreen(which) {
+      ['setup', 'live', 'results'].forEach(s => {
+        const el = document.getElementById('draft-' + s + '-screen');
+        if (el) el.classList.toggle('hidden', s !== which);
+      });
+    }
+
+    function setDraftDifficulty(level) {
+      draftDifficulty = level;
+      ['casual', 'competitive', 'elite'].forEach(d => {
+        const btn = document.getElementById('diff-' + d);
+        if (!btn) return;
+        const active = d === level;
+        btn.className = active
+          ? 'draft-diff-btn py-3 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-center transition-all'
+          : 'draft-diff-btn py-3 px-2 rounded-xl border-2 border-slate-600 bg-court-900 text-center transition-all';
+      });
+    }
+
+    function setDraftOrder(order) {
+      draftPickOrder = order;
+      ['user', 'ai', 'random'].forEach(o => {
+        const btn = document.getElementById('order-' + o);
+        if (!btn) return;
+        const active = o === order;
+        btn.className = active
+          ? 'draft-order-btn py-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 font-bold text-sm'
+          : 'draft-order-btn py-2.5 rounded-xl border-2 border-slate-600 bg-court-900 font-bold text-sm';
+      });
+    }
+
+    function startDraftNight() {
+      draftUserPicks = [];
+      draftAiPicks = [];
+      draftAvailablePlayers = getDraftPool();
+      draftFinished = false;
+      draftSelectedName = null;
+      draftPoolFilter = 'all';
+      draftSearchQuery = '';
+      draftPickNumber = 0;
+      draftHistory = [];
+      const searchEl = document.getElementById('draft-search');
+      if (searchEl) searchEl.value = '';
+
+      if (draftPickOrder === 'random') {
+        draftUserGoesFirst = Math.random() < 0.5;
+      } else {
+        draftUserGoesFirst = draftPickOrder === 'user';
+      }
+      draftIsUserTurn = draftUserGoesFirst;
+
+      const sub = document.getElementById('draft-live-sub');
+      if (sub) {
+        const diffLabel = draftDifficulty.charAt(0).toUpperCase() + draftDifficulty.slice(1);
+        sub.textContent = `${diffLabel} · ${draftUserGoesFirst ? 'You pick first' : 'AI picks first'} · Snake`;
+      }
+
+      showDraftScreen('live');
+      renderDraftNight();
+
+      // If AI goes first, make its opening pick after a short beat
+      if (!draftIsUserTurn) {
+        setTimeout(() => runAiTurn(), 450);
+      }
+    }
+
     function resetDraftNight() {
       draftUserPicks = [];
       draftAiPicks = [];
       draftAvailablePlayers = getDraftPool();
-      draftRound = 1;
       draftFinished = false;
-      renderDraftNight();
+      draftSelectedName = null;
+      draftPickNumber = 0;
+      draftHistory = [];
+      showDraftScreen('setup');
+      setDraftDifficulty(draftDifficulty);
+      setDraftOrder(draftPickOrder);
     }
 
-    function renderDraftNight() {
-      const userScore = draftUserPicks.reduce((sum,p)=>sum+Number(p.total||0),0);
-      const aiScore = draftAiPicks.reduce((sum,p)=>sum+Number(p.total||0),0);
-      const userScoreEl=document.getElementById('draft-user-score');
-      const aiScoreEl=document.getElementById('draft-ai-score');
-      const userPicksEl=document.getElementById('draft-user-picks');
-      const aiPicksEl=document.getElementById('draft-ai-picks');
-      const select=document.getElementById('draft-player-select');
-      const status=document.getElementById('draft-status');
-      const log=document.getElementById('draft-pick-log');
-      if(userScoreEl) userScoreEl.textContent=`${userScore.toFixed(2)} SS`;
-      if(aiScoreEl) aiScoreEl.textContent=`${aiScore.toFixed(2)} SS`;
-      if(userPicksEl) userPicksEl.innerHTML=draftUserPicks.length?draftUserPicks.map((p,i)=>`${i+1}. ${escapeDraftText(p.name)} <b>${Number(p.total).toFixed(2)}</b>`).join('<br>'):'No picks yet.';
-      if(aiPicksEl) aiPicksEl.innerHTML=draftAiPicks.length?draftAiPicks.map((p,i)=>`${i+1}. ${escapeDraftText(p.name)} <b>${Number(p.total).toFixed(2)}</b>`).join('<br>'):'Waiting for the first pick.';
-      if(select) {
-        const current=select.value;
-        select.innerHTML='<option value="">Choose a player from the 2026–27 leaderboard</option>'+draftAvailablePlayers.map(p=>`<option value="${escapeDraftText(p.name)}">${escapeDraftText(p.name)} — ${Number(p.total).toFixed(2)} SS</option>`).join('');
-        if(draftAvailablePlayers.some(p=>p.name===current)) select.value=current;
+    // --- Snake turn logic ---
+    function currentRound() {
+      return Math.floor(draftPickNumber / 2) + 1;
+    }
+
+    function isSnakeReverse() {
+      // Odd rounds (1,3,5...): first picker goes first
+      // Even rounds (2,4,6...): order flips
+      const round = currentRound();
+      return round % 2 === 0;
+    }
+
+    function whoseTurnAfterPick() {
+      // After a pick, advance and decide next
+      const nextPick = draftPickNumber; // already incremented
+      if (nextPick >= 24) return null;
+      const round = Math.floor(nextPick / 2) + 1;
+      const pickInRound = nextPick % 2; // 0 = first pick of round, 1 = second
+      const reverse = round % 2 === 0;
+      if (!reverse) {
+        // Normal: first picker then second
+        return pickInRound === 0 ? (draftUserGoesFirst ? 'user' : 'ai') : (draftUserGoesFirst ? 'ai' : 'user');
+      } else {
+        // Reverse
+        return pickInRound === 0 ? (draftUserGoesFirst ? 'ai' : 'user') : (draftUserGoesFirst ? 'user' : 'ai');
       }
-      const pickButton=document.getElementById('draft-pick-btn');
-      if(pickButton) pickButton.disabled=draftFinished || draftUserPicks.length>=12 || !draftAvailablePlayers.length;
-      if(status) status.textContent=draftFinished?`Draft complete! ${userScore>aiScore?'You win!':userScore<aiScore?'AI Manager wins!':'It is a tie!'} Final team totals are based on 2026–27 Schrift Score.`:`Round ${draftUserPicks.length+1} of 12 — Your pick. The AI selects the highest remaining SS player after you.`;
-      if(log) log.innerHTML=[...draftUserPicks.map((p,i)=>({round:i+1,owner:'YOU',p})),...draftAiPicks.map((p,i)=>({round:i+1,owner:'AI',p}))].sort((a,b)=>a.round-b.round).map(x=>`<div class="flex justify-between gap-2 border-b border-slate-200 dark:border-court-border py-1"><span>Round ${x.round} · ${x.owner}: ${escapeDraftText(x.p.name)}</span><b>${Number(x.p.total).toFixed(2)} SS</b></div>`).join('');
     }
 
-    function escapeDraftText(value) {
-      return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    // --- Pool filtering ---
+    function setDraftPoolFilter(filter) {
+      draftPoolFilter = filter;
+      document.querySelectorAll('.draft-filter-btn').forEach(btn => {
+        const f = btn.getAttribute('data-filter');
+        const active = f === filter;
+        btn.className = active
+          ? 'draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-slate-950'
+          : 'draft-filter-btn px-2 py-0.5 rounded-full text-[10px] font-mono bg-court-800 text-slate-300';
+      });
+      renderDraftPlayerList();
+    }
+
+    function filterDraftPool() {
+      const el = document.getElementById('draft-search');
+      draftSearchQuery = (el ? el.value : '').toLowerCase().trim();
+      renderDraftPlayerList();
+    }
+
+    function getFilteredDraftPool() {
+      let list = draftAvailablePlayers.slice();
+      if (draftPoolFilter === 'tier1') list = list.filter(p => p.total >= 28);
+      else if (draftPoolFilter === 'tier2') list = list.filter(p => p.total >= 22 && p.total < 28);
+      else if (draftPoolFilter === 'tier3') list = list.filter(p => p.total >= 16 && p.total < 22);
+      else if (draftPoolFilter === 'rest') list = list.filter(p => p.total < 16);
+      if (draftSearchQuery) {
+        list = list.filter(p =>
+          p.name.toLowerCase().includes(draftSearchQuery) ||
+          (p.team || '').toLowerCase().includes(draftSearchQuery)
+        );
+      }
+      return list;
+    }
+
+    function selectDraftPlayer(name) {
+      if (draftFinished || !draftIsUserTurn) return;
+      draftSelectedName = name;
+      renderDraftPlayerList();
+      renderDraftPreview();
+      const btn = document.getElementById('draft-pick-btn');
+      if (btn) {
+        btn.disabled = !name;
+        btn.textContent = name ? `Draft ${name.split(' ').pop()}` : 'Select a player';
+      }
+    }
+
+    function renderDraftPreview() {
+      const empty = document.getElementById('draft-preview-empty');
+      const card = document.getElementById('draft-preview-card');
+      if (!draftSelectedName) {
+        if (empty) empty.classList.remove('hidden');
+        if (card) card.classList.add('hidden');
+        return;
+      }
+      const p = draftAvailablePlayers.find(x => x.name === draftSelectedName);
+      if (!p) {
+        if (empty) empty.classList.remove('hidden');
+        if (card) card.classList.add('hidden');
+        return;
+      }
+      if (empty) empty.classList.add('hidden');
+      if (card) card.classList.remove('hidden');
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('preview-name', p.name);
+      set('preview-team', p.team || '—');
+      set('preview-rank', p.rank ? `#${p.rank} overall` : '');
+      set('preview-ss', p.total.toFixed(2));
+      set('preview-ppg', Number(p.ppg).toFixed(1));
+      set('preview-rpg', Number(p.rpg).toFixed(1));
+      set('preview-apg', Number(p.apg).toFixed(1));
+      set('preview-spg', Number(p.spg).toFixed(1));
+      set('preview-bpg', Number(p.bpg).toFixed(1));
+
+      let role = 'Rotational';
+      try { role = determinePlayerArchetype(p); } catch (e) {}
+      set('preview-role', role);
+
+      // Value note
+      const overallRank = draftAvailablePlayers.findIndex(x => x.name === p.name) + 1;
+      const noteEl = document.getElementById('preview-value-note');
+      if (noteEl) {
+        if (overallRank <= 5) noteEl.textContent = 'Elite tier — clear top of the board';
+        else if (overallRank <= 15) noteEl.textContent = 'High-end starter value';
+        else if (overallRank <= 40) noteEl.textContent = 'Solid contributor / good value';
+        else noteEl.textContent = 'Depth / specialist upside';
+      }
+    }
+
+    function tierBadge(total) {
+      if (total >= 28) return '<span class="text-[8px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">MVP</span>';
+      if (total >= 22) return '<span class="text-[8px] px-1 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold">All-NBA</span>';
+      if (total >= 16) return '<span class="text-[8px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">AS</span>';
+      return '';
+    }
+
+    function renderDraftPlayerList() {
+      const container = document.getElementById('draft-player-list');
+      const countEl = document.getElementById('draft-pool-count');
+      if (!container) return;
+      const filtered = getFilteredDraftPool();
+      if (countEl) countEl.textContent = `${filtered.length}`;
+
+      if (!filtered.length) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-8 text-xs">No players match</div>';
+        return;
+      }
+
+      const display = filtered.slice(0, 100);
+      container.innerHTML = display.map((p, idx) => {
+        const isSelected = draftSelectedName === p.name;
+        const ss = Number(p.total).toFixed(2);
+        const disabled = !draftIsUserTurn || draftFinished;
+        return `
+          <button type="button" ${disabled ? 'disabled' : ''} onclick="selectDraftPlayer('${String(p.name).replace(/'/g, "\\'")}')"
+            class="w-full text-left px-2 py-1.5 rounded-lg border transition-all flex items-center gap-2
+              ${isSelected
+                ? 'bg-emerald-500/20 border-emerald-500/50'
+                : 'bg-court-900/80 border-transparent hover:border-court-border hover:bg-court-850'}
+              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}">
+            <span class="text-[10px] text-slate-500 w-5 text-right flex-shrink-0">${idx + 1}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="font-semibold text-white truncate text-[12px]">${escapeDraftText(p.name)}</span>
+                ${tierBadge(p.total)}
+              </div>
+              <div class="text-[9px] text-slate-500 truncate">${escapeDraftText(p.team || '')} · ${Number(p.ppg).toFixed(1)}/${Number(p.rpg).toFixed(1)}/${Number(p.apg).toFixed(1)}</div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="font-black text-emerald-400 text-[12px]">${ss}</div>
+            </div>
+          </button>`;
+      }).join('');
+      if (filtered.length > 100) {
+        container.innerHTML += `<div class="text-center text-[10px] text-slate-500 py-2">Top 100 shown · search to find more</div>`;
+      }
+    }
+
+    // --- Team needs & AI brain ---
+    function teamNeedVector(picks) {
+      if (!picks.length) return { pts: 0, reb: 0, ast: 0, def: 0, count: 0 };
+      const n = picks.length;
+      return {
+        pts: picks.reduce((s, p) => s + (p.ssPpg || 0), 0) / n,
+        reb: picks.reduce((s, p) => s + (p.ssRpg || 0), 0) / n,
+        ast: picks.reduce((s, p) => s + (p.ssApg || 0), 0) / n,
+        def: picks.reduce((s, p) => s + ((p.ssSpg || 0) + (p.ssBpg || 0)), 0) / n,
+        count: n
+      };
+    }
+
+    function needsSummary(picks) {
+      if (!picks.length) return 'Empty';
+      const v = teamNeedVector(picks);
+      const parts = [
+        { l: 'PTS', v: v.pts },
+        { l: 'REB', v: v.reb },
+        { l: 'AST', v: v.ast },
+        { l: 'DEF', v: v.def }
+      ].sort((a, b) => a.v - b.v);
+      return `Need ${parts[0].l}`;
+    }
+
+    function aiPickScore(player, myPicks, oppPicks) {
+      let score = player.total;
+      const needs = teamNeedVector(myPicks);
+      const difficulty = draftDifficulty;
+
+      if (difficulty === 'casual') {
+        // Pure BPA + tiny noise
+        return score + (Math.random() - 0.5) * 0.3;
+      }
+
+      // Competitive & Elite: need bonuses
+      if (myPicks.length >= 1) {
+        const cats = [
+          { val: player.ssPpg || 0, need: needs.pts },
+          { val: player.ssRpg || 0, need: needs.reb },
+          { val: player.ssApg || 0, need: needs.ast },
+          { val: (player.ssSpg || 0) + (player.ssBpg || 0), need: needs.def }
+        ];
+        const minNeed = Math.min(...cats.map(c => c.need));
+        cats.forEach(c => {
+          if (c.need <= minNeed + 0.2) {
+            score += c.val * (difficulty === 'elite' ? 0.55 : 0.35);
+          }
+        });
+      }
+
+      if (difficulty === 'elite') {
+        // Anti-stack: if we already have 3+ high-usage scorers, slightly devalue pure scorers
+        const highScorers = myPicks.filter(p => (p.ppg || 0) >= 22).length;
+        if (highScorers >= 3 && (player.ppg || 0) >= 22) score -= 1.2;
+
+        // Scarcity: if player is top-8 remaining, small urgency bonus
+        const rankLeft = draftAvailablePlayers.findIndex(p => p.name === player.name);
+        if (rankLeft >= 0 && rankLeft < 8) score += 0.6;
+
+        // Slightly prefer balanced two-way profiles late
+        if (myPicks.length >= 6) {
+          const stocks = (player.spg || 0) + (player.bpg || 0);
+          if (stocks >= 1.5) score += 0.4;
+        }
+      }
+
+      // Noise scales with difficulty (elite more consistent)
+      const noise = difficulty === 'elite' ? 0.25 : 0.45;
+      score += (Math.random() - 0.5) * noise;
+      return score;
+    }
+
+    function chooseAiPick() {
+      if (!draftAvailablePlayers.length) return null;
+      const candidates = draftAvailablePlayers.slice(0, 50);
+      let best = candidates[0];
+      let bestScore = -Infinity;
+      candidates.forEach(p => {
+        const s = aiPickScore(p, draftAiPicks, draftUserPicks);
+        if (s > bestScore) {
+          bestScore = s;
+          best = p;
+        }
+      });
+      return best;
+    }
+
+    function executePick(player, owner) {
+      if (!player) return;
+      draftPickNumber += 1;
+      const round = Math.ceil(draftPickNumber / 2);
+      draftHistory.push({ pickNum: draftPickNumber, round, owner, player });
+
+      if (owner === 'user') {
+        draftUserPicks.push(player);
+      } else {
+        draftAiPicks.push(player);
+      }
+      draftAvailablePlayers = draftAvailablePlayers.filter(p => p.name !== player.name);
+      draftSelectedName = null;
+
+      if (draftUserPicks.length >= 12 && draftAiPicks.length >= 12) {
+        draftFinished = true;
+      }
     }
 
     function makeDraftPick() {
-      if(draftFinished) return;
-      if(!draftAvailablePlayers.length) draftAvailablePlayers=getDraftPool();
-      const select=document.getElementById('draft-player-select');
-      const chosenName=select?.value;
-      const chosen=draftAvailablePlayers.find(p=>p.name===chosenName);
-      const status=document.getElementById('draft-status');
-      if(!chosen) { if(status) status.textContent='Select an available player before making your pick.'; return; }
-      draftUserPicks.push(chosen);
-      draftAvailablePlayers=draftAvailablePlayers.filter(p=>p.name!==chosen.name);
-      // AI takes the highest remaining 2026–27 Schrift Score player.
-      if(draftAvailablePlayers.length && draftAiPicks.length<12) {
-        const aiPick=draftAvailablePlayers.shift();
-        draftAiPicks.push(aiPick);
-      }
-      if(draftUserPicks.length>=12 || draftAiPicks.length>=12 || !draftAvailablePlayers.length) draftFinished=true;
+      if (draftFinished || !draftIsUserTurn) return;
+      if (!draftAvailablePlayers.length) draftAvailablePlayers = getDraftPool();
+      const chosen = draftAvailablePlayers.find(p => p.name === draftSelectedName);
+      if (!chosen) return;
+
+      executePick(chosen, 'user');
       renderDraftNight();
+
+      if (draftFinished) {
+        setTimeout(() => { showDraftScreen('results'); renderDraftResults(); }, 400);
+        return;
+      }
+
+      // Next turn
+      const next = whoseTurnAfterPick();
+      draftIsUserTurn = next === 'user';
+      renderDraftNight();
+
+      if (!draftIsUserTurn) {
+        setTimeout(() => runAiTurn(), 380);
+      }
+    }
+
+    function autoPickBest() {
+      if (draftFinished || !draftIsUserTurn || !draftAvailablePlayers.length) return;
+      draftSelectedName = draftAvailablePlayers[0].name;
+      makeDraftPick();
+    }
+
+    function runAiTurn() {
+      if (draftFinished || draftIsUserTurn) return;
+      const pick = chooseAiPick();
+      if (!pick) {
+        draftFinished = true;
+        renderDraftNight();
+        showDraftScreen('results');
+        renderDraftResults();
+        return;
+      }
+      executePick(pick, 'ai');
+      renderDraftNight();
+
+      if (draftFinished) {
+        setTimeout(() => { showDraftScreen('results'); renderDraftResults(); }, 400);
+        return;
+      }
+
+      const next = whoseTurnAfterPick();
+      draftIsUserTurn = next === 'user';
+      renderDraftNight();
+
+      // If somehow still AI turn (shouldn't in 2-team snake), continue
+      if (!draftIsUserTurn) {
+        setTimeout(() => runAiTurn(), 380);
+      }
+    }
+
+    function renderCategoryBars(containerId, userPicks, aiPicks) {
+      const bars = document.getElementById(containerId);
+      if (!bars) return;
+      const cats = [
+        { label: 'Scoring', u: userPicks.reduce((s, p) => s + (p.ssPpg || 0), 0), a: aiPicks.reduce((s, p) => s + (p.ssPpg || 0), 0) },
+        { label: 'Rebounding', u: userPicks.reduce((s, p) => s + (p.ssRpg || 0), 0), a: aiPicks.reduce((s, p) => s + (p.ssRpg || 0), 0) },
+        { label: 'Playmaking', u: userPicks.reduce((s, p) => s + (p.ssApg || 0), 0), a: aiPicks.reduce((s, p) => s + (p.ssApg || 0), 0) },
+        { label: 'Defense', u: userPicks.reduce((s, p) => s + (p.ssSpg || 0) + (p.ssBpg || 0), 0), a: aiPicks.reduce((s, p) => s + (p.ssSpg || 0) + (p.ssBpg || 0), 0) }
+      ];
+      bars.innerHTML = cats.map(c => {
+        const max = Math.max(c.u, c.a, 0.01);
+        const uPct = (c.u / max) * 100;
+        const aPct = (c.a / max) * 100;
+        const uWin = c.u >= c.a;
+        return `<div>
+          <div class="flex justify-between mb-0.5 text-slate-400">
+            <span>${c.label}</span>
+            <span><span class="${uWin ? 'text-emerald-400 font-bold' : ''}">${c.u.toFixed(1)}</span> – <span class="${!uWin ? 'text-amber-400 font-bold' : ''}">${c.a.toFixed(1)}</span></span>
+          </div>
+          <div class="flex h-1.5 rounded-full overflow-hidden bg-court-800 gap-0.5">
+            <div class="bg-emerald-500 rounded-l" style="width:${uPct}%"></div>
+            <div class="bg-amber-500 rounded-r" style="width:${aPct}%"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderDraftNight() {
+      const userScore = draftUserPicks.reduce((s, p) => s + p.total, 0);
+      const aiScore = draftAiPicks.reduce((s, p) => s + p.total, 0);
+      const totalPicks = draftPickNumber;
+      const maxPicks = 24;
+
+      const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setText('draft-user-score', userScore.toFixed(2));
+      setText('draft-ai-score', aiScore.toFixed(2));
+      setText('draft-user-count', `${draftUserPicks.length}/12`);
+      setText('draft-ai-count', `${draftAiPicks.length}/12`);
+
+      const diff = userScore - aiScore;
+      const diffEl = document.getElementById('draft-score-diff');
+      if (diffEl) {
+        if (totalPicks === 0) diffEl.textContent = '—';
+        else if (Math.abs(diff) < 0.05) diffEl.textContent = 'Tied';
+        else diffEl.textContent = diff > 0 ? `+${diff.toFixed(2)} you` : `${diff.toFixed(2)} AI`;
+        diffEl.className = diff > 0.05 ? 'text-emerald-400 text-[11px] font-bold' : diff < -0.05 ? 'text-amber-400 text-[11px] font-bold' : 'text-slate-400 text-[11px]';
+      }
+
+      const round = Math.min(currentRound(), 12);
+      const pickInRound = (draftPickNumber % 2) + 1;
+      setText('draft-round-badge', draftFinished ? 'Final' : `R${round} · Pick ${Math.min(draftPickNumber + 1, 24)}`);
+
+      const progress = document.getElementById('draft-progress-bar');
+      if (progress) progress.style.width = `${Math.min(100, (totalPicks / maxPicks) * 100)}%`;
+
+      // On the clock
+      const clock = document.getElementById('draft-on-clock');
+      const clockText = document.getElementById('draft-clock-text');
+      if (clock && clockText) {
+        if (draftFinished) {
+          clock.classList.add('hidden');
+        } else {
+          clock.classList.remove('hidden');
+          if (draftIsUserTurn) {
+            clock.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-400';
+            clockText.textContent = 'Your pick';
+          } else {
+            clock.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-bold text-amber-400';
+            clockText.textContent = 'AI thinking...';
+          }
+        }
+      }
+
+      // Rosters
+      const userPicksEl = document.getElementById('draft-user-picks');
+      const aiPicksEl = document.getElementById('draft-ai-picks');
+      if (userPicksEl) {
+        userPicksEl.innerHTML = draftUserPicks.length
+          ? draftUserPicks.map((p, i) => `<div class="flex justify-between gap-1 py-0.5 ${i === draftUserPicks.length - 1 && draftHistory.length && draftHistory[draftHistory.length-1].owner==='user' ? 'bg-emerald-500/10 rounded px-1' : ''}"><span class="truncate text-slate-300">${i+1}. ${escapeDraftText(p.name)}</span><b class="text-emerald-400">${p.total.toFixed(2)}</b></div>`).join('')
+          : '<span class="text-slate-600">—</span>';
+      }
+      if (aiPicksEl) {
+        aiPicksEl.innerHTML = draftAiPicks.length
+          ? draftAiPicks.map((p, i) => `<div class="flex justify-between gap-1 py-0.5 ${i === draftAiPicks.length - 1 && draftHistory.length && draftHistory[draftHistory.length-1].owner==='ai' ? 'bg-amber-500/10 rounded px-1' : ''}"><span class="truncate text-slate-300">${i+1}. ${escapeDraftText(p.name)}</span><b class="text-amber-400">${p.total.toFixed(2)}</b></div>`).join('')
+          : '<span class="text-slate-600">—</span>';
+      }
+
+      setText('draft-user-needs', needsSummary(draftUserPicks));
+      setText('draft-ai-needs', needsSummary(draftAiPicks));
+
+      // Category
+      const catBox = document.getElementById('draft-category-compare');
+      if (catBox) {
+        if (draftUserPicks.length + draftAiPicks.length >= 4) {
+          catBox.classList.remove('hidden');
+          renderCategoryBars('draft-cat-bars', draftUserPicks, draftAiPicks);
+        } else {
+          catBox.classList.add('hidden');
+        }
+      }
+
+      // Pick feed
+      const log = document.getElementById('draft-pick-log');
+      if (log) {
+        if (!draftHistory.length) {
+          log.innerHTML = '<div class="text-slate-600 text-center py-3 text-[11px]">Waiting for first pick...</div>';
+        } else {
+          log.innerHTML = [...draftHistory].reverse().map(h => `
+            <div class="flex justify-between gap-2 py-1 border-b border-court-border/50">
+              <span><span class="text-slate-500">#${h.pickNum}</span> <span class="${h.owner === 'user' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}">${h.owner === 'user' ? 'YOU' : 'AI'}</span> ${escapeDraftText(h.player.name)}</span>
+              <b class="text-slate-300">${h.player.total.toFixed(2)}</b>
+            </div>`).join('');
+        }
+      }
+
+      // Buttons
+      const pickBtn = document.getElementById('draft-pick-btn');
+      const autoBtn = document.getElementById('draft-auto-btn');
+      if (pickBtn) {
+        pickBtn.disabled = draftFinished || !draftIsUserTurn || !draftSelectedName;
+        pickBtn.textContent = !draftIsUserTurn ? 'AI is picking...' : (draftSelectedName ? `Draft ${draftSelectedName.split(' ').pop()}` : 'Select a player');
+      }
+      if (autoBtn) autoBtn.disabled = draftFinished || !draftIsUserTurn || !draftAvailablePlayers.length;
+
+      renderDraftPlayerList();
+      renderDraftPreview();
+    }
+
+    function renderDraftResults() {
+      const userScore = draftUserPicks.reduce((s, p) => s + p.total, 0);
+      const aiScore = draftAiPicks.reduce((s, p) => s + p.total, 0);
+      const userWins = userScore > aiScore;
+      const tie = Math.abs(userScore - aiScore) < 0.05;
+
+      const banner = document.getElementById('draft-result-banner');
+      const title = document.getElementById('draft-result-title');
+      const sub = document.getElementById('draft-result-sub');
+      if (title) title.textContent = tie ? 'Draft Complete — Tie' : userWins ? 'You Win' : 'AI Wins';
+      if (sub) sub.textContent = `${draftDifficulty.charAt(0).toUpperCase() + draftDifficulty.slice(1)} difficulty · Snake draft`;
+
+      if (banner) {
+        if (tie) {
+          banner.className = 'rounded-2xl p-5 text-center border border-slate-500/40 bg-slate-500/10';
+          banner.innerHTML = `<div class="text-2xl font-black text-slate-200">It's a tie</div>
+            <div class="text-sm text-slate-400 mt-1">${userScore.toFixed(2)} – ${aiScore.toFixed(2)} SS</div>`;
+        } else if (userWins) {
+          banner.className = 'rounded-2xl p-5 text-center border border-emerald-500/40 bg-emerald-500/10';
+          banner.innerHTML = `<div class="text-2xl font-black text-emerald-400">You beat the AI</div>
+            <div class="text-sm text-emerald-300/80 mt-1">+${(userScore - aiScore).toFixed(2)} SS margin · ${userScore.toFixed(2)} – ${aiScore.toFixed(2)}</div>`;
+        } else {
+          banner.className = 'rounded-2xl p-5 text-center border border-amber-500/40 bg-amber-500/10';
+          banner.innerHTML = `<div class="text-2xl font-black text-amber-400">AI Manager wins</div>
+            <div class="text-sm text-amber-300/80 mt-1">−${(aiScore - userScore).toFixed(2)} SS · ${userScore.toFixed(2)} – ${aiScore.toFixed(2)}</div>`;
+        }
+      }
+
+      const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setText('result-user-ss', userScore.toFixed(2));
+      setText('result-ai-ss', aiScore.toFixed(2));
+
+      const userList = document.getElementById('result-user-list');
+      const aiList = document.getElementById('result-ai-list');
+      if (userList) {
+        userList.innerHTML = draftUserPicks
+          .slice().sort((a, b) => b.total - a.total)
+          .map((p, i) => `<div class="flex justify-between gap-2 py-0.5"><span class="truncate">${i+1}. ${escapeDraftText(p.name)}</span><b class="text-emerald-400">${p.total.toFixed(2)}</b></div>`).join('');
+      }
+      if (aiList) {
+        aiList.innerHTML = draftAiPicks
+          .slice().sort((a, b) => b.total - a.total)
+          .map((p, i) => `<div class="flex justify-between gap-2 py-0.5"><span class="truncate">${i+1}. ${escapeDraftText(p.name)}</span><b class="text-amber-400">${p.total.toFixed(2)}</b></div>`).join('');
+      }
+
+      renderCategoryBars('result-cat-bars', draftUserPicks, draftAiPicks);
+    }
+
+    function escapeDraftText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     }
 
     // -------------------------------------------------------------
