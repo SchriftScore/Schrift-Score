@@ -77,7 +77,7 @@ export default async function handler(req, res) {
               const blk = num(get('BLK'));
               const minRaw = get('MIN');
               const minText = String(minRaw ?? '').trim();
-              const hasMinutes = (Number.isFinite(Number(minRaw)) && Number(minRaw) > 0) || (/^\\d+:\\d{2}$/.test(minText) && minText !== '0:00');
+              const hasMinutes = (Number.isFinite(Number(minRaw)) && Number(minRaw) > 0) || (/^\d+:\d{2}$/.test(minText) && minText !== '0:00');
               const played = hasMinutes || pts + reb + ast + stl + blk > 0;
               if (!played) continue;
               const playerName = row.athlete.displayName || row.athlete.shortName;
