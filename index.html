@@ -2253,61 +2253,25 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
-      } else {
-        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
-      }
-
-      document.getElementById('season-badge').textContent = cfg.badgeText;
-      document.getElementById('formula-title').textContent = cfg.title;
-      document.getElementById('formula-desc').textContent = cfg.desc;
-
-      document.getElementById('w-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
-      document.getElementById('w-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
-      document.getElementById('w-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
-      document.getElementById('w-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
-      document.getElementById('w-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
-      document.getElementById('w-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
-
-      document.getElementById('col-weight-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
-      document.getElementById('col-weight-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
-      document.getElementById('col-weight-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
-      document.getElementById('col-weight-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
-      document.getElementById('col-weight-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
-      document.getElementById('col-weight-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
-
-      document.getElementById('table-rows').innerHTML = `
-        <tr>
-          <td colspan="12" class="py-16 text-center text-slate-400 font-sans">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
-            <p>Loading ${cfg.label} player analytics...</p>
-          </td>
-        </tr>
-      `;
-
-      if (seasonKey === '2026/27') {
-        // Always request the latest 2026/27 rows from Apps Script on page load/season selection.
+        // The 2026-27 leaderboard is loaded directly from Basketball-Reference.
+        // Do not fall back to Google Sheets or a hard-coded snapshot if the source is unavailable.
         try {
-          const liveRows = await fetchLive202627Leaderboard();
-          masterData = normalizeLiveLeaderboard(liveRows);
-          if (!masterData.length) throw new Error('No valid 2026/27 players were returned');
+          const response = await fetch('/api/basketball-reference?season=2027', { cache: 'no-store' });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Basketball-Reference stats unavailable');
+          if (!Array.isArray(payload.players) || !payload.players.length) throw new Error('Basketball-Reference returned no player rows');
+          masterData = payload.players;
           seasonsData[seasonKey] = masterData;
-          console.info(`Schrift Score: loaded ${masterData.length} live 2026/27 players from Google Sheets.`);
+          const sourceStatus = document.getElementById('analytics-status');
+          if (sourceStatus) sourceStatus.textContent = 'Source: Basketball-Reference · 2026–27 Per Game · ' + payload.count + ' players · Updated ' + new Date(payload.updatedAt).toLocaleString();
+          console.info('Schrift Score: loaded ' + payload.count + ' players directly from Basketball-Reference.');
         } catch (err) {
-          console.error('Live Google Sheets connection failed; trying the public CSV export.', err);
-          try {
-            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${cfg.gid}`;
-            const response = await fetch(csvUrl);
-            if (!response.ok) throw new Error('Google Sheets CSV request failed');
-            masterData = parseCSV(await response.text(), cfg.weights);
-            if (!masterData.length) throw new Error('CSV contained no player rows');
-            seasonsData[seasonKey] = masterData;
-          } catch (csvErr) {
-            console.warn('CSV fallback failed; showing the built-in fallback leaderboard.', csvErr);
-            masterData = getFallback202627Data();
-          }
+          console.error('Basketball-Reference leaderboard could not be loaded.', err);
+          masterData = [];
+          const rows = document.getElementById('table-rows');
+          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">Basketball-Reference stats could not be loaded. No substitute data was shown. Please try again later.</td></tr>';
+          const sourceStatus = document.getElementById('analytics-status');
+          if (sourceStatus) sourceStatus.textContent = 'Basketball-Reference source unavailable · no substitute stats loaded';
         }
       } else if (seasonsData[seasonKey] && seasonsData[seasonKey].length > 0) {
         masterData = seasonsData[seasonKey];
