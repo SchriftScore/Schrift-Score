@@ -133,5 +133,38 @@ begin
 end;
 $$;
 
+create or replace function public.leave_draft_room(p_room_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $
+declare
+  v_room public.draft_rooms%rowtype;
+  v_next_host uuid;
+begin
+  select * into v_room from public.draft_rooms where id=p_room_id for update;
+  if not found then return jsonb_build_object('left',true); end if;
+
+  delete from public.draft_room_players
+  where room_id=p_room_id and user_id=auth.uid();
+
+  select user_id into v_next_host
+  from public.draft_room_players
+  where room_id=p_room_id
+  order by seat
+  limit 1;
+
+  if v_next_host is null then
+    delete from public.draft_rooms where id=p_room_id;
+  elsif v_room.host_id=auth.uid() then
+    update public.draft_rooms set host_id=v_next_host where id=p_room_id;
+  end if;
+
+  return jsonb_build_object('left',true,'new_host',v_next_host);
+end;
+$;
+
+grant execute on function public.leave_draft_room(uuid) to authenticated;
 grant execute on function public.quick_match_draft_room(text) to authenticated;
 grant execute on function public.start_public_draft_room(uuid) to authenticated;
