@@ -1067,6 +1067,12 @@
                 <li>• Highest total SS at the end wins</li>
               </ul>
             </div>
+            <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-2">
+              <div class="text-[10px] uppercase tracking-widest text-emerald-300 font-bold">New mode · Recommended</div>
+              <input id="auction-user-team-name" maxlength="26" value="Your Franchise" placeholder="Name your franchise" class="w-full bg-court-950 border border-court-border rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500">
+              <button onclick="startAuctionDraft()" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-base shadow-lg shadow-emerald-500/20 transition-all">💰 Start 12-Team Auction Draft →</button>
+              <p class="text-center text-[10px] text-emerald-300/80">12 front offices · $200 per team · 12 players each</p>
+            </div>
             <button onclick="startDraftNight()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-base shadow-lg shadow-amber-500/20 transition-all">
               Start Draft Night →
             </button>
@@ -1213,6 +1219,42 @@
         </div>
       </div>
 
+      <!-- ===== NEW 12-TEAM AUCTION ROOM ===== -->
+      <div id="auction-live-screen" class="hidden flex flex-col h-full min-h-0">
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-court-border bg-court-900">
+          <div><div class="text-lg font-black">💰 SCHRIFT SCORE AUCTION ROOM</div><div id="auction-subtitle" class="text-[10px] text-slate-400">12 front offices · $200 budget · 12-player rosters</div></div>
+          <div class="flex items-center gap-2"><div class="text-right"><div class="text-[9px] uppercase text-slate-500">Players sold</div><div id="auction-progress" class="text-sm font-black text-emerald-400">0 / 144</div></div><button onclick="closeDraftNight()" class="text-slate-400 hover:text-white text-xl p-1">✕</button></div>
+        </div>
+        <div class="h-1 bg-court-800"><div id="auction-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style="width:0%"></div></div>
+        <div class="grid grid-cols-3 gap-px bg-court-border border-b border-court-border">
+          <div class="bg-court-900 p-2 text-center"><div class="text-[9px] uppercase text-slate-500">Your budget</div><div id="auction-user-budget" class="text-lg font-black text-emerald-400">$200</div></div>
+          <div class="bg-court-900 p-2 text-center"><div class="text-[9px] uppercase text-slate-500">Your roster</div><div id="auction-user-roster-count" class="text-lg font-black text-white">0 / 12</div></div>
+          <div class="bg-court-900 p-2 text-center"><div class="text-[9px] uppercase text-slate-500">Your total SS</div><div id="auction-user-score" class="text-lg font-black text-emerald-400">0.00</div></div>
+        </div>
+        <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+          <section class="lg:col-span-3 flex flex-col min-h-0 max-h-[28vh] lg:max-h-none border-r border-court-border">
+            <div class="p-2 border-b border-court-border space-y-2"><input id="auction-search" type="text" placeholder="Search available players..." oninput="renderAuctionPool()" class="w-full bg-court-850 border border-court-border rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500"><div class="flex justify-between text-[9px] text-slate-500"><span>AVAILABLE PLAYERS</span><span id="auction-pool-count">—</span></div></div>
+            <div id="auction-player-list" class="flex-1 overflow-y-auto p-1.5 space-y-1"></div>
+          </section>
+          <section class="lg:col-span-6 flex flex-col min-h-0 overflow-y-auto bg-court-950 p-3 sm:p-5">
+            <div id="auction-nomination-panel" class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 mb-3"><div class="text-[10px] uppercase tracking-widest text-emerald-300 font-bold">On the nomination clock</div><div id="auction-nominator" class="text-xl font-black mt-1">Your turn to nominate</div><div id="auction-nomination-help" class="text-xs text-slate-400 mt-1">Choose a player from the list, then nominate them.</div><button id="auction-nominate-btn" onclick="nominateAuctionPlayer()" disabled class="mt-3 w-full rounded-lg py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-court-800 disabled:text-slate-500 text-slate-950 font-black text-sm">Nominate selected player · $1 opening bid</button><button id="auction-skip-nomination" onclick="autoNominateForUser()" class="mt-2 w-full rounded-lg py-2 border border-court-border text-slate-300 hover:bg-court-800 text-xs font-bold">Nominate best available</button></div>
+            <div id="auction-player-stage" class="hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-court-900 to-court-850 p-4 sm:p-6 text-center mb-3">
+              <div class="text-[10px] tracking-[0.2em] uppercase text-amber-300 font-bold">Now up for auction</div><div id="auction-player-name" class="text-2xl sm:text-3xl font-black mt-2 text-white"></div><div id="auction-player-meta" class="text-xs text-slate-400 mt-1"></div>
+              <div class="grid grid-cols-5 gap-1.5 mt-4 text-center font-mono"><div class="rounded-lg bg-court-950/70 p-2"><div class="text-[9px] text-slate-500">PTS</div><b id="auction-pts" class="text-sm"></b></div><div class="rounded-lg bg-court-950/70 p-2"><div class="text-[9px] text-slate-500">REB</div><b id="auction-reb" class="text-sm"></b></div><div class="rounded-lg bg-court-950/70 p-2"><div class="text-[9px] text-slate-500">AST</div><b id="auction-ast" class="text-sm"></b></div><div class="rounded-lg bg-court-950/70 p-2"><div class="text-[9px] text-slate-500">STL</div><b id="auction-stl" class="text-sm"></b></div><div class="rounded-lg bg-court-950/70 p-2"><div class="text-[9px] text-slate-500">BLK</div><b id="auction-blk" class="text-sm"></b></div></div>
+              <div class="mt-4 rounded-xl bg-black/30 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500">Current bid</div><div id="auction-current-bid" class="text-5xl font-black text-amber-300 tabular-nums">$1</div><div id="auction-high-bidder" class="text-sm font-bold text-white mt-1">Opening bid</div><div class="mt-3 flex items-center justify-center gap-2"><div id="auction-countdown" class="text-2xl font-black text-emerald-300 tabular-nums">8</div><div class="text-left text-[9px] uppercase text-slate-500 leading-tight">seconds<br>remaining</div></div></div>
+              <div class="grid grid-cols-3 gap-2 mt-3"><button onclick="placeAuctionBid(1)" class="rounded-lg py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm">+$1</button><button onclick="placeAuctionBid(5)" class="rounded-lg py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm">+$5</button><button onclick="placeAuctionBid(10)" class="rounded-lg py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm">+$10</button></div><div id="auction-bid-message" class="text-[10px] text-slate-400 mt-2 min-h-4">Bid to win this player.</div>
+            </div>
+            <div class="rounded-xl border border-court-border bg-court-900 p-3 flex-1 min-h-[120px]"><div class="flex justify-between items-center mb-2"><span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Live auction feed</span><span id="auction-feed-status" class="text-[9px] text-emerald-300">READY</span></div><div id="auction-feed" class="space-y-1 text-[11px] font-mono max-h-48 overflow-y-auto"><div class="text-slate-500">The auction room is ready.</div></div></div>
+          </section>
+          <aside class="lg:col-span-3 flex flex-col min-h-0 border-l border-court-border bg-court-900/60"><div class="p-2.5 border-b border-court-border"><div class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Front office standings</div><div class="text-[9px] text-slate-500">Budget · roster · total SS</div></div><div id="auction-team-board" class="flex-1 overflow-y-auto p-2 space-y-1"></div></aside>
+        </div>
+      </div>
+      <!-- ===== AUCTION RESULTS ===== -->
+      <div id="auction-results-screen" class="hidden flex flex-col h-full">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-court-border"><div><h2 class="text-xl font-black">🏆 Auction Draft Results</h2><p id="auction-result-sub" class="text-xs text-slate-400 mt-1"></p></div><button onclick="closeDraftNight()" class="text-slate-400 hover:text-white text-2xl p-1">✕</button></div>
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"><div id="auction-result-banner" class="rounded-2xl border p-5 text-center"></div><div id="auction-result-summary" class="grid sm:grid-cols-3 gap-2"></div><div class="rounded-xl border border-court-border bg-court-900 p-3"><div class="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Final front-office rankings</div><div id="auction-result-rankings" class="space-y-1"></div></div><div class="grid sm:grid-cols-2 gap-3"><div class="rounded-xl border border-emerald-500/30 bg-court-900 p-3"><div class="font-bold text-emerald-300 mb-2">Your roster</div><div id="auction-result-roster" class="space-y-1 text-xs"></div></div><div class="rounded-xl border border-court-border bg-court-900 p-3"><div class="font-bold text-amber-300 mb-2">Draft awards</div><div id="auction-result-awards" class="space-y-2 text-xs"></div></div></div><div class="flex gap-2"><button onclick="resetAuctionDraft()" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black">Run it back</button><button onclick="closeDraftNight()" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-slate-300 font-bold">Close</button></div></div>
+      </div>
+
       <!-- ===== RESULTS SCREEN ===== -->
       <div id="draft-results-screen" class="hidden flex flex-col h-full">
         <div class="flex items-center justify-between px-5 py-4 border-b border-court-border">
@@ -1353,6 +1395,13 @@
     function openDraftNight() {
       const modal = document.getElementById('draft-night-modal');
       if (!modal) return;
+      if (window.auctionDraftState && window.auctionDraftState.active) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        showAuctionDraftScreen(window.auctionDraftState.finished ? 'results' : 'live');
+        if (!window.auctionDraftState.finished) renderAuctionDraft();
+        return;
+      }
       modal.classList.remove('hidden');
       document.body.classList.add('overflow-hidden');
       // Always show setup when opening fresh (or if no active draft)
@@ -3461,5 +3510,7 @@
 
     window.onload = init;
   </script>
+
+  <script src="/auction-draft.js"></script>
 </body>
 </html>
