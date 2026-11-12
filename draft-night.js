@@ -42,13 +42,14 @@
     var roles={};t.roster.forEach(function(p){var r=role(p);if(r!=='ROTATION PIECE')roles[r]=true;});
     var coverage=Object.keys(roles).length;
     var chemistry=Math.max(0,coverage-1)*2.5;
-    return {base:base,chemistry:chemistry,total:base+chemistry,coverage:coverage};
+    var missions=t.missionBonus||0;
+    return {base:base,chemistry:chemistry,missions:missions,total:base+chemistry+missions,coverage:coverage};
   }
   function makeTeams(name){
-    return [{id:0,name:name||'Your Franchise',user:true,style:'user',emoji:'🫵',roster:[],score:0},
-      {id:1,name:gmTemplates[0].name,style:'film',emoji:'🎥',roster:[],score:0},
-      {id:2,name:gmTemplates[1].name,style:'numbers',emoji:'📊',roster:[],score:0},
-      {id:3,name:gmTemplates[2].name,style:'bold',emoji:'🔥',roster:[],score:0}];
+    return [{id:0,name:name||'Your Franchise',user:true,style:'user',emoji:'🫵',roster:[],missionBonus:0,score:0},
+      {id:1,name:gmTemplates[0].name,style:'film',emoji:'🎥',roster:[],missionBonus:0,score:0},
+      {id:2,name:gmTemplates[1].name,style:'numbers',emoji:'📊',roster:[],missionBonus:0,score:0},
+      {id:3,name:gmTemplates[2].name,style:'bold',emoji:'🔥',roster:[],missionBonus:0,score:0}];
   }
   function orderForPick(n){
     var round=Math.floor(n/4),slot=n%4;
@@ -141,7 +142,7 @@
     var ix=game.pool.findIndex(function(x){return x.name===p.name;});if(ix<0)return;
     var expected=game.pool.slice().sort(function(a,b){return score(b)-score(a);}).findIndex(function(x){return x.name===p.name;})+1;
     var pickNo=game.picks.length+1,extra=bonus(p,round);
-    team.roster.push(p);team.score=teamScore(team).total;
+    team.roster.push(p);team.missionBonus=(team.missionBonus||0)+extra;team.score=teamScore(team).total;
     game.picks.push({pick:pickNo,round:round+1,team:teamId,player:p,bonus:extra,expected:expected});
     game.pool.splice(ix,1);game.selected=null;
     if(teamId===0){
