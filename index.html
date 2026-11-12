@@ -2615,7 +2615,7 @@
 
     function getAnalyticsLeaderboard() {
       const sourceGames=Object.prototype.hasOwnProperty.call(analyticsCache,activeAnalyticsWindow)?analyticsCache[activeAnalyticsWindow]:(analyticsLoadedWindow===activeAnalyticsWindow?analyticsGames:null);
-      if(!sourceGames) return masterData;
+      if(!sourceGames) return activeAnalyticsWindow==='season'?masterData:[];
       const filtered=sourceGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
       const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
       const groups=new Map();
@@ -2647,7 +2647,7 @@
       const qualifiedToggle=document.getElementById('nba-qualified-only');if(qualifiedToggle){qualifiedToggle.disabled=key!=='season';if(qualifiedToggle.disabled)qualifiedToggle.checked=false;}
       const minGamesSlider=document.getElementById('min-games-slider');if(minGamesSlider){minGamesSlider.max=key==='season'?'82':key;if(Number(minGamesSlider.value)>Number(minGamesSlider.max))minGamesSlider.value=minGamesSlider.max;}
       document.querySelectorAll('.timeframe-btn').forEach(btn=>{const on=btn.dataset.window===key;btn.className='timeframe-btn px-2.5 py-2 rounded-lg border font-mono text-[10px] sm:text-xs '+(on?'border-emerald-500 bg-emerald-500 text-slate-950 font-bold':'border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300');});
-      try{await loadGameAnalytics(key);applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Live game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];renderTable();}}
+      try{await loadGameAnalytics(key);applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Live game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
     }
 
     function applyAnalyticsControls(rerender=true) {
