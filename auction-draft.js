@@ -23,7 +23,7 @@
   function needsFactor(team,p){
     if(!team.roster.length)return 1;
     var stats={offense:0,defense:0,rebounds:0,playmaking:0};
-    team.roster.forEach(function(x){stats.offense+=(x.ssPpg||0)+(x.ssApg||0)*.55;stats.defense+=(x.ssSpg||0)+(x.ssBpg||0);stats.rebounds+=(x.ssRpg||0);stats.playmaking+=(x.ssApg||0);});
+    team.roster.forEach(function(x){stats.offense+=(x.ppg||0)+(x.apg||0)*.55;stats.defense+=(x.spg||0)+(x.bpg||0);stats.rebounds+=(x.rpg||0);stats.playmaking+=(x.apg||0);});
     Object.keys(stats).forEach(function(k){stats[k]/=team.roster.length;});
     var focus=team.style==='Defensive GM'||team.style==='Rim Protector'?'defense':team.style==='Playmaking Specialist'?'playmaking':team.style==='Balanced Builder'?Object.keys(stats).sort(function(a,b){return stats[a]-stats[b];})[0]:'offense';
     var val=focus==='offense'?(p.ssPpg||0)+(p.ssApg||0)*.55:focus==='defense'?(p.ssSpg||0)+(p.ssBpg||0):focus==='rebounds'?(p.ssRpg||0):(p.ssApg||0);
