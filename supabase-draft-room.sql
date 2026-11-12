@@ -163,7 +163,7 @@ begin
   alter publication supabase_realtime add table public.draft_rooms;
 exception when duplicate_object then null;
 end $$;
-do $
+do $$
 begin
   alter publication supabase_realtime add table public.draft_room_players;
 exception when duplicate_object then null;
