@@ -2606,8 +2606,9 @@
       const rookiesOnly=document.getElementById('rookies-only')?.checked||false;
       const source=getAnalyticsLeaderboard();
       currentData=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))&&(team==='ALL'||team===p.team)&&(!rookiesOnly||ROOKIE_NAMES_2627.has(p.name)));
-      currentData.sort((a,b)=>sortDirection==='asc'?(a[sortColumn]??0)-(b[sortColumn]??0):(b[sortColumn]??0)-(a[sortColumn]??0));
+      currentData.sort((a,b)=>b.total-a.total);
       currentData.forEach((p,i)=>p.rank=i+1);
+      currentData.sort((a,b)=>sortDirection==='asc'?(a[sortColumn]??0)-(b[sortColumn]??0):(b[sortColumn]??0)-(a[sortColumn]??0));
       const count=document.getElementById('player-count');if(count)count.textContent=currentData.length+' Players';
       renderTable();
     }
