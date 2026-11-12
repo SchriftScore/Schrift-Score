@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Basketball-Reference data is not configured. Add APISH_API_KEY to Vercel Preview.' });
   }
 
-  const seasonStart = '2026-10-21';
+  const seasonStart = '2026-10-20';
   const now = new Date();
   const today = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York',
