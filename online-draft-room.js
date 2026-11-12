@@ -5,6 +5,7 @@
   var SUPABASE_KEY = 'sb_publishable_sJriHLQFth-kYpO5hKU-wQ_p3xwV4GD';
   var client = null, roomId = null, roomCode = '', seat = null, hostId = null;
   var userId = null, playersInRoom = [], channel = null, botBusy = false, displayName = '';
+  var isPublicRoom = false, publicStartTimer = null, publicStartRoomId = null;
   var modalId = 'sda-online-room';
 
   function esc(v) {
@@ -54,6 +55,7 @@
       var b = e.target.closest('[data-online]');
       if (!b) return;
       var action = b.getAttribute('data-online');
+      if (action === 'quick') quickMatch();
       if (action === 'create') createRoom();
       if (action === 'join') joinRoom();
       if (action === 'start') startRoom();
@@ -79,10 +81,11 @@
   }
   function renderHome(error) {
     document.getElementById('sda-online-content').innerHTML =
+      '<section class="rounded-2xl border border-cyan-300/30 bg-gradient-to-r from-cyan-300/10 to-lime-300/5 p-5 mb-4"><div class="text-[10px] uppercase tracking-[.2em] text-cyan-200 font-black">Public matchmaking</div><div class="text-2xl font-black mt-1">QUICK MATCH</div><p class="text-sm text-slate-300 mt-1">Play against whoever is online. No invite code and no friends needed. We will find an open public draft or start one.</p><label class="block text-xs text-slate-400 mt-4 mb-1">Your display name</label><div class="flex flex-col sm:flex-row gap-2"><input id="sda-quick-name" maxlength="24" value="' + esc(displayName || 'Your Franchise') + '" class="flex-1 rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm"><button data-online="quick" class="rounded-xl bg-cyan-300 text-slate-950 font-black px-6 py-3">FIND A MATCH →</button></div></section>' +
       '<div class="grid md:grid-cols-2 gap-4">' +
-      '<section class="rounded-2xl border border-lime-400/25 bg-slate-900 p-5"><div class="text-lg font-black">Create a room</div><p class="text-sm text-slate-400 mt-1">Host a four-seat draft and invite friends with a six-character code.</p><label class="block text-xs text-slate-400 mt-5 mb-1">Your display name</label><input id="sda-online-name" maxlength="24" value="' + esc(displayName || 'Your Franchise') + '" class="w-full rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm"><button data-online="create" class="mt-3 w-full rounded-xl bg-lime-400 text-slate-950 font-black py-3">CREATE PRIVATE ROOM</button></section>' +
-      '<section class="rounded-2xl border border-white/10 bg-slate-900 p-5"><div class="text-lg font-black">Join a room</div><p class="text-sm text-slate-400 mt-1">Enter the code shared by the host.</p><label class="block text-xs text-slate-400 mt-5 mb-1">Your display name</label><input id="sda-online-join-name" maxlength="24" value="' + esc(displayName || 'Your Franchise') + '" class="w-full rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm"><label class="block text-xs text-slate-400 mt-3 mb-1">Room code</label><input id="sda-online-code" maxlength="6" placeholder="ABC123" class="w-full uppercase rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm tracking-[.25em]"><button data-online="join" class="mt-3 w-full rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 font-black py-3">JOIN ROOM</button></section>' +
-      '</div><p id="sda-online-message" class="text-sm text-rose-300 mt-4">' + esc(error || 'Sign-in is automatic. No password or account creation is needed.') + '</p><p class="text-[11px] text-slate-500 mt-4">The host can let the AI draft for any empty seats. Everyone else joins from their own device.</p>';
+      '<section class="rounded-2xl border border-lime-400/25 bg-slate-900 p-5"><div class="text-lg font-black">Create a private room</div><p class="text-sm text-slate-400 mt-1">Host a draft and invite friends with a six-character code.</p><label class="block text-xs text-slate-400 mt-5 mb-1">Your display name</label><input id="sda-online-name" maxlength="24" value="' + esc(displayName || 'Your Franchise') + '" class="w-full rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm"><button data-online="create" class="mt-3 w-full rounded-xl bg-lime-400 text-slate-950 font-black py-3">CREATE PRIVATE ROOM</button></section>' +
+      '<section class="rounded-2xl border border-white/10 bg-slate-900 p-5"><div class="text-lg font-black">Join a private room</div><p class="text-sm text-slate-400 mt-1">Enter the code shared by the host.</p><label class="block text-xs text-slate-400 mt-5 mb-1">Your display name</label><input id="sda-online-join-name" maxlength="24" value="' + esc(displayName || 'Your Franchise') + '" class="w-full rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm"><label class="block text-xs text-slate-400 mt-3 mb-1">Room code</label><input id="sda-online-code" maxlength="6" placeholder="ABC123" class="w-full uppercase rounded-xl bg-slate-950 border border-white/15 px-3 py-3 text-sm tracking-[.25em]"><button data-online="join" class="mt-3 w-full rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 font-black py-3">JOIN ROOM</button></section>' +
+      '</div><p id="sda-online-message" class="text-sm text-rose-300 mt-4">' + esc(error || 'Sign-in is automatic. No password or account creation is needed.') + '</p><p class="text-[11px] text-slate-500 mt-4">Public matches start automatically once four players join, or after a short wait when at least two players are found. Empty seats are filled by the host AI.</p>';
   }
   async function ensureClient() {
     if (!client) {
@@ -106,6 +109,19 @@
       userId = current.data.user.id;
     }
   }
+  async function quickMatch() {
+    try {
+      displayName = (document.getElementById('sda-quick-name').value || '').trim();
+      if (!displayName) throw new Error('Enter a display name.');
+      await ensureClient();
+      setMessage('Finding players online…');
+      var result = await client.rpc('quick_match_draft_room', {p_display_name:displayName});
+      if (result.error) throw result.error;
+      roomId = result.data.room_id; roomCode = result.data.room_code; seat = result.data.seat;
+      isPublicRoom = true;
+      await refreshRoom(); subscribe();
+    } catch (e) { setMessage(e.message || String(e)); }
+  }
   async function createRoom() {
     try {
       displayName = (document.getElementById('sda-online-name').value || '').trim();
@@ -113,7 +129,7 @@
       await ensureClient();
       var result = await client.rpc('create_draft_room', {p_display_name:displayName});
       if (result.error) throw result.error;
-      roomId = result.data.room_id; roomCode = result.data.room_code; seat = result.data.seat;
+      roomId = result.data.room_id; roomCode = result.data.room_code; seat = result.data.seat; isPublicRoom = false;
       await refreshRoom(); subscribe();
     } catch (e) { setMessage(e.message || String(e)); }
   }
@@ -125,7 +141,7 @@
       await ensureClient();
       var result = await client.rpc('join_draft_room', {p_room_code:code,p_display_name:displayName});
       if (result.error) throw result.error;
-      roomId = result.data.room_id; roomCode = result.data.room_code; seat = result.data.seat;
+      roomId = result.data.room_id; roomCode = result.data.room_code; seat = result.data.seat; isPublicRoom = false;
       await refreshRoom(); subscribe();
     } catch (e) { setMessage(e.message || String(e)); }
   }
@@ -136,7 +152,9 @@
     if (rosterResult.error) throw rosterResult.error;
     playersInRoom = rosterResult.data || [];
     hostId = roomResult.data.host_id;
+    isPublicRoom = !!roomResult.data.is_public;
     renderRoom(roomResult.data);
+    if (isPublicRoom) schedulePublicStart(roomResult.data);
   }
   function subscribe() {
     if (channel) client.removeChannel(channel);
@@ -151,10 +169,34 @@
       var p = playersInRoom.find(function (x) { return x.seat === s; });
       return '<div class="rounded-xl border ' + (p?'border-lime-400/30 bg-lime-400/5':'border-white/10 bg-slate-950/50') + ' p-4"><div class="text-[10px] uppercase text-slate-500">Seat ' + (s+1) + '</div><div class="font-black mt-1">' + (p?esc(p.display_name):'AI opponent if empty') + '</div>' + (s===seat?'<div class="text-[10px] text-lime-300 mt-1">YOU</div>':'') + '</div>';
     }).join('');
-    var code = '<div class="rounded-2xl border border-cyan-300/30 bg-cyan-300/5 p-5"><div class="text-xs uppercase tracking-widest text-cyan-200 font-bold">Invite friends · room code</div><div class="flex items-center gap-3 mt-2"><div class="text-4xl sm:text-5xl font-black tracking-[.2em]">' + esc(roomCode) + '</div><button data-online="copy" class="rounded-lg border border-white/20 px-3 py-2 text-xs">COPY</button></div><div class="text-xs text-slate-400 mt-2">Share this code with friends. Each person joins from their own device.</div></div>';
-    var action = r.status === 'waiting' ? (host ? '<button data-online="start" class="w-full mt-4 rounded-xl bg-lime-400 text-slate-950 font-black py-3" ' + (playersInRoom.length<2?'disabled style="opacity:.4"':'') + '>START DRAFT · ' + playersInRoom.length + '/4 PLAYERS</button>' : '<p class="text-sm text-slate-400 mt-4">Waiting for the host to start the draft…</p>') : '<div class="mt-4 text-sm text-lime-200 font-bold">' + (r.status==='finished'?'Draft complete':'Draft in progress') + '</div>';
+    var code = r.is_public
+      ? '<div class="rounded-2xl border border-cyan-300/30 bg-cyan-300/5 p-5"><div class="text-xs uppercase tracking-widest text-cyan-200 font-bold">PUBLIC QUICK MATCH</div><div class="text-2xl font-black mt-2">You are in matchmaking</div><div class="text-xs text-slate-400 mt-2">You were matched with whoever was online. This lobby is not listed by room code.</div></div>'
+      : '<div class="rounded-2xl border border-cyan-300/30 bg-cyan-300/5 p-5"><div class="text-xs uppercase tracking-widest text-cyan-200 font-bold">Invite friends · room code</div><div class="flex items-center gap-3 mt-2"><div class="text-4xl sm:text-5xl font-black tracking-[.2em]">' + esc(roomCode) + '</div><button data-online="copy" class="rounded-lg border border-white/20 px-3 py-2 text-xs">COPY</button></div><div class="text-xs text-slate-400 mt-2">Share this code with friends. Each person joins from their own device.</div></div>';
+    var action = r.status === 'waiting'
+      ? (r.is_public
+          ? '<div class="w-full mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/5 p-4 text-center"><div class="font-black text-cyan-200">WAITING FOR PLAYERS · '+playersInRoom.length+'/4</div><p class="text-xs text-slate-400 mt-1">'+(playersInRoom.length>=2?'Match found. Draft starts automatically in a moment.':'Keep this screen open. The draft starts when another player joins.')+'</p></div>'
+          : (host ? '<button data-online="start" class="w-full mt-4 rounded-xl bg-lime-400 text-slate-950 font-black py-3" ' + (playersInRoom.length<2?'disabled style="opacity:.4"':'') + '>START DRAFT · ' + playersInRoom.length + '/4 PLAYERS</button>' : '<p class="text-sm text-slate-400 mt-4">Waiting for the host to start the draft…</p>'))
+      : '<div class="mt-4 text-sm text-lime-200 font-bold">' + (r.status==='finished'?'Draft complete':'Draft in progress') + '</div>';
     document.getElementById('sda-online-content').innerHTML = code + '<div class="grid sm:grid-cols-2 gap-3 mt-4">' + seats + '</div>' + action + '<button data-online="leave" class="mt-3 text-xs text-slate-500 underline">Leave room</button><p id="sda-online-message" class="text-sm text-rose-300 mt-3"></p>' + (r.status==='waiting'?'':'<div id="sda-online-game" class="mt-5"></div>');
     if (r.status === 'live' || r.status === 'finished') renderGame(r);
+  }
+  function schedulePublicStart(r) {
+    if (!r || !r.is_public || r.status !== 'waiting' || playersInRoom.length < 2) return;
+    if (publicStartRoomId === r.id && publicStartTimer) return;
+    if (publicStartTimer) clearTimeout(publicStartTimer);
+    publicStartRoomId = r.id;
+    var started = new Date(r.created_at).getTime() + 15000;
+    var wait = Math.max(0, started - Date.now());
+    publicStartTimer = setTimeout(async function () {
+      publicStartTimer = null;
+      try {
+        var result = await client.rpc('start_public_draft_room', {p_room_id:r.id});
+        if (result.error && !String(result.error.message || '').includes('Still looking')) {
+          setMessage(result.error.message || String(result.error));
+        }
+        await refreshRoom();
+      } catch (e) { setMessage(e.message || String(e)); }
+    }, wait);
   }
   async function startRoom() {
     try { var result = await client.rpc('start_draft_room',{p_room_id:roomId}); if(result.error)throw result.error; await refreshRoom(); }
@@ -196,6 +238,8 @@
   }
   function leaveRoom() {
     if (channel && client) { client.removeChannel(channel); channel = null; }
+    if (publicStartTimer) clearTimeout(publicStartTimer);
+    publicStartTimer=null;publicStartRoomId=null;isPublicRoom=false;
     roomId=null;roomCode='';seat=null;hostId=null;playersInRoom=[];botBusy=false;
     renderHome();
   }
