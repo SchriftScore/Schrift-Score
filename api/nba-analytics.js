@@ -31,8 +31,20 @@ export default async function handler(req, res) {
   };
 
   try {
-    const board = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + startKey + '-' + endKey + '&limit=500');
-    const finals = (board.events || []).filter(e => e.competitions?.[0]?.status?.type?.completed);
+    // ESPN's NBA scoreboard is reliable by month; fetch month buckets and
+    // filter the requested rolling window locally (date-range queries can 400).
+    const monthKeys = new Set();
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) monthKeys.add(dateKey(d).slice(0, 6));
+    const monthBoards = await Promise.all([...monthKeys].map(month =>
+      getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + month + '&seasontype=2&limit=500')
+    ));
+    const eventMap = new Map();
+    monthBoards.forEach(payload => (payload.events || []).forEach(event => {
+      const eventDate = event.date ? new Date(event.date) : null;
+      const eventDay = eventDate ? dateKey(eventDate) : '';
+      if (eventDay >= startKey && eventDay <= endKey) eventMap.set(event.id, event);
+    }));
+    const finals = [...eventMap.values()].filter(e => e.competitions?.[0]?.status?.type?.completed);
     const games = [];
     const workers = Array.from({ length: Math.min(10, finals.length) }, async (_, workerIndex) => {
       for (let i = workerIndex; i < finals.length; i += Math.min(10, finals.length)) {
