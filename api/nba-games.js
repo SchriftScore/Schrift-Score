@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=43200');
   const rawDate = String(req.query?.date || '');
-  if (!/^\\d{8}$/.test(rawDate)) return res.status(400).json({ error: 'Use date=YYYYMMDD.' });
+  if (!/^\d{8}$/.test(rawDate)) return res.status(400).json({ error: 'Use date=YYYYMMDD.' });
   const date = rawDate.slice(0, 4) + '-' + rawDate.slice(4, 6) + '-' + rawDate.slice(6, 8);
   const apiKey = process.env.APISH_API_KEY;
   if (!apiKey) return res.status(503).json({ error: 'Basketball-Reference data is not configured. Add APISH_API_KEY to Vercel Preview.' });
@@ -27,11 +27,11 @@ export default async function handler(req, res) {
     return Number.isFinite(n) ? n : 0;
   };
   const boxIdFromUrl = value => {
-    const match = String(value || '').match(/boxscores\\/([^/?#]+?)(?:\\.html)?(?:[?#]|$)/i);
+    const match = String(value || '').match(/boxscores\/([^/?#]+?)(?:\.html)?(?:[?#]|$)/i);
     return match?.[1] || '';
   };
   const teamAbbrFromUrl = value => {
-    const match = String(value || '').match(/\\/teams\\/([A-Z]{3})\\//i);
+    const match = String(value || '').match(/\/teams\/([A-Z]{3})\//i);
     return match?.[1]?.toUpperCase() || '';
   };
 
