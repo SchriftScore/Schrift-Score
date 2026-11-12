@@ -95,6 +95,7 @@ export default async function handler(req, res) {
             const blk = num(row?.blk);
             const minutes = row?.mp ?? row?.minutes ?? '';
             if (!minutes && !pts && !reb && !ast && !stl && !blk) continue;
+            const ss = pts * 0.35 + reb * 0.83 + ast * 1.14 + stl * 1.80 + blk * 1.98 + 0.04;
             const isHome = team === homeAbbr;
             const own = isHome ? home : away;
             const opponent = isHome ? away : home;
@@ -106,7 +107,7 @@ export default async function handler(req, res) {
               opponent: opponent.abbr || opponent.name || '—',
               homeAway: isHome ? 'home' : 'away',
               result: own.score > opponent.score ? 'W' : 'L',
-              pts, reb, ast, stl, blk,
+              pts, reb, ast, stl, blk, ss,
               minutes: minutes || '—'
             });
           }
