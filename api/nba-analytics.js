@@ -1,109 +1,137 @@
-// Vercel serverless endpoint for real game-level Schrift Score analytics.
-// Pulls completed NBA games from ESPN scoreboard + official box-score summaries.
+// Game-level analytics sourced only from Basketball-Reference via API.SH.
+// Returns the current 2026-27 season once; the browser applies 7/14/30-day windows locally.
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-  const windowKey = String(req.query?.window || 'season');
-  if (!['season', '7', '14', '30'].includes(windowKey)) {
-    return res.status(400).json({ error: 'Use window=season, 7, 14, or 30.' });
-  }
+  res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=43200');
+  const apiKey = process.env.APISH_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'Basketball-Reference data is not configured. Add APISH_API_KEY to Vercel Preview.' });
 
+  const seasonStart = '2026-10-21';
   const now = new Date();
-  const etDate = new Intl.DateTimeFormat('en-CA', {
+  const today = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
   }).format(now);
-  const end = new Date(etDate + 'T12:00:00-05:00');
-  const start = new Date(end);
-  if (windowKey === 'season') start.setFullYear(2026, 9, 21);
-  else start.setDate(start.getDate() - (Number(windowKey) - 1));
-  const dateKey = d => new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(d).replaceAll('-', '');
-  const startKey = dateKey(start);
-  const endKey = dateKey(end);
-  const num = v => {
-    const n = Number(v);
+  const startDate = new Date(seasonStart + 'T12:00:00Z');
+  const endDate = new Date(today + 'T12:00:00Z');
+  const dayKeys = [];
+  for (const day = new Date(startDate); day <= endDate; day.setUTCDate(day.getUTCDate() + 1)) {
+    dayKeys.push(day.toISOString().slice(0, 10));
+  }
+
+  const apiGet = async (path, params) => {
+    const url = new URL('https://api.api.sh/basketball-reference/v1/' + path);
+    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+    const response = await fetch(url, {
+      headers: { 'x-api-key': apiKey, 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(120000)
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.error || ('API.SH ' + path + ' returned HTTP ' + response.status));
+    return payload;
+  };
+  const tablesOf = payload => Array.isArray(payload?.tables)
+    ? payload.tables
+    : payload?.tables && typeof payload.tables === 'object' ? Object.values(payload.tables) : [];
+  const num = value => {
+    if (value === null || value === undefined || value === '' || value === '-') return 0;
+    const n = Number(String(value).replace(/,/g, ''));
     return Number.isFinite(n) ? n : 0;
   };
-  const getJson = async url => {
-    const response = await fetch(url, { headers: { 'User-Agent': 'SchriftScore/1.0' } });
-    if (!response.ok) throw new Error('ESPN returned HTTP ' + response.status);
-    return response.json();
+  const teamAbbr = team => {
+    const match = String(team?.url || '').match(/\\/teams\\/([A-Z]{3})\\//i);
+    return match?.[1]?.toUpperCase() || String(team?.abbreviation || team?.team_id || '');
   };
+  const boxIdFromUrl = value => String(value || '').match(/boxscores\\/([^/?#]+?)(?:\\.html)?(?:[?#]|$)/i)?.[1] || '';
 
   try {
-    // ESPN's NBA scoreboard is reliable by month; fetch month buckets and
-    // filter the requested rolling window locally (date-range queries can 400).
-    const monthKeys = new Set();
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) monthKeys.add(dateKey(d).slice(0, 6));
-    const monthBoards = await Promise.all([...monthKeys].map(month =>
-      getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + month + '&seasontype=2&limit=500')
-    ));
-    const eventMap = new Map();
-    monthBoards.forEach(payload => (payload.events || []).forEach(event => {
-      const eventDate = event.date ? new Date(event.date) : null;
-      const eventDay = eventDate ? dateKey(eventDate) : '';
-      if (eventDay >= startKey && eventDay <= endKey) eventMap.set(event.id, event);
-    }));
-    const finals = [...eventMap.values()].filter(e => e.competitions?.[0]?.status?.type?.completed);
+    // Fetch the Basketball-Reference daily scores index for each date in the season.
+    const dailyPayloads = await Promise.all(dayKeys.map(date => apiGet('scores', { date })));
+    const descriptors = [];
+    dailyPayloads.forEach((payload, index) => {
+      const date = dayKeys[index];
+      for (const game of Array.isArray(payload.games) ? payload.games : []) {
+        const boxscoreUrl = game.boxscore_url || game.boxscoreUrl ||
+          (Array.isArray(game.teams) ? game.teams.find(team => team.boxscore_url)?.boxscore_url : '');
+        const boxId = boxIdFromUrl(boxscoreUrl) || boxIdFromUrl(game.url);
+        if (!boxId) throw new Error('Basketball-Reference listed a game without a box-score link.');
+        descriptors.push({ date, boxId, teams: Array.isArray(game.teams) ? game.teams : [] });
+      }
+    });
+
     const games = [];
-    const workers = Array.from({ length: Math.min(10, finals.length) }, async (_, workerIndex) => {
-      for (let i = workerIndex; i < finals.length; i += Math.min(10, finals.length)) {
-        const event = finals[i];
-        const comp = event.competitions?.[0];
-        if (!comp) continue;
-        const competitors = comp.competitors || [];
-        const away = competitors.find(t => t.homeAway === 'away');
-        const home = competitors.find(t => t.homeAway === 'home');
-        const summary = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + event.id);
-        const date = event.date || comp.date;
-        const dateOnly = date ? dateKey(new Date(date)).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') : '';
-        for (const teamBlock of summary.boxscore?.players || []) {
-          const team = teamBlock.team?.abbreviation || '';
-          const teamComp = competitors.find(t => t.team?.abbreviation === team);
-          const opponent = competitors.find(t => t.team?.abbreviation !== team);
-          for (const group of teamBlock.statistics || []) {
-            const labels = group.labels || [];
-            for (const row of group.athletes || []) {
-              if (!row.athlete) continue;
-              const vals = row.stats || [];
-              const get = key => {
-                const idx = labels.indexOf(key);
-                return idx < 0 ? 0 : vals[idx];
-              };
-              const pts = num(get('PTS'));
-              const reb = num(get('REB'));
-              const ast = num(get('AST'));
-              const stl = num(get('STL'));
-              const blk = num(get('BLK'));
-              const minRaw = get('MIN');
-              const minText = String(minRaw ?? '').trim();
-              const hasMinutes = (Number.isFinite(Number(minRaw)) && Number(minRaw) > 0) || (/^\d+:\d{2}$/.test(minText) && minText !== '0:00');
-              const played = hasMinutes || pts + reb + ast + stl + blk > 0;
-              if (!played) continue;
-              const playerName = row.athlete.displayName || row.athlete.shortName;
-              if (!playerName) continue;
-              const weights = { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 };
-              const ss = pts * weights.ppg + reb * weights.rpg + ast * weights.apg + stl * weights.spg + blk * weights.bpg + weights.gp;
-              games.push({
-                name: playerName, team, date: dateOnly, eventId: event.id,
-                opponent: opponent?.team?.abbreviation || '—',
-                homeAway: teamComp?.homeAway || '—',
-                result: teamComp && opponent ? (num(teamComp.score) > num(opponent.score) ? 'W' : 'L') : '—',
-                pts, reb, ast, stl, blk, minutes: minRaw || '—', ss
-              });
-            }
+    const concurrency = 8;
+    const workers = Array.from({ length: Math.min(concurrency, descriptors.length) }, async (_, worker) => {
+      for (let index = worker; index < descriptors.length; index += Math.min(concurrency, descriptors.length)) {
+        const descriptor = descriptors[index];
+        const payload = await apiGet('boxscore', { id: descriptor.boxId });
+        const tables = tablesOf(payload);
+        const basicTables = tables.filter(table =>
+          String(table?.id || '').includes('game-basic') ||
+          (Array.isArray(table?.rows) && table.rows.some(row => row?.player !== undefined && (row?.pts !== undefined || row?.mp !== undefined)))
+        );
+        const selectedTables = basicTables.length ? basicTables : tables;
+        const homeAbbr = descriptor.boxId.slice(-3).toUpperCase();
+        const teams = descriptor.teams;
+        const teamInfo = teams.map(team => ({
+          abbr: teamAbbr(team),
+          score: num(team?.score ?? team?.pts),
+          name: team?.name || team?.team || teamAbbr(team)
+        }));
+        const home = teamInfo.find(team => team.abbr === homeAbbr) || teamInfo[1] || {};
+        const away = teamInfo.find(team => team.abbr && team.abbr !== homeAbbr) || teamInfo[0] || {};
+        if (teamInfo.length < 2) throw new Error('Basketball-Reference score response omitted a game's two teams.');
+
+        for (const table of selectedTables) {
+          const tableId = String(table?.id || '');
+          const tableTeam = tableId.match(/box-([A-Z]{3})-/i)?.[1]?.toUpperCase() || '';
+          for (const row of Array.isArray(table?.rows) ? table.rows : []) {
+            const name = String(row?.player || row?.name || '').trim();
+            if (!name || /^(team totals|reserves|starters)$/i.test(name)) continue;
+            const team = tableTeam || String(row?.team_id || '');
+            if (!team) continue;
+            const pts = num(row?.pts);
+            const reb = num(row?.trb ?? row?.reb);
+            const ast = num(row?.ast);
+            const stl = num(row?.stl);
+            const blk = num(row?.blk);
+            const minutes = row?.mp ?? row?.minutes ?? '';
+            if (!minutes && !pts && !reb && !ast && !stl && !blk) continue;
+            const isHome = team === homeAbbr;
+            const own = isHome ? home : away;
+            const opponent = isHome ? away : home;
+            games.push({
+              name,
+              team,
+              date: descriptor.date,
+              eventId: descriptor.boxId,
+              opponent: opponent.abbr || opponent.name || '—',
+              homeAway: isHome ? 'home' : 'away',
+              result: own.score > opponent.score ? 'W' : 'L',
+              pts, reb, ast, stl, blk,
+              minutes: minutes || '—'
+            });
           }
         }
       }
     });
-    await Promise.all(workers);
+    if (workers.length) await Promise.all(workers);
+    if (!games.length && descriptors.length) {
+      throw new Error('Basketball-Reference box scores did not contain usable player lines.');
+    }
     games.sort((a, b) => b.date.localeCompare(a.date));
     return res.status(200).json({
-      window: windowKey, startDate: startKey, endDate: endKey,
-      games, gameCount: finals.length, generatedAt: new Date().toISOString()
+      source: 'Basketball-Reference',
+      retrieval: 'API.SH',
+      window: 'season',
+      startDate: seasonStart,
+      endDate: today,
+      games,
+      gameCount: descriptors.length,
+      generatedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Schrift Score analytics feed failed:', error);
-    return res.status(502).json({ error: 'Real game-level NBA data is temporarily unavailable. No estimated stats were substituted.' });
+    console.error('Basketball-Reference game analytics feed failed:', error);
+    return res.status(502).json({
+      error: 'Basketball-Reference game-level data could not be retrieved through API.SH. No ESPN or other substitute data was used.'
+    });
   }
 }
