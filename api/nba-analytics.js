@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
   try {
     // Fetch the Basketball-Reference daily scores index for every date in the season.
-    const dailyPayloads = await Promise.all(dayKeys.map(date => apiGet('scores', { date })));
+    const dailyPayloads = await Promise.all(dayKeys.map(date => apiGet('scores', date === today ? { date, fresh: 1 } : { date })));
     const descriptors = [];
     for (let index = 0; index < dailyPayloads.length; index += 1) {
       const payload = dailyPayloads[index];
@@ -74,7 +74,11 @@ export default async function handler(req, res) {
         const teamWithBoxLink = gameTeams.find(team => team.boxscore_url);
         const boxscoreUrl = game.boxscore_url || game.boxscoreUrl || (teamWithBoxLink && teamWithBoxLink.boxscore_url) || '';
         const boxId = boxIdFromUrl(boxscoreUrl) || boxIdFromUrl(game.url);
-        if (!boxId) throw new Error('Basketball-Reference listed a game without a box-score link.');
+        if (!boxId) {
+          const status = String(game.status || game.status_text || '').toLowerCase();
+          if (!status.includes('final')) continue; // Ignore games scheduled for later today.
+          throw new Error('Basketball-Reference listed a completed game without a box-score link.');
+        }
         descriptors.push({ date, boxId, teams: gameTeams });
       }
     }
