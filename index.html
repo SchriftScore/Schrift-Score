@@ -2580,9 +2580,15 @@
     }
 
     function getAnalyticsLeaderboard() {
-      const sourceGames=Object.prototype.hasOwnProperty.call(analyticsCache,activeAnalyticsWindow)?analyticsCache[activeAnalyticsWindow]:(analyticsLoadedWindow===activeAnalyticsWindow?analyticsGames:null);
+      const sourceGames=analyticsCache.season||(analyticsLoadedWindow==='season'?analyticsGames:null);
       if(!sourceGames) return activeAnalyticsWindow==='season'?masterData:[];
-      const filtered=sourceGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
+      let timeframeGames=sourceGames;
+      if(activeAnalyticsWindow!=='season'){
+        const cutoff=new Date();cutoff.setDate(cutoff.getDate()-(Number(activeAnalyticsWindow)-1));
+        const cutoffKey=dateKeyET(cutoff).replace(/^(\\d{4})(\\d{2})(\\d{2})$/,'$1-$2-$3');
+        timeframeGames=sourceGames.filter(g=>String(g.date||'')>=cutoffKey);
+      }
+      const filtered=timeframeGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
       const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
       const groups=new Map();
       filtered.forEach(g=>{const k=norm(g.name);if(!groups.has(k))groups.set(k,{name:g.name,team:g.team,games:[]});groups.get(k).games.push(g);});
@@ -2600,12 +2606,13 @@
     }
 
     async function loadGameAnalytics(key) {
-      if(Object.prototype.hasOwnProperty.call(analyticsCache,key)){analyticsGames=analyticsCache[key];analyticsLoadedWindow=key;return;}
+      const cacheKey='season';
+      if(Object.prototype.hasOwnProperty.call(analyticsCache,cacheKey)){analyticsGames=analyticsCache[cacheKey];analyticsLoadedWindow=cacheKey;return;}
       if(analyticsLoadPromise)await analyticsLoadPromise;
-      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading completed NBA box scores…';
-      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window='+encodeURIComponent(key),{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'NBA game data unavailable');analyticsGames=Array.isArray(data.games)?data.games:[];analyticsCache[key]=analyticsGames;analyticsLoadedWindow=key;})();
+      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading Basketball-Reference box scores…';
+      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season',{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
-      if(status)status.textContent='ESPN completed box scores · '+analyticsGames.length+' player-game lines loaded · '+new Date().toLocaleTimeString();
+      if(status)status.textContent='Basketball-Reference box scores · '+analyticsGames.length+' player-game lines loaded · '+new Date().toLocaleTimeString();
     }
 
     async function setAnalyticsWindow(key) {
@@ -2613,7 +2620,7 @@
       const qualifiedToggle=document.getElementById('nba-qualified-only');if(qualifiedToggle){qualifiedToggle.disabled=key!=='season';if(qualifiedToggle.disabled)qualifiedToggle.checked=false;}
       const minGamesSlider=document.getElementById('min-games-slider');if(minGamesSlider){minGamesSlider.max=key==='season'?'82':key;if(Number(minGamesSlider.value)>Number(minGamesSlider.max))minGamesSlider.value=minGamesSlider.max;}
       document.querySelectorAll('.timeframe-btn').forEach(btn=>{const on=btn.dataset.window===key;btn.className='timeframe-btn px-2.5 py-2 rounded-lg border font-mono text-[10px] sm:text-xs '+(on?'border-emerald-500 bg-emerald-500 text-slate-950 font-bold':'border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300');});
-      try{await loadGameAnalytics(key);applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Live game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
+      try{await loadGameAnalytics('season');applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Basketball-Reference game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
     }
 
     function applyAnalyticsControls(rerender=true) {
