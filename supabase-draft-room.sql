@@ -1,8 +1,6 @@
 -- Schrift Score Draft Room multiplayer schema
 -- Run this entire file once in Supabase SQL Editor.
 
-create extension if not exists pgcrypto;
-
 create table if not exists public.draft_rooms (
   id uuid primary key default gen_random_uuid(),
   room_code text not null unique,
@@ -51,7 +49,7 @@ begin
   if v_uid is null then raise exception 'Sign in is required.'; end if;
   if char_length(trim(p_display_name)) not between 1 and 24 then raise exception 'Name must be 1–24 characters.'; end if;
   loop
-    v_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 6));
+    v_code := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
     exit when not exists (select 1 from public.draft_rooms where room_code = v_code);
   end loop;
   insert into public.draft_rooms(room_code, host_id) values (v_code, v_uid) returning * into v_room;
