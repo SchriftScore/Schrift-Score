@@ -429,7 +429,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-200 dark:border-court-border pt-3">
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="block font-bold mb-1">GAME SPLIT</span><select id="analytics-split" onchange="applyAnalyticsControls()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-2 text-xs"><option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option></select></label>
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="flex justify-between font-bold mb-1"><span>MINIMUM GAMES PLAYED</span><span id="min-games-value">0</span></span><input id="min-games-slider" type="range" min="0" max="20" step="1" value="0" oninput="applyAnalyticsControls()" class="w-full accent-emerald-500 mt-2"><span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span></label>
-        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">NBA awards qualified</b><span class="text-[9px] text-slate-400">65-game season threshold</span></span></label>
+        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">65-game season minimum</b><span class="text-[9px] text-slate-400">Games-played filter only</span></span></label>
       </div><p id="analytics-status" class="text-[10px] text-slate-500 dark:text-slate-400" aria-live="polite">Loading verified game-level analytics…</p>
     </section>
 
@@ -2608,6 +2608,7 @@
       currentData=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))&&(team==='ALL'||team===p.team)&&(!rookiesOnly||ROOKIE_NAMES_2627.has(p.name)));
       currentData.sort((a,b)=>sortDirection==='asc'?(a[sortColumn]??0)-(b[sortColumn]??0):(b[sortColumn]??0)-(a[sortColumn]??0));
       currentData.forEach((p,i)=>p.rank=i+1);
+      const count=document.getElementById('player-count');if(count)count.textContent=currentData.length+' Players';
       renderTable();
     }
 
