@@ -83,7 +83,7 @@
     if(nom)nom.classList.add('hidden');if(stage)stage.classList.remove('hidden');
     var p=cur.player;T('auction-player-name',p.name);T('auction-player-meta',(p.team||'NBA')+' · Rank #'+(p.rank||'—')+' · Schrift Score '+Number(p.total).toFixed(2));
     T('auction-pts',Number(p.ppg||0).toFixed(1));T('auction-reb',Number(p.rpg||0).toFixed(1));T('auction-ast',Number(p.apg||0).toFixed(1));T('auction-stl',Number(p.spg||0).toFixed(1));T('auction-blk',Number(p.bpg||0).toFixed(1));
-    T('auction-current-bid',cash(cur.bid));T('auction-high-bidder','Leading: '+s.teams[cur.highTeam].name);
+    T('auction-current-bid',cash(cur.bid));T('auction-high-bidder',cur.highTeam<0?'Opening bid · No bids yet':'Leading: '+s.teams[cur.highTeam].name);
     var can=user.roster.length<12&&cur.highTeam!==0&&spendLimit(user)>=cur.bid+1;
     [1,5,10].forEach(function(step){var b=document.querySelector('#auction-player-stage button[onclick="placeAuctionBid('+step+')"]');if(b){b.disabled=!can||cur.bid+step>spendLimit(user);b.classList.toggle('opacity-40',b.disabled);}});
     T('auction-bid-message',cur.highTeam===0?'You are leading. Protect your bid.':'Raise the bid to take the lead.');
@@ -105,7 +105,7 @@
   function autoNominateForUser(){var s=S();if(!s.active||s.current||s.nominationTurn%12!==0)return;var p=chooseNomination(s.teams[0]);if(p)beginAuction(p,0);}
   function beginAuction(player,nominator){
     var s=S(),team=s.teams[nominator];if(!player||s.current||!team||team.roster.length>=12||!s.pool.some(function(p){return p.name===player.name;}))return;
-    s.selectedName='';s.current={player:player,bid:1,highTeam:nominator,deadline:Date.now()+8000,nextAiAt:Date.now()+900};
+    s.selectedName='';s.current={player:player,bid:1,highTeam:-1,nominator:nominator,deadline:Date.now()+8000,nextAiAt:Date.now()+900};
     feed('<b>'+esc(team.name)+'</b> nominates <b>'+esc(player.name)+'</b> at $1.','text-amber-200');renderAuctionDraft();
     stopTimer();s.timer=setInterval(function(){
       var c=s.current;if(!s.active||!c){stopTimer();return;}
@@ -133,9 +133,9 @@
   }
   function closeAuction(){
     var s=S(),c=s.current;if(!c)return;stopTimer();
-    var winner=s.teams[c.highTeam];winner.budget-=c.bid;winner.roster.push(c.player);
+    var winner=s.teams[c.highTeam>=0?c.highTeam:c.nominator];var salePrice=c.highTeam>=0?c.bid:1;winner.budget-=salePrice;winner.roster.push(c.player);
     s.pool=s.pool.filter(function(p){return p.name!==c.player.name;});
-    s.sold.push({player:c.player,price:c.bid,teamId:winner.id,nominator:s.nominationTurn%12});
+    s.sold.push({player:c.player,price:salePrice,teamId:winner.id,nominator:s.nominationTurn%12});
     feed('<b>SOLD:</b> '+esc(c.player.name)+' to <b>'+esc(winner.name)+'</b> for <b>'+cash(c.bid)+'</b>.',winner.user?'text-emerald-300':'text-amber-200');
     s.current=null;s.nominationTurn++;renderAuctionDraft();
     if(s.teams.every(function(t){return t.roster.length>=12;})||!s.pool.length){finishAuctionDraft();return;}
