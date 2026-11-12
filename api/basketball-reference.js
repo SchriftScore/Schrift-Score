@@ -35,6 +35,7 @@ export default async function handler(req, res) {
     url.searchParams.set('type', 'per_game');
     url.searchParams.set('league', 'nba');
     url.searchParams.set('tables', 'per_game_stats');
+    url.searchParams.set('fresh', '1');
 
     const response = await fetch(url, {
       headers: { 'x-api-key': apiKey, 'Accept': 'application/json' },
