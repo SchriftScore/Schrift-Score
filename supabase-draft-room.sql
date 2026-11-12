@@ -25,10 +25,10 @@ alter table public.draft_room_players enable row level security;
 
 create or replace function public.is_draft_room_member(p_room_id uuid)
 returns boolean language sql stable security definer set search_path = public, auth
-as $
+as $$
   select exists (select 1 from public.draft_room_players
                  where room_id = p_room_id and user_id = auth.uid());
-$;
+$$;
 
 drop policy if exists "Room members can read their rooms" on public.draft_rooms;
 create policy "Room members can read their rooms" on public.draft_rooms
@@ -162,9 +162,9 @@ do $$
 begin
   alter publication supabase_realtime add table public.draft_rooms;
 exception when duplicate_object then null;
-end $;
+end $$;
 do $
 begin
   alter publication supabase_realtime add table public.draft_room_players;
 exception when duplicate_object then null;
-end $;
+end $$;
