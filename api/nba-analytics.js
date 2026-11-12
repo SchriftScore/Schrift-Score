@@ -127,7 +127,8 @@ export default async function handler(req, res) {
             const stl = num(row.stl);
             const blk = num(row.blk);
             const minutes = row.mp !== undefined ? row.mp : (row.minutes || '');
-            if (!minutes && !pts && !reb && !ast && !stl && !blk) continue;
+            const hasMinutes = minutes !== '' && String(minutes).trim() !== '0:00' && String(minutes).trim() !== '0';
+            if (!hasMinutes && !pts && !reb && !ast && !stl && !blk) continue;
             const ss = pts * 0.35 + reb * 0.83 + ast * 1.14 + stl * 1.80 + blk * 1.98 + 0.04;
             const isHome = team === homeAbbr;
             const own = isHome ? home : away;
