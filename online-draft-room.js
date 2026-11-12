@@ -72,7 +72,8 @@
   function close() {
     var m = document.getElementById(modalId);
     if (m) m.classList.add('hidden');
-    if (channel && client) { client.removeChannel(channel); channel = null; }
+    if (roomId) leaveRoom(false);
+    else if (channel && client) { client.removeChannel(channel); channel = null; }
   }
   function setMessage(msg) {
     var n = document.getElementById('sda-online-message');
@@ -236,12 +237,21 @@
     try { await navigator.clipboard.writeText(roomCode); setMessage('Room code copied.'); }
     catch(e) { setMessage('Your room code is '+roomCode+'.'); }
   }
-  function leaveRoom() {
+  async function leaveRoom(showHome) {
+    var leavingId = roomId;
     if (channel && client) { client.removeChannel(channel); channel = null; }
     if (publicStartTimer) clearTimeout(publicStartTimer);
     publicStartTimer=null;publicStartRoomId=null;isPublicRoom=false;
+    if (leavingId && client && userId) {
+      try {
+        var result = await client.rpc('leave_draft_room', {p_room_id:leavingId});
+        if (result.error && showHome !== false) setMessage(result.error.message || String(result.error));
+      } catch (e) {
+        if (showHome !== false) setMessage(e.message || String(e));
+      }
+    }
     roomId=null;roomCode='';seat=null;hostId=null;playersInRoom=[];botBusy=false;
-    renderHome();
+    if (showHome !== false) renderHome();
   }
   window.openOnlineDraftRoom = open;
 })();
