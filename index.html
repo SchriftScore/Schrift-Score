@@ -2696,13 +2696,6 @@
       applyFilters();
     });
 
-    document.getElementById('reset-btn').addEventListener('click', () => {
-      document.getElementById('search-input').value = "";
-      document.getElementById('team-select').value = "ALL";
-      const rookieToggle=document.getElementById('rookies-only'); if(rookieToggle) rookieToggle.checked=false;
-      currentData = [...masterData];
-      renderTable();
-    });
 
     function sortTable(col) {
       if (sortColumn === col) {
