@@ -25,19 +25,20 @@ create table if not exists public.draft_room_players (
 alter table public.draft_rooms enable row level security;
 alter table public.draft_room_players enable row level security;
 
+create or replace function public.is_draft_room_member(p_room_id uuid)
+returns boolean language sql stable security definer set search_path = public, auth
+as $
+  select exists (select 1 from public.draft_room_players
+                 where room_id = p_room_id and user_id = auth.uid());
+$;
+
 drop policy if exists "Room members can read their rooms" on public.draft_rooms;
 create policy "Room members can read their rooms" on public.draft_rooms
-for select to authenticated using (
-  exists (select 1 from public.draft_room_players p
-          where p.room_id = draft_rooms.id and p.user_id = auth.uid())
-);
+for select to authenticated using (public.is_draft_room_member(id));
 
 drop policy if exists "Players can read their room roster" on public.draft_room_players;
 create policy "Players can read their room roster" on public.draft_room_players
-for select to authenticated using (
-  exists (select 1 from public.draft_room_players me
-          where me.room_id = draft_room_players.room_id and me.user_id = auth.uid())
-);
+for select to authenticated using (public.is_draft_room_member(room_id));
 
 create or replace function public.create_draft_room(p_display_name text)
 returns jsonb language plpgsql security definer set search_path = public, auth
@@ -116,6 +117,7 @@ declare
   v_turn integer;
   v_user_seat integer;
   v_host uuid;
+  v_is_empty_seat boolean;
 begin
   select * into v_room from public.draft_rooms where id = p_room_id for update;
   if not found then raise exception 'Room not found.'; end if;
@@ -123,7 +125,6 @@ begin
   if char_length(trim(p_player_name)) not between 1 and 100 then raise exception 'Invalid player name.'; end if;
   select seat into v_user_seat from public.draft_room_players where room_id = p_room_id and user_id = auth.uid();
   if v_user_seat is null then raise exception 'You are not in this room.'; end if;
-  v_host := v_room.host_id;
   v_picks := coalesce(v_room.state->'picks','[]'::jsonb);
   v_count := jsonb_array_length(v_picks);
   if v_count >= 20 then raise exception 'Draft is already complete.'; end if;
@@ -133,12 +134,15 @@ begin
   v_round := floor(v_count / 4.0)::integer;
   v_slot := v_count % 4;
   v_turn := case when v_round % 2 = 0 then v_slot else 3 - v_slot end;
-  if v_turn <> v_user_seat and not (v_user_seat = 0 and v_turn not in (select seat from public.draft_room_players where room_id = p_room_id)) then
+  select not exists (select 1 from public.draft_room_players where room_id = p_room_id and seat = v_turn)
+    into v_is_empty_seat;
+  if v_turn <> v_user_seat and not (auth.uid() = v_room.host_id and v_is_empty_seat) then
     raise exception 'It is not your turn.';
   end if;
   v_picks := v_picks || jsonb_build_array(jsonb_build_object(
     'pick', v_count + 1, 'round', v_round + 1, 'seat', v_turn,
-    'player_name', trim(p_player_name), 'picked_by', auth.uid(), 'picked_at', now()
+    'player_name', trim(p_player_name), 'picked_by', auth.uid(), 'picked_at', now(),
+    'is_bot', (v_turn <> v_user_seat)
   ));
   update public.draft_rooms
   set state = jsonb_set(coalesce(state,'{}'::jsonb), '{picks}', v_picks, true),
@@ -154,9 +158,15 @@ grant execute on function public.create_draft_room(text) to authenticated;
 grant execute on function public.join_draft_room(text,text) to authenticated;
 grant execute on function public.start_draft_room(uuid) to authenticated;
 grant execute on function public.submit_draft_pick(uuid,text) to authenticated;
+grant execute on function public.is_draft_room_member(uuid) to authenticated;
 
 do $$
 begin
   alter publication supabase_realtime add table public.draft_rooms;
 exception when duplicate_object then null;
-end $$;
+end $;
+do $
+begin
+  alter publication supabase_realtime add table public.draft_room_players;
+exception when duplicate_object then null;
+end $;
