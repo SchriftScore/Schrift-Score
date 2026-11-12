@@ -6,12 +6,18 @@
   var clock = null;
   var aiTimer = null;
   var challenges = [
-    {name:'GET BUCKETS',tag:'Scoring specialist',desc:'This round rewards pure scoring. Find a player who can carry an offense.',key:'points',bonus:function(p){return Math.min((+p.ppg||0)*0.22,6);},label:'PTS'},
-    {name:'RUN THE OFFENSE',tag:'Floor general',desc:'Playmaking is the assignment. Find the player who makes everyone better.',key:'assists',bonus:function(p){return Math.min((+p.apg||0)*0.72,6);},label:'AST'},
-    {name:'LOCKDOWN',tag:'Defensive menace',desc:'Stocks matter. Steals and blocks can swing this round.',key:'defense',bonus:function(p){return Math.min(((+p.spg||0)+(+p.bpg||0))*2.1,6);},label:'STL + BLK'},
-    {name:'OWN THE GLASS',tag:'Rebounding machine',desc:'Control the boards. Rebounds earn the round bonus.',key:'rebounds',bonus:function(p){return Math.min((+p.rpg||0)*0.42,6);},label:'REB'},
-    {name:'THE COMPLETE PLAYER',tag:'No weaknesses',desc:'The final round rewards players who contribute across the board.',key:'complete',bonus:function(p){var n=0;if((+p.ppg||0)>=18)n++;if((+p.rpg||0)>=6)n++;if((+p.apg||0)>=4)n++;if((+p.spg||0)>=1)n++;if((+p.bpg||0)>=0.8)n++;return n*1.25;},label:'ALL-AROUND'}
+    {name:'GET TO THE LINE',tag:'Rim pressure',desc:'Reward players who attack the basket and get to the free-throw line.',key:'scoring',bonus:function(p){return Math.min((+p.ppg||0)*0.18,5.5);},label:'PTS'},
+    {name:'TABLE SETTERS',tag:'Playmaking',desc:'Find the creators who generate good looks for teammates.',key:'assists',bonus:function(p){return Math.min((+p.apg||0)*0.78,6);},label:'AST'},
+    {name:'NO FLY ZONE',tag:'Rim protection',desc:'Protect the paint. Blocks and defensive presence earn the edge.',key:'blocks',bonus:function(p){return Math.min((+p.bpg||0)*3.0,6);},label:'BLK'},
+    {name:'PICKPOCKETS',tag:'Disruption',desc:'Create extra possessions with steals and active hands.',key:'steals',bonus:function(p){return Math.min((+p.spg||0)*3.0,6);},label:'STL'},
+    {name:'CLEAN THE GLASS',tag:'Rebounding',desc:'Finish possessions. Rebounders earn the round bonus.',key:'rebounds',bonus:function(p){return Math.min((+p.rpg||0)*0.4,6);},label:'REB'},
+    {name:'THREE-LEVEL THREAT',tag:'Scoring',desc:'A high-volume scorer who can pressure a defense all over the floor.',key:'scoring',bonus:function(p){return Math.min((+p.ppg||0)*0.2,6);},label:'PTS'},
+    {name:'THE CONNECTOR',tag:'All-around',desc:'Reward players who contribute in multiple statistical categories.',key:'complete',bonus:function(p){var n=0;if((+p.ppg||0)>=15)n++;if((+p.rpg||0)>=5)n++;if((+p.apg||0)>=4)n++;if((+p.spg||0)>=1)n++;if((+p.bpg||0)>=0.7)n++;return n*1.15;},label:'ALL-AROUND'},
+    {name:'TWO-WAY IMPACT',tag:'Two-way play',desc:'Both ends count. Combine scoring with steals and blocks.',key:'twoWay',bonus:function(p){return Math.min((+p.ppg||0)*0.12+((+p.spg||0)+(+p.bpg||0))*1.6,6);},label:'PTS + STOCKS'},
+    {name:'POSSESSION WINS',tag:'Possession game',desc:'Value the players who rebound, create, and disrupt without wasting possessions.',key:'possession',bonus:function(p){return Math.min((+p.rpg||0)*0.2+(+p.apg||0)*0.35+(+p.spg||0)*1.4,6);},label:'REB + AST + STL'},
+    {name:'STAR POWER',tag:'Elite production',desc:'The best overall producers get rewarded. Draft the player with the strongest total impact.',key:'star',bonus:function(p){return Math.min(score(p)*0.12,6);},label:'SCHRIFT SCORE'}
   ];
+  function shuffledFive(){var a=challenges.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a.slice(0,5);}
   var gmTemplates = [
     {name:'The Film Room',style:'film',line:'Trusts two-way players and complete games.',emoji:'🎥'},
     {name:'The Spreadsheet',style:'numbers',line:'Chases value and the best score on the board.',emoji:'📊'},
@@ -26,24 +32,29 @@
     try { if(typeof masterData!=='undefined') return masterData.filter(function(p){return p&&p.name&&Number.isFinite(Number(p.total));}); } catch(e){}
     return [];
   }
-  function role(p){
-    var pts=+p.ppg||0,reb=+p.rpg||0,ast=+p.apg||0,stl=+p.spg||0,blk=+p.bpg||0;
-    if(pts>=22)return 'BUCKET GETTER';
-    if(ast>=6)return 'FLOOR GENERAL';
-    if(stl>=1.5||blk>=1.5)return 'LOCKDOWN';
-    if(reb>=9)return 'GLASS CLEANER';
-    if(pts>=15&&reb>=5&&ast>=4)return 'ALL-AROUND';
-    return 'ROTATION PIECE';
+  function playerArchetypes(p){
+    var tags=[];
+    if((+p.ppg||0)>=20)tags.push('SCORING');
+    if((+p.apg||0)>=5)tags.push('PLAYMAKING');
+    if((+p.spg||0)>=1.3||(+p.bpg||0)>=1.2)tags.push('DEFENSE');
+    if((+p.rpg||0)>=7.5)tags.push('REBOUNDING');
+    if((+p.ppg||0)>=15&&(+p.rpg||0)>=5&&(+p.apg||0)>=4)tags.push('ALL-AROUND');
+    return tags;
   }
-  function bonus(p,round){return challenges[round].bonus(p);}
+  function role(p){
+    var tags=playerArchetypes(p);
+    return tags[0]||'ROTATION PIECE';
+  }
+  function bonus(p,round){var deck=game&&game.challenges?game.challenges:challenges;return deck[Math.max(0,Math.min(round,deck.length-1))].bonus(p);}
   function playerValue(p,round){return score(p)+bonus(p,round);}
   function teamScore(t){
     var base=t.roster.reduce(function(n,p){return n+score(p);},0);
-    var roles={};t.roster.forEach(function(p){var r=role(p);if(r!=='ROTATION PIECE')roles[r]=true;});
-    var coverage=Object.keys(roles).length;
-    var chemistry=Math.max(0,coverage-1)*2.5;
+    var roles={};t.roster.forEach(function(p){playerArchetypes(p).forEach(function(tag){roles[tag]=true;});});
+    var roleNames=Object.keys(roles);
+    var coverage=roleNames.length;
+    var chemistry=Math.min(10,coverage*2);
     var missions=t.missionBonus||0;
-    return {base:base,chemistry:chemistry,missions:missions,total:base+chemistry+missions,coverage:coverage};
+    return {base:base,chemistry:chemistry,missions:missions,total:base+chemistry+missions,coverage:coverage,roles:roleNames};
   }
   function makeTeams(name){
     return [{id:0,name:name||'Your Franchise',user:true,style:'user',emoji:'🫵',roster:[],missionBonus:0,score:0},
@@ -84,8 +95,8 @@
       '<div class="text-[10px] text-slate-500 mt-3">'+pool.length+' players loaded from the live Schrift Score player pool</div></div></section>'+
       '<section class="rounded-3xl border border-white/10 bg-slate-900 p-5 sm:p-7"><div class="text-xs uppercase tracking-[.2em] font-black text-slate-400">The rules</div><div class="space-y-5 mt-5">'+
       rule('01','Snake draft','You and three AI GMs take turns. Draft order reverses every round. You get five picks.','↔️')+
-      rule('02','Round challenges','Every round has a different mission: scoring, playmaking, defense, rebounding, and all-around impact.','🎯')+
-      rule('03','Build chemistry','Draft different player types to unlock roster chemistry points. A team of five one-dimensional scorers will not automatically win.','🧩')+
+      rule('02','Random round missions','Five different missions are drawn from a larger pool every game. The order and combination change, so you cannot rely on the same first-round target. Each pick earns a mission bonus based on the player’s real stats.','🎯')+
+      rule('03','Chemistry explained','Players can qualify as scorers (20+ PPG), playmakers (5+ APG), defenders (1.3+ steals or 1.2+ blocks), rebounders (7.5+ RPG), or all-around (15+ PPG, 5+ RPG, 4+ APG). Each different archetype represented adds 2 points, up to 10. One player can cover more than one archetype.','🧩')+
       rule('04','Beat the room','Your final roster score combines real Schrift Score totals, round challenge bonuses, and lineup chemistry.','🏆')+
       '</div><div class="mt-7 border-t border-white/10 pt-5"><div class="font-black text-sm">ONLINE MULTIPLAYER</div><p class="text-xs text-slate-400 mt-1">I’m designing this as a real invite-a-friend mode, not a fake room code. It needs a shared realtime game server before players on different devices can draft together.</p><div class="mt-3 inline-flex rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-[10px] font-bold text-sky-300">ONLINE ROOMS · NEXT BUILD</div></div></section></div>'+
       '<div class="text-center text-[10px] text-slate-500 mt-5">Designed to be a quick 3–5 minute showdown. No 144-player auction marathons.</div>';
@@ -95,7 +106,7 @@
     var pool=poolData();if(pool.length<20){alert('The live player pool has not loaded yet. Wait for the Schrift Score leaderboard to finish loading, then try again.');return;}
     var name=(el('sda-team-name').value||'Your Franchise').trim().slice(0,24)||'Your Franchise';
     var teams=makeTeams(name);
-    game={teams:teams,pool:pool.slice().sort(function(a,b){return score(b)-score(a);}),picks:[],feed:[],selected:null,seconds:22,finished:false,started:Date.now(),bestSteal:null};
+    game={teams:teams,pool:pool.slice().sort(function(a,b){return score(b)-score(a);}),picks:[],feed:[],selected:null,seconds:22,finished:false,started:Date.now(),bestSteal:null,challenges:shuffledFive()};
     pushFeed('The commissioner has opened the draft. Five rounds. No excuses.','system');
     renderLive();
     nextTurn();
@@ -165,7 +176,7 @@
   }
   function renderLive(){
     if(!game)return;
-    var round=currentRound(),teamId=orderForPick(game.picks.length),onClock=teamId===0,mission=challenges[Math.min(round,4)];
+    var round=currentRound(),teamId=orderForPick(game.picks.length),onClock=teamId===0,mission=game.challenges[Math.min(round,4)];
     var teams=game.teams.slice().sort(function(a,b){return teamScore(b).total-teamScore(a).total;});
     var selected=game.pool.find(function(p){return p.name===game.selected;});
     var q=game.search||'';
@@ -173,7 +184,7 @@
     var picksHtml=game.picks.slice(-8).reverse().map(function(x){return '<div class="flex items-center justify-between gap-2 py-2 border-b border-white/5"><div class="min-w-0"><div class="text-[10px] text-slate-500">R'+x.round+' · '+x.team+'</div><div class="text-xs font-bold truncate">'+esc(game.teams[x.team].name)+': '+esc(x.player.name)+'</div></div><div class="text-right shrink-0"><div class="text-xs font-black text-amber-300">'+score(x.player).toFixed(1)+'</div><div class="text-[9px] text-slate-500">SS</div></div></div>';}).join('');
     el('sda-main').innerHTML=
       '<div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><div class="text-[10px] uppercase tracking-[.25em] text-amber-400 font-black">Live draft · '+game.picks.length+'/20 picks</div><h2 class="text-2xl sm:text-3xl font-black">ROUND '+Math.min(round+1,5)+' <span class="text-slate-500">/ 5</span></h2></div><div class="flex items-center gap-2"><div class="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-right"><div class="text-[9px] text-slate-500 uppercase">On the clock</div><div class="font-black text-sm '+(onClock?'text-emerald-300':'text-amber-300')+'">'+(onClock?'YOUR PICK':esc(game.teams[teamId].name))+'</div></div><button data-action="exit" class="text-xs text-slate-400 hover:text-white px-2">Exit</button></div></div>'+
-      '<div class="rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/15 to-orange-400/5 p-4 mb-4"><div class="flex items-center justify-between gap-2"><div><div class="text-[9px] uppercase tracking-[.25em] font-black text-amber-300">Round '+(round+1)+' mission · '+mission.tag+'</div><div class="text-xl font-black mt-1">'+mission.name+'</div><div class="text-xs text-slate-300 mt-1">'+mission.desc+'</div></div><div class="text-right shrink-0"><div class="text-[9px] uppercase text-slate-400">Bonus stat</div><div class="text-lg font-black text-amber-300">'+mission.label+'</div></div></div></div>'+
+      '<div class="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-400/10 to-indigo-400/5 p-4 mb-4"><div class="flex items-center justify-between gap-2"><div><div class="text-[9px] uppercase tracking-[.25em] font-black text-cyan-300">Random mission '+(round+1)+' of 5 · '+mission.tag+'</div><div class="text-xl font-black mt-1">'+mission.name+'</div><div class="text-xs text-slate-300 mt-1">'+mission.desc+'</div></div><div class="text-right shrink-0"><div class="text-[9px] uppercase text-slate-400">Bonus stat</div><div class="text-lg font-black text-amber-300">'+mission.label+'</div></div></div></div>'+
       '<div class="grid xl:grid-cols-[1fr_300px] gap-4"><section class="min-w-0"><div class="grid sm:grid-cols-2 gap-3 mb-3">'+teams.map(function(t){var s=teamScore(t);return '<div class="rounded-2xl border '+(t.user?'border-emerald-400/40 bg-emerald-400/5':'border-white/10 bg-slate-900')+' p-3"><div class="flex justify-between gap-2"><div class="font-black text-xs truncate">'+t.emoji+' '+esc(t.name)+(t.user?' · YOU':'')+'</div><div class="text-sm font-black '+(t.user?'text-emerald-300':'text-amber-300')+'">'+s.total.toFixed(1)+'</div></div><div class="flex justify-between text-[9px] text-slate-500 mt-1"><span>'+t.roster.length+'/5 drafted</span><span>+ '+s.chemistry.toFixed(1)+' chemistry</span></div><div class="flex gap-1 mt-2">'+[0,1,2,3,4].map(function(i){return '<div class="flex-1 h-1.5 rounded-full '+(t.roster[i]?(t.user?'bg-emerald-400':'bg-amber-400'):'bg-white/10')+'"></div>';}).join('')+'</div><div class="mt-2 flex flex-wrap gap-1">'+t.roster.map(function(p){return '<span class="text-[9px] rounded bg-white/5 px-1.5 py-1 text-slate-300">'+esc(p.name)+'</span>';}).join('')+'</div></div>';}).join('')+'</div>'+
       '<div class="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden"><div class="p-3 border-b border-white/10 flex items-center justify-between gap-2"><div><div class="text-xs font-black">PLAYER BOARD</div><div class="text-[9px] text-slate-500">Choose your next pick from the live player pool</div></div><input id="sda-search" value="'+esc(q)+'" placeholder="Search player / team" class="w-44 max-w-[48%] rounded-lg bg-slate-950 border border-white/10 px-2 py-2 text-xs outline-none focus:border-amber-400" '+(onClock?'':'disabled')+'></div>'+
       '<div class="grid grid-cols-[1fr_auto] gap-0"><div class="max-h-[48vh] overflow-y-auto divide-y divide-white/5">'+(players.map(function(p){var active=selected&&selected.name===p.name;return '<button data-player="'+esc(p.name)+'" '+(onClock?'':'disabled')+' class="w-full text-left p-3 flex items-center gap-3 hover:bg-white/5 disabled:opacity-50 '+(active?'bg-amber-400/10':'')+'"><div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">'+(game.pool.indexOf(p)+1)+'</div><div class="min-w-0 flex-1"><div class="text-xs font-black truncate">'+esc(p.name)+'</div><div class="text-[9px] text-slate-500">'+esc(p.team||'NBA')+' · '+role(p)+'</div></div><div class="text-right"><div class="text-sm font-black text-emerald-300">'+score(p).toFixed(1)+'</div><div class="text-[8px] text-slate-500">SS</div></div></button>';}).join('')||'<div class="p-6 text-center text-xs text-slate-500">No players found.</div>')+'</div>'+
