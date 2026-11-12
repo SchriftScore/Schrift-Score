@@ -37,10 +37,10 @@ export default async function handler(req, res) {
     return Number.isFinite(n) ? n : 0;
   };
   const teamAbbr = team => {
-    const match = String(team?.url || '').match(/\\/teams\\/([A-Z]{3})\\//i);
+    const match = String(team?.url || '').match(/\/teams\/([A-Z]{3})\//i);
     return match?.[1]?.toUpperCase() || String(team?.abbreviation || team?.team_id || '');
   };
-  const boxIdFromUrl = value => String(value || '').match(/boxscores\\/([^/?#]+?)(?:\\.html)?(?:[?#]|$)/i)?.[1] || '';
+  const boxIdFromUrl = value => String(value || '').match(/boxscores\/([^/?#]+?)(?:\.html)?(?:[?#]|$)/i)?.[1] || '';
 
   try {
     // Fetch the Basketball-Reference daily scores index for each date in the season.
