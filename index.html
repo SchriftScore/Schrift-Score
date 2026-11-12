@@ -1384,6 +1384,7 @@
     // Basketball-Reference day index is linked on every game for independent verification.
     let yesterdayGames = [];
     let analyticsGames = [];
+    let analyticsCache = {};
     let analyticsLoadedWindow = null;
     let analyticsLoadPromise = null;
     let activeAnalyticsWindow = 'season';
@@ -2611,8 +2612,9 @@
     }
 
     function getAnalyticsLeaderboard() {
-      if(!analyticsGames.length) return masterData;
-      const filtered=analyticsGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
+      const sourceGames=Object.prototype.hasOwnProperty.call(analyticsCache,activeAnalyticsWindow)?analyticsCache[activeAnalyticsWindow]:(analyticsLoadedWindow===activeAnalyticsWindow?analyticsGames:null);
+      if(!sourceGames) return masterData;
+      const filtered=sourceGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
       const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
       const groups=new Map();
       filtered.forEach(g=>{const k=norm(g.name);if(!groups.has(k))groups.set(k,{name:g.name,team:g.team,games:[]});groups.get(k).games.push(g);});
@@ -2630,10 +2632,10 @@
     }
 
     async function loadGameAnalytics(key) {
-      if(analyticsLoadedWindow===key&&analyticsGames.length)return;
+      if(Object.prototype.hasOwnProperty.call(analyticsCache,key)){analyticsGames=analyticsCache[key];analyticsLoadedWindow=key;return;}
       if(analyticsLoadPromise)await analyticsLoadPromise;
       const status=document.getElementById('analytics-status');if(status)status.textContent='Loading completed NBA box scores…';
-      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window='+encodeURIComponent(key),{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'NBA game data unavailable');analyticsGames=Array.isArray(data.games)?data.games:[];analyticsLoadedWindow=key;})();
+      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window='+encodeURIComponent(key),{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'NBA game data unavailable');analyticsGames=Array.isArray(data.games)?data.games:[];analyticsCache[key]=analyticsGames;analyticsLoadedWindow=key;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
       if(status)status.textContent='ESPN completed box scores · '+analyticsGames.length+' player-game lines loaded · '+new Date().toLocaleTimeString();
     }
@@ -2664,7 +2666,7 @@
       try{
         await loadGameAnalytics('season');
         const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-        const logs=analyticsGames.filter(g=>norm(g.name)===norm(p.name)).sort((a,b)=>a.date.localeCompare(b.date));
+        const profileGames=analyticsCache.season||analyticsGames;const logs=profileGames.filter(g=>norm(g.name)===norm(p.name)).sort((a,b)=>a.date.localeCompare(b.date));
         if(!logs.length)throw new Error('No completed game logs returned for this player.');
         const high=logs.reduce((best,g)=>g.ss>best.ss?g:best,logs[0]);
         document.getElementById('profile-high').textContent=high.ss.toFixed(2)+' SS';
