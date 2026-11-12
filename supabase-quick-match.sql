@@ -138,7 +138,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public, auth
-as $
+as $$
 declare
   v_room public.draft_rooms%rowtype;
   v_next_host uuid;
@@ -163,7 +163,7 @@ begin
 
   return jsonb_build_object('left',true,'new_host',v_next_host);
 end;
-$;
+$$;
 
 grant execute on function public.leave_draft_room(uuid) to authenticated;
 grant execute on function public.quick_match_draft_room(text) to authenticated;
