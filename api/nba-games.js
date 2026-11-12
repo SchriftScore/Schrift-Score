@@ -73,15 +73,17 @@ export default async function handler(req, res) {
             blk: asNumber(row?.blk),
             min: minutes || '—'
           };
-          if (player.min === '—' && !player.pts && !player.reb && !player.ast && !player.stl && !player.blk) continue;
+          const hasMinutes = player.min !== '—' && String(player.min).trim() !== '0:00' && String(player.min).trim() !== '0';
+          if (!hasMinutes && !player.pts && !player.reb && !player.ast && !player.stl && !player.blk) continue;
           if (box.some(existing => existing.name === player.name && existing.tm === player.tm)) continue;
           box.push(player);
         }
       }
       if (!box.length) throw new Error('Basketball-Reference returned an incomplete box score for ' + boxId + '.');
 
-      const away = teams[0] || {};
-      const home = teams[1] || {};
+      const homeAbbr = boxId.slice(-3).toUpperCase();
+      const home = teams.find(team => teamAbbrFromUrl(team.url) === homeAbbr) || teams[1] || {};
+      const away = teams.find(team => team !== home && teamAbbrFromUrl(team.url) !== homeAbbr) || teams.find(team => team !== home) || teams[0] || {};
       const teamName = team => team.name || team.team || team.abbreviation || '—';
       const teamScore = team => asNumber(team.score ?? team.pts);
       return {
