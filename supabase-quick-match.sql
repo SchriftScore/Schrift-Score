@@ -49,7 +49,7 @@ begin
   from public.draft_rooms r
   where r.is_public = true
     and r.status = 'waiting'
-    and r.created_at > now() - interval '2 minutes'
+    and r.created_at > now() - interval '10 minutes'
     and not exists (
       select 1 from public.draft_room_players p
       where p.room_id = r.id and p.user_id = v_uid
