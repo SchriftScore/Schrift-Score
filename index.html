@@ -2253,27 +2253,27 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        // Current leaderboard is loaded from the user's supplied spreadsheet export.
-        // Values, rank history, and Schrift Score totals are preserved as supplied.
+        // Basketball-Reference is the sole source for 2026-27 season per-game stats.
+        // Never load the supplied spreadsheet, ESPN, or a stale fallback for this leaderboard.
         try {
-          const response = await fetch('/data/leaderboard-2026-27.json', { cache: 'no-store' });
+          const response = await fetch('/api/basketball-reference?season=2027', { cache: 'no-store' });
           const payload = await response.json();
-          if (!response.ok) throw new Error(payload.error || 'Spreadsheet leaderboard unavailable');
-          if (!Array.isArray(payload.players) || payload.players.length !== 466) {
-            throw new Error('Spreadsheet leaderboard did not contain all 466 player rows');
+          if (!response.ok) throw new Error(payload.error || 'Basketball-Reference leaderboard unavailable');
+          if (payload.source !== 'Basketball-Reference' || !Array.isArray(payload.players) || !payload.players.length) {
+            throw new Error('Basketball-Reference returned an invalid leaderboard payload');
           }
           masterData = payload.players;
           seasonsData[seasonKey] = masterData;
           const sourceStatus = document.getElementById('analytics-status');
-          if (sourceStatus) sourceStatus.textContent = 'Source: Supplied Schrift Score spreadsheet · ' + payload.count + ' players · Updated ' + new Date(payload.updatedAt).toLocaleString();
-          console.info('Schrift Score: loaded ' + payload.count + ' players from the supplied spreadsheet.');
+          if (sourceStatus) sourceStatus.textContent = 'Source: Basketball-Reference 2026–27 Per Game · ' + payload.count + ' players · Retrieved ' + new Date(payload.updatedAt).toLocaleString();
+          console.info('Schrift Score: loaded ' + payload.count + ' players from Basketball-Reference.');
         } catch (err) {
-          console.error('Spreadsheet leaderboard could not be loaded.', err);
+          console.error('Basketball-Reference leaderboard could not be loaded.', err);
           masterData = [];
           const rows = document.getElementById('table-rows');
-          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">The Schrift Score spreadsheet could not be loaded. No substitute stats were shown.</td></tr>';
+          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">Basketball-Reference stats could not be loaded. No spreadsheet, ESPN, or stale substitute stats were shown.</td></tr>';
           const sourceStatus = document.getElementById('analytics-status');
-          if (sourceStatus) sourceStatus.textContent = 'Supplied spreadsheet unavailable · no substitute stats loaded';
+          if (sourceStatus) sourceStatus.textContent = 'Basketball-Reference unavailable · no substitute stats loaded';
         }
       } else if (seasonsData[seasonKey] && seasonsData[seasonKey].length > 0) {
         masterData = seasonsData[seasonKey];
