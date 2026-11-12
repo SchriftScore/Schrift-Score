@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         const home = competitors.find(t => t.homeAway === 'home');
         const summary = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + event.id);
         const date = event.date || comp.date;
-        const dateOnly = date ? dateKey(new Date(date)).replace(/^(\\d{4})(\\d{2})(\\d{2})$/, '$1-$2-$3') : '';
+        const dateOnly = date ? dateKey(new Date(date)).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3') : '';
         for (const teamBlock of summary.boxscore?.players || []) {
           const team = teamBlock.team?.abbreviation || '';
           const teamComp = competitors.find(t => t.team?.abbreviation === team);
