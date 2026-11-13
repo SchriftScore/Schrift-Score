@@ -6,6 +6,7 @@
   var client = null, roomId = null, roomCode = '', seat = null, hostId = null;
   var userId = null, playersInRoom = [], channel = null, botBusy = false, displayName = '';
   var isPublicRoom = false, publicStartTimer = null, publicStartRoomId = null;
+  var selectedPlayer = null, turnClockTimer = null, turnClockKey = '', turnStartedAt = 0, autoPickBusy = false;
   var modalId = 'sda-online-room';
 
   function esc(v) {
@@ -27,17 +28,51 @@
     if ((+p.ppg || 0) >= 15 && (+p.rpg || 0) >= 5 && (+p.apg || 0) >= 4) a.push('ALL-AROUND');
     return a;
   }
+  var challenges = [
+    {name:'GET TO THE LINE',tag:'Rim pressure',desc:'Reward players who attack the basket and get to the free-throw line.',label:'PTS',bonus:function(p){return Math.min((+p.ppg||0)*0.18,5.5);}},
+    {name:'TABLE SETTERS',tag:'Playmaking',desc:'Find the creators who generate good looks for teammates.',label:'AST',bonus:function(p){return Math.min((+p.apg||0)*0.78,6);}},
+    {name:'NO FLY ZONE',tag:'Rim protection',desc:'Protect the paint. Blocks and defensive presence earn the edge.',label:'BLK',bonus:function(p){return Math.min((+p.bpg||0)*3,6);}},
+    {name:'PICKPOCKETS',tag:'Disruption',desc:'Create extra possessions with steals and active hands.',label:'STL',bonus:function(p){return Math.min((+p.spg||0)*3,6);}},
+    {name:'CLEAN THE GLASS',tag:'Rebounding',desc:'Finish possessions. Rebounders earn the round bonus.',label:'REB',bonus:function(p){return Math.min((+p.rpg||0)*0.4,6);}},
+    {name:'THREE-LEVEL THREAT',tag:'Scoring',desc:'A high-volume scorer who can pressure a defense all over the floor.',label:'PTS',bonus:function(p){return Math.min((+p.ppg||0)*0.2,6);}},
+    {name:'THE CONNECTOR',tag:'All-around',desc:'Reward players who contribute in multiple statistical categories.',label:'ALL-AROUND',bonus:function(p){var n=0;if((+p.ppg||0)>=15)n++;if((+p.rpg||0)>=5)n++;if((+p.apg||0)>=4)n++;if((+p.spg||0)>=1)n++;if((+p.bpg||0)>=0.7)n++;return n*1.15;}},
+    {name:'TWO-WAY IMPACT',tag:'Two-way play',desc:'Both ends count. Combine scoring with steals and blocks.',label:'PTS + STOCKS',bonus:function(p){return Math.min((+p.ppg||0)*0.12+((+p.spg||0)+(+p.bpg||0))*1.6,6);}},
+    {name:'POSSESSION WINS',tag:'Possession game',desc:'Value the players who rebound, create, and disrupt without wasting possessions.',label:'REB + AST + STL',bonus:function(p){return Math.min((+p.rpg||0)*0.2+(+p.apg||0)*0.35+(+p.spg||0)*1.4,6);}},
+    {name:'STAR POWER',tag:'Elite production',desc:'The best overall producers get rewarded. Draft the player with the strongest total impact.',label:'SCHRIFT SCORE',bonus:function(p){return Math.min(ss(p)*0.12,6);}}
+  ];
+  function missionDeck(seed) {
+    var deck=challenges.slice(),h=2166136261;
+    String(seed||'schriftscore').split('').forEach(function(c){h^=c.charCodeAt(0);h=Math.imul(h,16777619);});
+    var state=h>>>0;
+    function random(){state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;}
+    for(var i=deck.length-1;i>0;i--){var j=Math.floor(random()*(i+1));var t=deck[i];deck[i]=deck[j];deck[j]=t;}
+    return deck.slice(0,5);
+  }
+  function missionBonus(player, round) {
+    var deck=missionDeck(roomId);
+    return deck[Math.max(0,Math.min(round,4))].bonus(player);
+  }
   function teamScores(picks, pool) {
     return [0,1,2,3].map(function (s) {
-      var roster = picks.filter(function (p) { return p.seat === s; }).map(function (pick) {
-        return pool.find(function (p) { return p.name === pick.player_name; }) || {name:pick.player_name,total:0};
+      var roster=[],mission=0;
+      picks.forEach(function(p,i){
+        if(p.seat!==s)return;
+        var player=pool.find(function(x){return x.name===p.player_name;})||{name:p.player_name,total:0};
+        roster.push(player);mission+=missionBonus(player,Math.floor(i/4));
       });
-      var covered = {};
-      roster.forEach(function (p) { roles(p).forEach(function (r) { covered[r] = true; }); });
-      var chemistry = Math.min(10, Object.keys(covered).length * 2);
-      var base = roster.reduce(function (n,p) { return n + ss(p); }, 0);
-      return {seat:s, roster:roster, base:base, chemistry:chemistry, total:base+chemistry};
+      var covered={};
+      roster.forEach(function(p){roles(p).forEach(function(r){covered[r]=true;});});
+      var chemistry=Math.min(10,Object.keys(covered).length*2);
+      var base=roster.reduce(function(n,p){return n+ss(p);},0);
+      return {seat:s,roster:roster,base:base,chemistry:chemistry,missions:mission,total:base+chemistry+mission,roles:Object.keys(covered)};
     });
+  }
+  function archetype(p) {
+    var a=roles(p);return a[0]||'ROTATION PIECE';
+  }
+  function fmt(v){return (Number(v)||0).toFixed(1);}
+  function aiValue(p, round) {
+    return ss(p)+missionBonus(p,round);
   }
   function turnAt(n) {
     var round = Math.floor(n / 4), slot = n % 4;
@@ -61,6 +96,7 @@
       if (action === 'start') startRoom();
       if (action === 'leave') leaveRoom();
       if (action === 'pick') submitPick(b.getAttribute('data-player'));
+      if (action === 'select') { selectedPlayer=b.getAttribute('data-player'); if(roomId) client.from('draft_rooms').select('*').eq('id',roomId).single().then(function(x){if(!x.error)renderGame(x.data);}); }
       if (action === 'copy') copyCode();
     });
   }
@@ -208,30 +244,41 @@
     catch(e){setMessage(e.message||String(e));}
   }
   function renderGame(r) {
-    var picks = (r.state && r.state.picks) || [];
-    var turn = turnAt(picks.length);
-    var myTurn = seat === turn;
-    var host = userId === hostId;
-    var vacant = !playersInRoom.some(function(p){return p.seat===turn;});
-    var pool = getPool();
-    var taken = picks.map(function(p){return p.player_name;});
-    var available = pool.filter(function(p){return taken.indexOf(p.name)<0;});
-    var teams = teamScores(picks,pool);
-    var html = '<div class="rounded-2xl border border-white/10 bg-slate-900 p-4"><div class="flex justify-between items-center gap-2"><div><div class="text-[10px] uppercase tracking-widest text-cyan-200">Live draft · '+picks.length+'/20 picks</div><div class="text-2xl font-black mt-1">ROUND '+Math.min(5,Math.floor(picks.length/4)+1)+' / 5</div></div><div class="text-right text-xs font-bold '+(myTurn?'text-lime-200':'text-cyan-200')+'">'+(myTurn?'YOUR PICK':(host&&vacant?'HOST AI PICK':'SEAT '+(turn+1)+' ON THE CLOCK'))+'</div></div>';
-    html += '<div class="grid sm:grid-cols-2 gap-2 mt-4">'+teams.map(function(t){var rp=playersInRoom.find(function(p){return p.seat===t.seat;});return '<div class="rounded-xl border border-white/10 bg-slate-950 p-3"><div class="flex justify-between"><b class="text-xs">'+esc(rp?rp.display_name:'AI · Seat '+(t.seat+1))+'</b><b class="text-cyan-200">'+t.total.toFixed(1)+'</b></div><div class="text-[9px] text-slate-500 mt-1">'+t.roster.map(function(p){return esc(p.name);}).join(' · ')+'</div><div class="text-[9px] text-lime-200 mt-1">+'+t.chemistry.toFixed(1)+' chemistry</div></div>';}).join('')+'</div>';
-    html += '<div class="mt-4"><div class="text-xs font-black mb-2">PLAYER BOARD</div><input id="sda-online-search" placeholder="Search player" class="w-full rounded-lg bg-slate-950 border border-white/10 px-3 py-2 text-xs mb-2"><div class="max-h-72 overflow-y-auto divide-y divide-white/5">'+available.slice(0,80).map(function(p){var allowed=myTurn||(host&&vacant);return '<div class="flex items-center gap-3 py-2" data-player-row="'+esc(p.name.toLowerCase())+'"><div class="min-w-0 flex-1"><div class="text-xs font-bold">'+esc(p.name)+'</div><div class="text-[9px] text-slate-500">'+esc(p.team||'NBA')+'</div></div><b class="text-sm text-lime-200">'+ss(p).toFixed(1)+'</b><button data-online="pick" data-player="'+esc(p.name)+'" '+(!allowed?'disabled':'')+' class="rounded-lg bg-lime-400 px-3 py-2 text-[10px] font-black text-slate-950 disabled:opacity-30">PICK</button></div>';}).join('')+'</div></div>';
-    html += '<p id="sda-online-message" class="text-sm text-rose-300 mt-3"></p><div class="text-[10px] text-slate-500 mt-2">Snake draft · Schrift Score totals + up to 10 chemistry points · Duplicate picks and out-of-turn picks are rejected by the database.</div></div>';
-    var node = document.getElementById('sda-online-game');
-    if (node) node.innerHTML = html;
-    var search = document.getElementById('sda-online-search');
-    if (search) search.addEventListener('input',function(){var q=this.value.toLowerCase();Array.from(node.querySelectorAll('[data-player-row]')).forEach(function(row){row.style.display=row.getAttribute('data-player-row').includes(q)?'flex':'none';});});
-    if (host && vacant && r.status==='live' && picks.length<20 && !botBusy && available.length) {
-      botBusy = true;
-      setTimeout(function(){
-        var result = client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:available[0].name});
-        result.then(function(res){botBusy=false;if(res.error)setMessage(res.error.message);else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});
-      },600);
+    var picks=(r.state&&r.state.picks)||[];
+    var turn=turnAt(picks.length),myTurn=seat===turn,host=userId===hostId;
+    var vacant=!playersInRoom.some(function(p){return p.seat===turn;});
+    var pool=getPool().slice().sort(function(a,b){return ss(b)-ss(a);});
+    var taken=picks.map(function(p){return p.player_name;});
+    var available=pool.filter(function(p){return taken.indexOf(p.name)<0;});
+    var teams=teamScores(picks,pool);
+    var round=Math.min(4,Math.floor(picks.length/4));
+    var deck=missionDeck(roomId),mission=deck[round];
+    if(selectedPlayer&&taken.indexOf(selectedPlayer)>=0)selectedPlayer=null;
+    if(!selectedPlayer&&available.length)selectedPlayer=available[0].name;
+    var selected=available.find(function(p){return p.name===selectedPlayer;})||null;
+    var teamNames=['Your Franchise','The Film Room','The Spreadsheet','The Hot Take'];
+    var teamIcons=['🫵','🎥','📊','🔥'];
+    var html='<div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><div class="text-[10px] uppercase tracking-[.25em] text-cyan-400 font-black">Live draft · '+picks.length+'/20 picks</div><h2 class="text-2xl sm:text-3xl font-black">ROUND '+Math.min(round+1,5)+' <span class="text-slate-500">/ 5</span></h2></div><div class="flex items-center gap-2"><div class="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-right"><div class="text-[9px] text-slate-500 uppercase">On the clock</div><div class="font-black text-sm '+(myTurn?'text-lime-300':'text-cyan-300')+'">'+(myTurn?'YOUR PICK':(host&&vacant?'HOST AI PICK':'SEAT '+(turn+1)+' · '+esc((playersInRoom.find(function(p){return p.seat===turn;})||{}).display_name||'AI OPPONENT')))+'</div></div></div></div>';
+    html+='<div class="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-400/10 to-indigo-400/5 p-4 mb-4"><div class="flex items-center justify-between gap-2"><div><div class="text-[9px] uppercase tracking-[.25em] font-black text-cyan-300">Random mission '+(round+1)+' of 5 · '+mission.tag+'</div><div class="text-xl font-black mt-1">'+mission.name+'</div><div class="text-xs text-slate-300 mt-1">'+mission.desc+'</div></div><div class="text-right shrink-0"><div class="text-[9px] uppercase text-slate-400">Bonus stat</div><div class="text-lg font-black text-cyan-300">'+mission.label+'</div></div></div></div>';
+    html+='<div class="grid sm:grid-cols-2 gap-3 mb-4">'+teams.map(function(t){var rp=playersInRoom.find(function(p){return p.seat===t.seat;});var name=rp?rp.display_name:teamNames[t.seat];var icon=rp?'🏀':teamIcons[t.seat];return '<div class="rounded-2xl border '+(t.seat===seat?'border-lime-400/40 bg-lime-400/5':'border-white/10 bg-slate-900')+' p-3"><div class="flex justify-between gap-2"><div class="font-black text-xs truncate">'+icon+' '+esc(name)+(t.seat===seat?' · YOU':'')+'</div><div class="text-sm font-black '+(t.seat===seat?'text-lime-300':'text-cyan-300')+'">'+t.total.toFixed(1)+'</div></div><div class="flex justify-between text-[9px] text-slate-500 mt-1"><span>'+t.roster.length+'/5 drafted</span><span>+'+t.chemistry.toFixed(1)+' chemistry · '+t.roles.length+'/5 types</span></div><div class="text-[9px] text-cyan-300 mt-1">'+(t.roles.length?t.roles.join(' · '):'No archetypes covered yet')+'</div><div class="flex gap-1 mt-2">'+[0,1,2,3,4].map(function(i){return '<div class="flex-1 h-1.5 rounded-full '+(t.roster[i]?(t.seat===seat?'bg-lime-400':'bg-cyan-400'):'bg-white/10')+'"></div>';}).join('')+'</div><div class="mt-2 flex flex-wrap gap-1">'+t.roster.map(function(p){return '<span class="text-[9px] rounded bg-white/5 px-1.5 py-1 text-slate-300">'+esc(p.name)+'</span>';}).join('')+'</div></div>';}).join('')+'</div>';
+    var ticker=picks.slice(-8).map(function(p,i){var absolute=picks.length-1-i;var seatNo=p.seat;var playerName=p.player_name;var pl=pool.find(function(x){return x.name===playerName;});return {p:p,seat:seatNo,name:playerName,player:pl};}).reverse();
+    html+='<div class="grid xl:grid-cols-[1fr_300px] gap-4"><section class="min-w-0"><div class="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden"><div class="p-3 border-b border-white/10 flex items-center justify-between gap-2"><div><div class="text-xs font-black">PLAYER BOARD</div><div class="text-[9px] text-slate-500">Choose your next pick from the live player pool</div></div><input id="sda-online-search" placeholder="Search player / team" class="w-44 max-w-[48%] rounded-lg bg-slate-950 border border-white/10 px-2 py-2 text-xs outline-none focus:border-cyan-400"></div><div class="grid grid-cols-[1fr_auto] gap-0"><div class="max-h-[48vh] overflow-y-auto divide-y divide-white/5">'+available.slice(0,80).map(function(p){var active=selected&&selected.name===p.name;return '<button type="button" data-online="select" data-player="'+esc(p.name)+'" class="w-full text-left p-3 flex items-center gap-3 hover:bg-white/5 '+(active?'bg-cyan-400/10':'')+'"><div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">'+(pool.indexOf(p)+1)+'</div><div class="min-w-0 flex-1"><div class="text-xs font-black truncate">'+esc(p.name)+'</div><div class="text-[9px] text-slate-500">'+esc(p.team||'NBA')+' · '+archetype(p)+'</div></div><div class="text-right"><div class="text-sm font-black text-lime-300">'+ss(p).toFixed(1)+'</div><div class="text-[8px] text-slate-500">SS</div></div></button>';}).join('')+'</div><aside class="border-l border-white/10 p-3 min-w-0">'+(selected?'<div class="text-[9px] uppercase tracking-widest text-cyan-300 font-black">Scouting report</div><div class="text-lg font-black mt-2">'+esc(selected.name)+'</div><div class="text-[10px] text-slate-500">'+esc(selected.team||'NBA')+' · '+archetype(selected)+'</div><div class="text-3xl font-black text-lime-300 mt-4">'+ss(selected).toFixed(2)+'<span class="text-xs text-slate-500 ml-1">SS</span></div><div class="grid grid-cols-2 gap-2 mt-4">'+[['PTS',selected.ppg],['REB',selected.rpg],['AST',selected.apg],['STL',selected.spg],['BLK',selected.bpg]].map(function(x){return '<div class="rounded-lg bg-slate-950 p-2"><div class="text-[8px] text-slate-500">'+x[0]+'</div><div class="font-black text-sm">'+fmt(x[1])+'</div></div>';}).join('')+'</div><div class="mt-3 rounded-lg bg-cyan-400/10 border border-cyan-400/20 p-2"><div class="text-[9px] text-cyan-300 font-bold">ROUND BONUS</div><div class="text-lg font-black">+'+mission.bonus(selected).toFixed(1)+'</div></div><button data-online="pick" data-player="'+esc(selected.name)+'" '+(!myTurn?'disabled':'')+' class="w-full rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs py-3 mt-4 disabled:opacity-30">DRAFT '+esc(selected.name.split(' ').slice(-1)[0].toUpperCase())+' →</button>':'<div class="h-full min-h-48 flex flex-col items-center justify-center text-center"><div class="text-3xl">👀</div><div class="text-xs font-bold mt-2">Select a player</div><div class="text-[9px] text-slate-500 mt-1">View their scouting report before you pick</div></div>')+'</aside></div></div></section>';
+    html+='<aside class="space-y-3"><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black mb-2">Draft ticker</div>'+(ticker.length?ticker.map(function(x){var t=playersInRoom.find(function(p){return p.seat===x.seat;});return '<div class="flex items-center justify-between gap-2 py-2 border-b border-white/5"><div class="min-w-0"><div class="text-[10px] text-slate-500">Seat '+(x.seat+1)+'</div><div class="text-xs font-bold truncate">'+esc(t?t.display_name:teamNames[x.seat])+': '+esc(x.name)+'</div></div><div class="text-right shrink-0"><div class="text-xs font-black text-cyan-300">'+(x.player?ss(x.player).toFixed(1):'—')+'</div><div class="text-[9px] text-slate-500">SS</div></div></div>';}).join(''):'<div class="text-xs text-slate-500">The first pick is coming up.</div>')+'</div><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Draft clock</div><div class="text-xl font-black mt-2 '+(myTurn?'text-lime-300':'text-slate-400')+'">'+(myTurn?'YOUR PICK':'WAITING FOR SEAT '+(turn+1))+'</div><div class="text-[10px] text-slate-500 mt-2">'+(myTurn?'Make your pick while you are on the clock.':'The next franchise is making its move.')+'</div><div class="mt-3 text-xs font-bold text-cyan-300">'+(picks.length?'Latest pick: '+esc(picks[picks.length-1].player_name):'The first pick is coming up.')+'</div></div></aside></div>';
+    html+='<p id="sda-online-message" class="text-sm text-rose-300 mt-3"></p><div class="text-[10px] text-slate-500 mt-2">Snake draft · Schrift Score totals + mission bonuses + up to 10 chemistry points · Duplicate picks and out-of-turn picks are rejected by the database.</div>';
+    var node=document.getElementById('sda-online-game');
+    if(node)node.innerHTML=html;
+    var search=document.getElementById('sda-online-search');
+    if(search)search.addEventListener('input',function(){var q=this.value.toLowerCase();Array.from(node.querySelectorAll('[data-online="select"]')).forEach(function(row){var name=row.getAttribute('data-player')||'';row.style.display=name.toLowerCase().includes(q)?'flex':'none';});});
+    if(host&&vacant&&r.status==='live'&&picks.length<20&&!botBusy&&available.length){
+      botBusy=true;
+      setTimeout(function(){var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:available[0].name});result.then(function(res){botBusy=false;if(res.error)setMessage(res.error.message);else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
     }
+    if(r.status==='finished')renderOnlineResults(r,picks,pool,teams);
+  }
+  function renderOnlineResults(r,picks,pool,teams) {
+    var ranked=teams.slice().sort(function(a,b){return b.total-a.total;});
+    var html='<div class="rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 to-slate-900 p-5 mt-5"><div class="text-center py-5"><div class="text-5xl">🏆</div><div class="text-[10px] uppercase tracking-[.3em] text-cyan-300 font-black mt-3">Final results</div><h2 class="text-3xl sm:text-5xl font-black mt-2">THE DRAFT IS COMPLETE.</h2></div><div class="text-xs uppercase tracking-widest text-cyan-300 font-black">Final standings</div><div class="mt-4 space-y-2">'+ranked.map(function(t,i){var p=playersInRoom.find(function(x){return x.seat===t.seat;});return '<div class="rounded-xl '+(i===0?'bg-cyan-400/15 border border-cyan-400/40':'bg-black/20 border border-white/5')+' p-3 flex items-center gap-3"><div class="text-xl font-black w-8">'+['🥇','🥈','🥉','4th'][i]+'</div><div class="min-w-0 flex-1"><div class="font-black text-sm">'+esc(p?p.display_name:['Your Franchise','The Film Room','The Spreadsheet','The Hot Take'][t.seat])+(t.seat===seat?' · YOU':'')+'</div><div class="text-[9px] text-slate-500">'+t.roster.map(function(x){return esc(x.name);}).join(' · ')+'</div></div><div class="text-right"><div class="text-xl font-black '+(i===0?'text-cyan-300':'text-white')+'">'+t.total.toFixed(1)+'</div><div class="text-[9px] text-slate-500">'+t.base.toFixed(1)+' SS + '+t.chemistry.toFixed(1)+' chemistry + '+t.missions.toFixed(1)+' mission</div></div></div>';}).join('')+'</div></div>';
+    var node=document.getElementById('sda-online-game');if(node)node.insertAdjacentHTML('beforeend',html);
   }
   async function copyCode() {
     try { await navigator.clipboard.writeText(roomCode); setMessage('Room code copied.'); }
@@ -250,7 +297,7 @@
         if (showHome !== false) setMessage(e.message || String(e));
       }
     }
-    roomId=null;roomCode='';seat=null;hostId=null;playersInRoom=[];botBusy=false;
+    roomId=null;roomCode='';seat=null;hostId=null;playersInRoom=[];botBusy=false;selectedPlayer=null;turnClockKey='';turnStartedAt=0;
     if (showHome !== false) renderHome();
   }
   window.openOnlineDraftRoom = open;
