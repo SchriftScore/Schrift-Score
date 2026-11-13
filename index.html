@@ -2608,7 +2608,8 @@
       groups.forEach(group=>{
         const gp=group.games.length;
         if(gp<analyticsMinGames||(analyticsQualifiedOnly&&gp<65))return;
-        const avg=k=>group.games.reduce((sum,g)=>sum+Number(g[k]||0),0)/gp;
+        // Round averages to the one decimal displayed in the table BEFORE applying SS weights.
+        const avg=k=>Number((group.games.reduce((sum,g)=>sum+Number(g[k]||0),0)/gp).toFixed(1));
         const ppg=avg('pts'),rpg=avg('reb'),apg=avg('ast'),spg=avg('stl'),bpg=avg('blk');
         const base=masterData.find(p=>norm(p.name)===norm(group.name));
         rows.push({...base,name:base?.name||group.name,team:base?.team||group.team,ppg,rpg,apg,spg,bpg,gp,ssPpg:ppg*w.ppg,ssRpg:rpg*w.rpg,ssApg:apg*w.apg,ssSpg:spg*w.spg,ssBpg:bpg*w.bpg,ssGp:gp*w.gp,total:ppg*w.ppg+rpg*w.rpg+apg*w.apg+spg*w.spg+bpg*w.bpg+gp*w.gp});
