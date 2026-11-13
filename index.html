@@ -2419,42 +2419,44 @@
     }
 
     function updateTopCards() {
-      if (masterData.length === 0) return;
+      // In 2026–27, refresh the cards from the same verified game-level data as the table.
+      const cardData = activeSeason === '2026/27' && (analyticsCache.season || analyticsLoadedWindow === 'season')
+        ? getAnalyticsLeaderboard()
+        : masterData;
+      if (!cardData.length) return;
 
-      const leader = masterData[0];
+      const leader = cardData[0];
       highlightPlayers.leader = leader;
       document.getElementById('stat-leader').textContent = leader.name;
-      document.getElementById('stat-leader-score').textContent = `${leader.total.toFixed(2)} Total (${leader.team})`;
+      document.getElementById('stat-leader-score').textContent = `${Number(leader.total || 0).toFixed(2)} Total (${leader.team || '—'})`;
 
-      // Best Yesterday is calculated from the complete live 2026-27 box scores.
       updateDailyBestFromGames();
 
-      const topScorer = [...masterData].sort((a,b) => b.ppg - a.ppg)[0];
+      const topScorer = [...cardData].sort((a,b) => Number(b.ppg || 0) - Number(a.ppg || 0))[0];
       highlightPlayers.scorer = topScorer;
       document.getElementById('stat-scorer').textContent = topScorer.name;
-      document.getElementById('stat-scorer-val').textContent = `${topScorer.ppg.toFixed(1)} PPG (${topScorer.team})`;
+      document.getElementById('stat-scorer-val').textContent = `${Number(topScorer.ppg || 0).toFixed(1)} PPG (${topScorer.team || '—'})`;
 
-      const sortedByChange = [...masterData].sort((a,b) => b.rankChange - a.rankChange);
+      const sortedByChange = [...cardData].sort((a,b) => Number(b.rankChange || 0) - Number(a.rankChange || 0));
       const biggestRiser = sortedByChange[0];
       const biggestFaller = sortedByChange[sortedByChange.length - 1];
-
       highlightPlayers.riser = biggestRiser;
       highlightPlayers.faller = biggestFaller;
 
-      if (biggestRiser && biggestRiser.rankChange > 0) {
+      if (biggestRiser && Number(biggestRiser.rankChange || 0) > 0) {
         document.getElementById('stat-riser').textContent = biggestRiser.name;
         document.getElementById('stat-riser-val').textContent = `▲ +${biggestRiser.rankChange} (#${biggestRiser.rank})`;
       } else {
-        document.getElementById('stat-riser').textContent = "None";
-        document.getElementById('stat-riser-val').textContent = "0";
+        document.getElementById('stat-riser').textContent = 'None';
+        document.getElementById('stat-riser-val').textContent = '0';
       }
 
-      if (biggestFaller && biggestFaller.rankChange < 0) {
+      if (biggestFaller && Number(biggestFaller.rankChange || 0) < 0) {
         document.getElementById('stat-faller').textContent = biggestFaller.name;
         document.getElementById('stat-faller-val').textContent = `▼ ${biggestFaller.rankChange} (#${biggestFaller.rank})`;
       } else {
-        document.getElementById('stat-faller').textContent = "None";
-        document.getElementById('stat-faller-val').textContent = "0";
+        document.getElementById('stat-faller').textContent = 'None';
+        document.getElementById('stat-faller-val').textContent = '0';
       }
     }
 
@@ -2620,6 +2622,8 @@
       analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season',{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
       if(status)status.textContent='Basketball-Reference box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
+      updateTopCards();
+      applyFilters();
     }
 
     async function setAnalyticsWindow(key) {
