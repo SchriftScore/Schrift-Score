@@ -1444,6 +1444,12 @@
     // 2026-27 daily game data is loaded from the ESPN scoreboard/box-score feed.
     // Basketball-Reference day index is linked on every game for independent verification.
     let yesterdayGames = [];
+    let playerGameLines = [];
+    let playerGameAnalyticsLoaded = false;
+    let analyticsBaselineData = new Map();
+    let analyticsTimeframe = 'season';
+    let analyticsLoadError = '';
+
     const GAME_WEIGHTS_2627 = { ppg:0.35, rpg:0.83, apg:1.14, spg:1.80, bpg:1.98, gp:0.04 };
     const ROOKIE_NAMES_2627 = new Set([
       "AJ Dybantsa","Darryn Peterson","Cameron Boozer","Caleb Wilson","Keaton Wagler","Mikel Brown Jr.","Darius Acuff Jr.","Kingston Flemings","Morez Johnson Jr.","Brayden Burries","Yaxel Lendeborg","Aday Mara","Nate Ament","Hannes Steinbach","Dailyn Swain","Bennett Stirtz","Christian Anderson Jr.","Karim Lopez","Labaron Philon Jr.","Cameron Carr","Meleek Thomas","Allen Graves","Jayden Quaintance","Zuby Ejiofor","Tarris Reed Jr.","Chris Cenac Jr.","Joshua Jefferson","Alex Karaban","Koa Peat","Bruce Thornton","Richie Saunders","Isaiah Evans","Trevon Brazile","Baba Miller","Ryan Conwell","Braden Smith","Dillon Mitchell","Otega Oweh","Ja'Kobi Gillespie","Tyler Bilodeau","Maliq Brown","Emanuel Sharp","Felix Okpara","Tobi Lawal","Jaden Bradley","Henri Veesaar","Ugonna Onyenso","Nick Martinelli","Jaron Pierre Jr.","Sergio de Larrea","Izaiyah Nelson","Tyler Nickel","Vsevolod Ishchenko","Narcisse Ngoy","Trey Kaufman-Renn","Malique Lewis","Jaden Akins","Jaron Pierre Jr.","Norchad Omier","Ernest Udeh Jr.","Carson Cooper","Nate Bittle","Ebuka Okorie","Bennett Stirtz","Josh Dix","Thomas Sorber","Graham Ike","Bogoljub Markovic","Malik Dia","Quadir Copeland","Yaxel Lendeborg"
@@ -2169,6 +2175,127 @@
     }
 
     // --- LIVE TIMESTAMP ENGINE ---
+    // --- BOX-SCORE-DRIVEN ANALYTICS ---
+    function setAnalyticsTimeframe(period) {
+      analyticsTimeframe = String(period);
+      document.querySelectorAll('.analytics-period-btn').forEach(btn => {
+        const active = btn.dataset.timeframe === analyticsTimeframe;
+        btn.classList.toggle('bg-emerald-500', active);
+        btn.classList.toggle('text-slate-950', active);
+        btn.classList.toggle('border-emerald-500', active);
+      });
+      const awardToggle = document.getElementById('analytics-65-game');
+      if (awardToggle) {
+        awardToggle.disabled = analyticsTimeframe !== 'season';
+        if (analyticsTimeframe !== 'season') awardToggle.checked = false;
+        awardToggle.closest('label')?.classList.toggle('opacity-40', analyticsTimeframe !== 'season');
+      }
+      applyAnalyticsFilters();
+    }
+
+    async function loadPlayerGameAnalytics() {
+      const status = document.getElementById('analytics-data-status');
+      if (activeSeason !== '2026/27') {
+        if (status) status.textContent = 'ESPN completed box scores · Game-log analytics currently available for 2026–27.';
+        return;
+      }
+      if (status) status.textContent = 'ESPN completed box scores · Fetching completed regular-season box scores…';
+      try {
+        const response = await fetch('/api/player-game-logs?season=2026-27', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || `Box-score service returned HTTP ${response.status}`);
+        if (!Array.isArray(payload.playerGames) || !payload.playerGames.length) throw new Error('No completed regular-season player-game lines were returned.');
+        playerGameLines = payload.playerGames.map(g => ({...g, ss: gameSchriftScore(g)}));
+        playerGameAnalyticsLoaded = true;
+        analyticsLoadError = '';
+        const loadedAt = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',second:'2-digit'});
+        if (status) status.textContent = `ESPN completed box scores · ${playerGameLines.length.toLocaleString()} player-game lines loaded · ${loadedAt} ET`;
+        applyAnalyticsFilters();
+      } catch (error) {
+        analyticsLoadError = error.message || 'Box-score analytics unavailable';
+        console.error('Player-game analytics failed:', error);
+        if (status) status.textContent = `ESPN completed box scores · Unable to load player-game lines: ${analyticsLoadError}. Showing the existing season leaderboard.`;
+      }
+    }
+
+    function getFilteredPlayerGameLines() {
+      const split = document.getElementById('analytics-split')?.value || 'all';
+      const today = new Date();
+      const cutoff = analyticsTimeframe === 'season' ? null : new Date(today.getFullYear(), today.getMonth(), today.getDate() - Number(analyticsTimeframe) + 1);
+      return playerGameLines.filter(g => {
+        if (cutoff && new Date(`${g.gameDate}T12:00:00`) < cutoff) return false;
+        if (split === 'home' && g.homeAway !== 'home') return false;
+        if (split === 'away' && g.homeAway !== 'away') return false;
+        if (split === 'wins' && g.result !== 'W') return false;
+        if (split === 'losses' && g.result !== 'L') return false;
+        return true;
+      });
+    }
+
+    function applyAnalyticsFilters() {
+      if (!playerGameAnalyticsLoaded) return;
+      const rows = getFilteredPlayerGameLines();
+      const grouped = new Map();
+      rows.forEach(g => {
+        const key = String(g.name || '').trim().toLowerCase();
+        if (!key) return;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(g);
+      });
+      const minGames = Math.max(0, Math.min(82, Number(document.getElementById('analytics-min-games')?.value || 0)));
+      const use65 = analyticsTimeframe === 'season' && !!document.getElementById('analytics-65-game')?.checked;
+      const weights = SEASONS['2026/27'].weights;
+      const previous = analyticsBaselineData;
+      const rebuilt = [];
+      grouped.forEach((games, key) => {
+        const gp = games.length;
+        if (gp < minGames || (use65 && gp < 65)) return;
+        const sum = field => games.reduce((total, g) => total + (Number(g[field]) || 0), 0);
+        const ppg=sum('pts')/gp, rpg=sum('reb')/gp, apg=sum('ast')/gp, spg=sum('stl')/gp, bpg=sum('blk')/gp;
+        const base = previous.get(key) || {};
+        const p = {
+          name: games[games.length-1].name,
+          team: games.slice().sort((a,b)=>b.gameDate.localeCompare(a.gameDate))[0].team || base.team || 'NBA',
+          rank: 0, rankYesterday: base.rankYesterday ?? null, rankChange: base.rankChange || 0,
+          ppg, rpg, apg, spg, bpg, gp,
+          ssPpg: ppg*weights.ppg, ssRpg: rpg*weights.rpg, ssApg: apg*weights.apg,
+          ssSpg: spg*weights.spg, ssBpg: bpg*weights.bpg, ssGp: gp*weights.gp
+        };
+        p.total=p.ssPpg+p.ssRpg+p.ssApg+p.ssSpg+p.ssBpg+p.ssGp;
+        rebuilt.push(p);
+      });
+      rebuilt.sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
+      masterData=rebuilt.map((p,i)=>({...p,rank:i+1}));
+      populateTeams();
+      updateTopCards();
+      updateHeaderHighlights();
+      applyFilters();
+      const count=document.getElementById('player-count');
+      if(count) count.textContent=`${masterData.length} Players`;
+    }
+
+    function renderPlayerFile(player) {
+      const games = getFilteredPlayerGameLines().filter(g => String(g.name).toLowerCase() === player.name.toLowerCase())
+        .sort((a,b)=>b.gameDate.localeCompare(a.gameDate));
+      const high = games.reduce((best,g)=>!best || g.ss>best.ss ? g : best,null);
+      const highEl=document.getElementById('player-file-high');
+      const highDate=document.getElementById('player-file-high-date');
+      const count=document.getElementById('player-file-games');
+      const trend=document.getElementById('player-file-trend');
+      const log=document.getElementById('player-file-log');
+      if(count) count.textContent=String(games.length);
+      if(highEl) highEl.textContent=high ? `${high.ss.toFixed(2)} SS` : '—';
+      if(highDate) highDate.textContent=high ? `${high.gameDate} ${high.opp}` : 'No game in selected filters';
+      if(trend) {
+        const ordered=games.slice().reverse();
+        const max=Math.max(1,...ordered.map(g=>g.ss));
+        trend.innerHTML=ordered.length ? ordered.map((g,i)=>`<div title="${g.gameDate}: ${g.ss.toFixed(2)} SS" class="flex-1 min-w-[4px] rounded-t bg-emerald-500/80 hover:bg-emerald-400 relative" style="height:${Math.max(5,g.ss/max*100)}%"><span class="sr-only">${g.ss.toFixed(2)}</span></div>`).join('') : '<div class="text-[10px] text-slate-400">No game data for this selection.</div>';
+      }
+      if(log) {
+        log.innerHTML=games.length ? `<table class="w-full text-[9px] sm:text-[10px] font-mono whitespace-nowrap player-log-table"><thead><tr class="text-slate-500"><th class="text-left p-2">DATE</th><th class="text-left p-2">OPP</th><th class="text-left p-2">W/L</th><th class="text-right p-2">PTS</th><th class="text-right p-2">REB</th><th class="text-right p-2">AST</th><th class="text-right p-2">STL</th><th class="text-right p-2">BLK</th><th class="text-right p-2">SS</th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-court-border/60">${games.map(g=>`<tr class="text-slate-700 dark:text-slate-300"><td class="p-2">${g.gameDate}</td><td class="p-2">${g.opp}</td><td class="p-2 font-bold ${g.result==='W'?'text-emerald-500':'text-rose-400'}">${g.result}</td><td class="p-2 text-right">${g.pts}</td><td class="p-2 text-right">${g.reb}</td><td class="p-2 text-right">${g.ast}</td><td class="p-2 text-right">${g.stl}</td><td class="p-2 text-right">${g.blk}</td><td class="p-2 text-right font-black text-emerald-600 dark:text-emerald-400">${g.ss.toFixed(2)}</td></tr>`).join('')}</tbody></table>` : '<div class="p-4 text-center text-[10px] text-slate-400">No completed games for this player in the selected timeframe and split.</div>';
+      }
+    }
+
     function updateLastUpdatedTimestamp() {
       const el = document.getElementById('last-updated-text');
       if (!el) return;
@@ -2858,6 +2985,7 @@
         compareText.textContent = "Add to Compare ⚔️";
       }
 
+      renderPlayerFile(p);
       document.getElementById('player-modal').classList.remove('hidden');
     }
 
