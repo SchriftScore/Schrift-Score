@@ -74,6 +74,9 @@
   function aiValue(p, round) {
     return ss(p)+missionBonus(p,round);
   }
+  function chooseClockPenalty(available) {
+    return available.slice().sort(function(a,b){return ss(a)-ss(b)||String(a.name).localeCompare(String(b.name));})[0];
+  }
   function chooseOnlineAi(available, teamSeat, round, pickCount, roster) {
     var style=['user','film','numbers','bold'][teamSeat]||'numbers';
     var seen={};
@@ -124,7 +127,7 @@
       if(barNode)barNode.style.width=(remaining/24*100)+'%';
       if(remaining===0&&!autoPickBusy&&available.length){
         autoPickBusy=true;
-        var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);
+        var chosen=chooseClockPenalty(available);
         client.rpc('auto_pick_draft_turn',{p_room_id:roomId,p_player_name:chosen.name})
           .then(function(res){if(res.error)throw res.error;refreshRoom();})
           .catch(function(err){var msg=String(err&&err.message||err);if(!msg.toLowerCase().includes('24-second draft clock has not expired'))setMessage(msg);})
