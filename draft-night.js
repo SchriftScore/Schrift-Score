@@ -106,12 +106,16 @@
     var pool=poolData();if(pool.length<20){alert('The live player pool has not loaded yet. Wait for the Schrift Score leaderboard to finish loading, then try again.');return;}
     var name=(el('sda-team-name').value||'Your Franchise').trim().slice(0,24)||'Your Franchise';
     var teams=makeTeams(name);
-    game={teams:teams,pool:pool.slice().sort(function(a,b){return score(b)-score(a);}),picks:[],feed:[],selected:null,seconds:22,finished:false,started:Date.now(),bestSteal:null,challenges:shuffledFive()};
+    game={teams:teams,pool:pool.slice().sort(function(a,b){return score(b)-score(a);}),picks:[],feed:[],selected:null,seconds:24,finished:false,started:Date.now(),bestSteal:null,challenges:shuffledFive()};
     pushFeed('The Schrift Score Draft Room is open. Five missions drawn at random. Make every pick count.','system');
     renderLive();
     nextTurn();
   }
   function pushFeed(message,type){game.feed.unshift({message:message,type:type||'normal'});game.feed=game.feed.slice(0,16);}
+  function clockPenaltyPick(){
+    if(!game||!game.pool.length)return null;
+    return game.pool.slice().sort(function(a,b){return score(a)-score(b)||String(a.name).localeCompare(String(b.name));})[0];
+  }
   function gmPick(team,round){
     var available=game.pool.slice(0,Math.min(55,game.pool.length));
     if(!available.length)return null;
@@ -143,7 +147,7 @@
       game.seconds--;
       var n=el('sda-clock');if(n)n.textContent=game.seconds+'s';
       var bar=el('sda-clockbar');if(bar)bar.style.width=(game.seconds/24*100)+'%';
-      if(game.seconds<=0){var p=gmPick(game.teams[0],currentRound());pushFeed('Clock expired. Auto-pick: '+p.name+'.','warning');makePick(0,p);}
+      if(game.seconds<=0){var p=clockPenaltyPick();pushFeed('CLOCK VIOLATION. Forced pick: '+p.name+' (lowest Schrift Score remaining).','warning');makePick(0,p);}
     },1000);
   }
   function makePick(teamId,p){
