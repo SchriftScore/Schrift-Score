@@ -97,7 +97,7 @@ begin
   if v_room.status <> 'waiting' then raise exception 'Draft has already started.'; end if;
   select count(*) into v_count from public.draft_room_players where room_id = p_room_id;
   if v_count < 2 then raise exception 'At least two people must join before starting.'; end if;
-  update public.draft_rooms set status = 'live', state = jsonb_build_object('picks','[]'::jsonb,'started_at',now())
+  update public.draft_rooms set status = 'live', state = jsonb_build_object('picks','[]'::jsonb,'started_at',now(),'turn_started_at',now())
   where id = p_room_id returning * into v_room;
   return jsonb_build_object('status', v_room.status, 'state', v_room.state);
 end;
