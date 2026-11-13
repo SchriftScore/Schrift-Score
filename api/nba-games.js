@@ -50,33 +50,37 @@ export default async function handler(req, res) {
 
       const boxPayload = await apiGet('boxscore', { id: boxId });
       const boxTables = tablesOf(boxPayload);
+      // Only the two official basic box-score tables contain one player line per appearance.
+      // Do not fall back to advanced/four-factor tables: that duplicates players and stats.
       const basicTables = boxTables.filter(table =>
-        String(table?.id || '').includes('game-basic') ||
-        (Array.isArray(table?.rows) && table.rows.some(row => row?.player !== undefined && (row?.pts !== undefined || row?.mp !== undefined)))
+        /^box-[A-Z]{3}-game-basic$/i.test(String(table?.id || ''))
       );
-      const selectedTables = basicTables.length ? basicTables : boxTables;
+      if (basicTables.length !== 2) {
+        throw new Error('Expected exactly two Basketball-Reference basic box-score tables for ' + boxId + '.');
+      }
       const box = [];
-      for (const table of selectedTables) {
-        const tableId = String(table?.id || '');
-        const tableTeam = tableId.match(/box-([A-Z]{3})-/i)?.[1]?.toUpperCase() || '';
+      const seenPlayers = new Set();
+      for (const table of basicTables) {
+        const tableTeam = String(table.id).match(/^box-([A-Z]{3})-game-basic$/i)?.[1]?.toUpperCase() || '';
+        if (!tableTeam) throw new Error('Missing team identifier in Basketball-Reference box score ' + boxId + '.');
         for (const row of Array.isArray(table?.rows) ? table.rows : []) {
           const name = String(row?.player || row?.name || '').trim();
           if (!name || /^(team totals|reserves|starters)$/i.test(name)) continue;
           const minutes = row?.mp ?? row?.minutes ?? '';
-          const player = {
-            name,
-            tm: tableTeam || teamAbbrFromUrl(row?.player_url) || String(row?.team_id || ''),
+          const hasMinutes = String(minutes).trim() !== '' && String(minutes).trim() !== '0:00' && String(minutes).trim() !== '0';
+          if (!hasMinutes) continue;
+          const playerKey = name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (seenPlayers.has(playerKey)) continue;
+          seenPlayers.add(playerKey);
+          box.push({
+            name, tm: tableTeam,
             pts: asNumber(row?.pts),
             reb: asNumber(row?.trb ?? row?.reb),
             ast: asNumber(row?.ast),
             stl: asNumber(row?.stl),
             blk: asNumber(row?.blk),
             min: minutes || '—'
-          };
-          const hasMinutes = player.min !== '—' && String(player.min).trim() !== '0:00' && String(player.min).trim() !== '0';
-          if (!hasMinutes && !player.pts && !player.reb && !player.ast && !player.stl && !player.blk) continue;
-          if (box.some(existing => existing.name === player.name && existing.tm === player.tm)) continue;
-          box.push(player);
+          });
         }
       }
       if (!box.length) throw new Error('Basketball-Reference returned an incomplete box score for ' + boxId + '.');
