@@ -2589,14 +2589,21 @@
         timeframeGames=sourceGames.filter(g=>String(g.date||'')>=cutoffKey);
       }
       const filtered=timeframeGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
-      const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const unique=new Map();
+      filtered.forEach(g=>{
+        const player=norm(g.name),event=String(g.eventId||g.date+'|'+g.team+'|'+g.opponent);
+        if(!player||!event)return;
+        const key=player+'|'+event;
+        if(!unique.has(key))unique.set(key,g);
+      });
       const groups=new Map();
-      filtered.forEach(g=>{const k=norm(g.name);if(!groups.has(k))groups.set(k,{name:g.name,team:g.team,games:[]});groups.get(k).games.push(g);});
+      unique.forEach(g=>{const k=norm(g.name);if(!groups.has(k))groups.set(k,{name:g.name,team:g.team,games:[]});groups.get(k).games.push(g);});
       const w=SEASONS[activeSeason].weights,rows=[];
       groups.forEach(group=>{
         const gp=group.games.length;
         if(gp<analyticsMinGames||(analyticsQualifiedOnly&&gp<65))return;
-        const avg=k=>group.games.reduce((s,g)=>s+Number(g[k]||0),0)/gp;
+        const avg=k=>group.games.reduce((sum,g)=>sum+Number(g[k]||0),0)/gp;
         const ppg=avg('pts'),rpg=avg('reb'),apg=avg('ast'),spg=avg('stl'),bpg=avg('blk');
         const base=masterData.find(p=>norm(p.name)===norm(group.name));
         rows.push({...base,name:base?.name||group.name,team:base?.team||group.team,ppg,rpg,apg,spg,bpg,gp,ssPpg:ppg*w.ppg,ssRpg:rpg*w.rpg,ssApg:apg*w.apg,ssSpg:spg*w.spg,ssBpg:bpg*w.bpg,ssGp:gp*w.gp,total:ppg*w.ppg+rpg*w.rpg+apg*w.apg+spg*w.spg+bpg*w.bpg+gp*w.gp});
