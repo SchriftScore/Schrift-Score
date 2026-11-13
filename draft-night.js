@@ -118,7 +118,7 @@
     var candidates=available.map(function(p){
       var r=role(p),has=team.roster.some(function(x){return role(x)===r;});
       var v=playerValue(p,round);
-      if(team.style==='film'){if(r==='LOCKDOWN'||r==='ALL-AROUND')v+=2.2;if(has)v-=1.5;}
+      if(team.style==='film'){if(r==='DEFENSE'||r==='ALL-AROUND')v+=2.2;if(has)v-=1.5;}
       if(team.style==='numbers'){v+=score(p)*.08;if(has)v-=.5;}
       if(team.style==='bold'){v+=Math.random()*5;if(score(p)>25)v+=1.8;}
       v+=Math.random()*1.4;
@@ -130,7 +130,7 @@
     if(!game||game.finished)return;
     if(game.picks.length>=20){finish();return;}
     var teamId=orderForPick(game.picks.length),team=game.teams[teamId],round=currentRound();
-    if(teamId===0){game.seconds=22;renderLive();startClock();}
+    if(teamId===0){game.seconds=24;renderLive();startClock();}
     else{
       renderLive();
       aiTimer=setTimeout(function(){if(!game||game.finished)return;var p=gmPick(team,round);makePick(teamId,p);},750+Math.random()*650);
@@ -142,7 +142,7 @@
       if(!game||game.finished||!userTurn()){stopClock();return;}
       game.seconds--;
       var n=el('sda-clock');if(n)n.textContent=game.seconds+'s';
-      var bar=el('sda-clockbar');if(bar)bar.style.width=(game.seconds/22*100)+'%';
+      var bar=el('sda-clockbar');if(bar)bar.style.width=(game.seconds/24*100)+'%';
       if(game.seconds<=0){var p=gmPick(game.teams[0],currentRound());pushFeed('Clock expired. Auto-pick: '+p.name+'.','warning');makePick(0,p);}
     },1000);
   }
@@ -189,7 +189,7 @@
       '<div class="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden"><div class="p-3 border-b border-white/10 flex items-center justify-between gap-2"><div><div class="text-xs font-black">PLAYER BOARD</div><div class="text-[9px] text-slate-500">Choose your next pick from the live player pool</div></div><input id="sda-search" value="'+esc(q)+'" placeholder="Search player / team" class="w-44 max-w-[48%] rounded-lg bg-slate-950 border border-white/10 px-2 py-2 text-xs outline-none focus:border-cyan-400" '+(onClock?'':'disabled')+'></div>'+
       '<div class="grid grid-cols-[1fr_auto] gap-0"><div class="max-h-[48vh] overflow-y-auto divide-y divide-white/5">'+(players.map(function(p){var active=selected&&selected.name===p.name;return '<button data-player="'+esc(p.name)+'" '+(onClock?'':'disabled')+' class="w-full text-left p-3 flex items-center gap-3 hover:bg-white/5 disabled:opacity-50 '+(active?'bg-cyan-400/10':'')+'"><div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">'+(game.pool.indexOf(p)+1)+'</div><div class="min-w-0 flex-1"><div class="text-xs font-black truncate">'+esc(p.name)+'</div><div class="text-[9px] text-slate-500">'+esc(p.team||'NBA')+' · '+role(p)+'</div></div><div class="text-right"><div class="text-sm font-black text-lime-300">'+score(p).toFixed(1)+'</div><div class="text-[8px] text-slate-500">SS</div></div></button>';}).join('')||'<div class="p-6 text-center text-xs text-slate-500">No players found.</div>')+'</div>'+
       '<aside class="border-l border-white/10 p-3 min-w-0">'+(selected?'<div class="text-[9px] uppercase tracking-widest text-cyan-300 font-black">Scouting report</div><div class="text-lg font-black mt-2">'+esc(selected.name)+'</div><div class="text-[10px] text-slate-500">'+esc(selected.team||'NBA')+' · '+role(selected)+'</div><div class="text-3xl font-black text-lime-300 mt-4">'+score(selected).toFixed(2)+'<span class="text-xs text-slate-500 ml-1">SS</span></div><div class="grid grid-cols-2 gap-2 mt-4">'+[['PTS',selected.ppg],['REB',selected.rpg],['AST',selected.apg],['STL',selected.spg],['BLK',selected.bpg]].map(function(x){return '<div class="rounded-lg bg-slate-950 p-2"><div class="text-[8px] text-slate-500">'+x[0]+'</div><div class="font-black text-sm">'+fmt(x[1])+'</div></div>';}).join('')+'</div><div class="mt-3 rounded-lg bg-cyan-400/10 border border-cyan-400/20 p-2"><div class="text-[9px] text-cyan-300 font-bold">ROUND BONUS</div><div class="text-lg font-black">+'+bonus(selected,round).toFixed(1)+'</div></div><button data-action="pick" class="w-full rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs py-3 mt-4">DRAFT '+esc(selected.name.split(' ').slice(-1)[0].toUpperCase())+' →</button>':'<div class="h-full min-h-48 flex flex-col items-center justify-center text-center"><div class="text-3xl">👀</div><div class="text-xs font-bold mt-2">Select a player</div><div class="text-[9px] text-slate-500 mt-1">View their scouting report before you pick</div></div>')+'</aside></div></div>'+
-      '<div class="grid md:grid-cols-2 gap-3 mt-3"><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black mb-2">Draft ticker</div>'+(picksHtml||'<div class="text-xs text-slate-500">The first pick is coming up.</div>')+'</div><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="flex items-center justify-between"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Draft clock</div><div id="sda-clock" class="text-xl font-black '+(onClock?'text-lime-300':'text-slate-500')+'">'+(onClock?game.seconds+'s':'AI PICKING')+'</div></div><div class="h-2 bg-slate-800 rounded-full mt-2 overflow-hidden"><div id="sda-clockbar" class="h-full bg-lime-400 transition-all" style="width:'+(onClock?game.seconds/22*100:0)+'%"></div></div><div class="text-[10px] text-slate-500 mt-3">'+(onClock?'Make your pick before the clock hits zero.':'The rival front office is making its move...')+'</div><div class="mt-3 text-xs font-bold text-cyan-300">'+esc(game.feed[0]?game.feed[0].message.replace(/<[^>]*>/g,''):'Draft started.')+'</div></div></div></section></div>';
+      '<div class="grid md:grid-cols-2 gap-3 mt-3"><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black mb-2">Draft ticker</div>'+(picksHtml||'<div class="text-xs text-slate-500">The first pick is coming up.</div>')+'</div><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="flex items-center justify-between"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Draft clock</div><div id="sda-clock" class="text-xl font-black '+(onClock?'text-lime-300':'text-slate-500')+'">'+(onClock?game.seconds+'s':'AI PICKING')+'</div></div><div class="h-2 bg-slate-800 rounded-full mt-2 overflow-hidden"><div id="sda-clockbar" class="h-full bg-lime-400 transition-all" style="width:'+(onClock?game.seconds/24*100:0)+'%"></div></div><div class="text-[10px] text-slate-500 mt-3">'+(onClock?'Make your pick before the clock hits zero.':'The rival front office is making its move...')+'</div><div class="mt-3 text-xs font-bold text-cyan-300">'+esc(game.feed[0]?game.feed[0].message.replace(/<[^>]*>/g,''):'Draft started.')+'</div></div></div></section></div>';
   }
   function finish(){
     if(!game||game.finished)return;stopClock();game.finished=true;
