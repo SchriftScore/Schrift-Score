@@ -1,4 +1,5 @@
 // Vercel serverless endpoint: completed regular-season player-game logs from ESPN.
+export const config = { maxDuration: 60 };
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
   const season = String(req.query?.season || '2026-27');
@@ -26,8 +27,8 @@ export default async function handler(req, res) {
     const board = await getJson(boardUrl);
     const finals = (board.events || []).filter(event => {
       const competition = event.competitions?.[0];
-      const type = Number(event.season?.type);
-      return competition?.status?.type?.completed && (!type || type === 2);
+      const type = Number(event.season?.type?.id ?? event.season?.type);
+      return competition?.status?.type?.completed && (!Number.isFinite(type) || type === 2);
     });
 
     const playerGames = [];
