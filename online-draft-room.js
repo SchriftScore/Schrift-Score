@@ -95,6 +95,43 @@
     var round = Math.floor(n / 4), slot = n % 4;
     return round % 2 === 0 ? slot : 3 - slot;
   }
+  function getTurnStartedAt(r,picks) {
+    var raw=r.state&&r.state.turn_started_at;
+    if(!raw&&picks.length)raw=picks[picks.length-1].picked_at;
+    if(!raw)raw=r.state&&r.state.started_at;
+    if(!raw)raw=r.created_at;
+    var parsed=Date.parse(raw||'');
+    return Number.isFinite(parsed)?parsed:Date.now();
+  }
+  function stopOnlineClock() {
+    if(turnClockTimer){clearInterval(turnClockTimer);turnClockTimer=null;}
+    turnClockKey='';turnStartedAt=0;autoPickBusy=false;
+  }
+  function runOnlineClock(r,picks,turn,round,available,teams) {
+    if(!r||r.status!=='live'||picks.length>=20){stopOnlineClock();return;}
+    var key=roomId+':'+picks.length;
+    if(turnClockKey!==key){
+      if(turnClockTimer)clearInterval(turnClockTimer);
+      turnClockKey=key;turnStartedAt=getTurnStartedAt(r,picks);autoPickBusy=false;
+    }
+    function tick(){
+      var elapsed=Math.max(0,Date.now()-turnStartedAt);
+      var remaining=Math.max(0,24-Math.floor(elapsed/1000));
+      var clockNode=document.getElementById('sda-online-clock');
+      var barNode=document.getElementById('sda-online-clockbar');
+      if(clockNode)clockNode.textContent=remaining+'s';
+      if(barNode)barNode.style.width=(remaining/24*100)+'%';
+      if(remaining===0&&!autoPickBusy&&available.length){
+        autoPickBusy=true;
+        var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);
+        client.rpc('auto_pick_draft_turn',{p_room_id:roomId,p_player_name:chosen.name})
+          .then(function(res){if(res.error)throw res.error;refreshRoom();})
+          .catch(function(err){var msg=String(err&&err.message||err);if(!msg.toLowerCase().includes('24-second draft clock has not expired'))setMessage(msg);})
+          .finally(function(){autoPickBusy=false;});
+      }
+    }
+    tick();if(!turnClockTimer)turnClockTimer=setInterval(tick,250);
+  }
   function ensureModal() {
     if (document.getElementById(modalId)) return;
     var m = document.createElement('div');
@@ -280,7 +317,7 @@
     html+='<div class="grid sm:grid-cols-2 gap-3 mb-4">'+teams.map(function(t){var rp=playersInRoom.find(function(p){return p.seat===t.seat;});var name=rp?rp.display_name:teamNames[t.seat];var icon=rp?'🏀':teamIcons[t.seat];return '<div class="rounded-2xl border '+(t.seat===seat?'border-lime-400/40 bg-lime-400/5':'border-white/10 bg-slate-900')+' p-3"><div class="flex justify-between gap-2"><div class="font-black text-xs truncate">'+icon+' '+esc(name)+(t.seat===seat?' · YOU':'')+'</div><div class="text-sm font-black '+(t.seat===seat?'text-lime-300':'text-cyan-300')+'">'+t.total.toFixed(1)+'</div></div><div class="flex justify-between text-[9px] text-slate-500 mt-1"><span>'+t.roster.length+'/5 drafted</span><span>+'+t.chemistry.toFixed(1)+' chemistry · '+t.roles.length+'/5 types</span></div><div class="text-[9px] text-cyan-300 mt-1">'+(t.roles.length?t.roles.join(' · '):'No archetypes covered yet')+'</div><div class="flex gap-1 mt-2">'+[0,1,2,3,4].map(function(i){return '<div class="flex-1 h-1.5 rounded-full '+(t.roster[i]?(t.seat===seat?'bg-lime-400':'bg-cyan-400'):'bg-white/10')+'"></div>';}).join('')+'</div><div class="mt-2 flex flex-wrap gap-1">'+t.roster.map(function(p){return '<span class="text-[9px] rounded bg-white/5 px-1.5 py-1 text-slate-300">'+esc(p.name)+'</span>';}).join('')+'</div></div>';}).join('')+'</div>';
     var ticker=picks.slice(-8).map(function(p,i){var absolute=picks.length-1-i;var seatNo=p.seat;var playerName=p.player_name;var pl=pool.find(function(x){return x.name===playerName;});return {p:p,seat:seatNo,name:playerName,player:pl};}).reverse();
     html+='<div class="grid xl:grid-cols-[1fr_300px] gap-4"><section class="min-w-0"><div class="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden"><div class="p-3 border-b border-white/10 flex items-center justify-between gap-2"><div><div class="text-xs font-black">PLAYER BOARD</div><div class="text-[9px] text-slate-500">Choose your next pick from the live player pool</div></div><input id="sda-online-search" placeholder="Search player / team" class="w-44 max-w-[48%] rounded-lg bg-slate-950 border border-white/10 px-2 py-2 text-xs outline-none focus:border-cyan-400"></div><div class="grid grid-cols-[1fr_auto] gap-0"><div class="max-h-[48vh] overflow-y-auto divide-y divide-white/5">'+available.slice(0,80).map(function(p){var active=selected&&selected.name===p.name;return '<button type="button" data-online="select" data-player="'+esc(p.name)+'" class="w-full text-left p-3 flex items-center gap-3 hover:bg-white/5 '+(active?'bg-cyan-400/10':'')+'"><div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">'+(pool.indexOf(p)+1)+'</div><div class="min-w-0 flex-1"><div class="text-xs font-black truncate">'+esc(p.name)+'</div><div class="text-[9px] text-slate-500">'+esc(p.team||'NBA')+' · '+archetype(p)+'</div></div><div class="text-right"><div class="text-sm font-black text-lime-300">'+ss(p).toFixed(1)+'</div><div class="text-[8px] text-slate-500">SS</div></div></button>';}).join('')+'</div><aside class="border-l border-white/10 p-3 min-w-0">'+(selected?'<div class="text-[9px] uppercase tracking-widest text-cyan-300 font-black">Scouting report</div><div class="text-lg font-black mt-2">'+esc(selected.name)+'</div><div class="text-[10px] text-slate-500">'+esc(selected.team||'NBA')+' · '+archetype(selected)+'</div><div class="text-3xl font-black text-lime-300 mt-4">'+ss(selected).toFixed(2)+'<span class="text-xs text-slate-500 ml-1">SS</span></div><div class="grid grid-cols-2 gap-2 mt-4">'+[['PTS',selected.ppg],['REB',selected.rpg],['AST',selected.apg],['STL',selected.spg],['BLK',selected.bpg]].map(function(x){return '<div class="rounded-lg bg-slate-950 p-2"><div class="text-[8px] text-slate-500">'+x[0]+'</div><div class="font-black text-sm">'+fmt(x[1])+'</div></div>';}).join('')+'</div><div class="mt-3 rounded-lg bg-cyan-400/10 border border-cyan-400/20 p-2"><div class="text-[9px] text-cyan-300 font-bold">ROUND BONUS</div><div class="text-lg font-black">+'+mission.bonus(selected).toFixed(1)+'</div></div><button data-online="pick" data-player="'+esc(selected.name)+'" '+(!myTurn?'disabled':'')+' class="w-full rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs py-3 mt-4 disabled:opacity-30">DRAFT '+esc(selected.name.split(' ').slice(-1)[0].toUpperCase())+' →</button>':'<div class="h-full min-h-48 flex flex-col items-center justify-center text-center"><div class="text-3xl">👀</div><div class="text-xs font-bold mt-2">Select a player</div><div class="text-[9px] text-slate-500 mt-1">View their scouting report before you pick</div></div>')+'</aside></div></div></section>';
-    html+='<aside class="space-y-3"><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black mb-2">Draft ticker</div>'+(ticker.length?ticker.map(function(x){var t=playersInRoom.find(function(p){return p.seat===x.seat;});return '<div class="flex items-center justify-between gap-2 py-2 border-b border-white/5"><div class="min-w-0"><div class="text-[10px] text-slate-500">Seat '+(x.seat+1)+'</div><div class="text-xs font-bold truncate">'+esc(t?t.display_name:teamNames[x.seat])+': '+esc(x.name)+'</div></div><div class="text-right shrink-0"><div class="text-xs font-black text-cyan-300">'+(x.player?ss(x.player).toFixed(1):'—')+'</div><div class="text-[9px] text-slate-500">SS</div></div></div>';}).join(''):'<div class="text-xs text-slate-500">The first pick is coming up.</div>')+'</div><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Draft clock</div><div class="text-xl font-black mt-2 '+(myTurn?'text-lime-300':'text-slate-400')+'">'+(myTurn?'YOUR PICK':'WAITING FOR SEAT '+(turn+1))+'</div><div class="text-[10px] text-slate-500 mt-2">'+(myTurn?'Make your pick while you are on the clock.':'The next franchise is making its move.')+'</div><div class="mt-3 text-xs font-bold text-cyan-300">'+(picks.length?'Latest pick: '+esc(picks[picks.length-1].player_name):'The first pick is coming up.')+'</div></div></aside></div>';
+    html+='<aside class="space-y-3"><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black mb-2">Draft ticker</div>'+(ticker.length?ticker.map(function(x){var t=playersInRoom.find(function(p){return p.seat===x.seat;});return '<div class="flex items-center justify-between gap-2 py-2 border-b border-white/5"><div class="min-w-0"><div class="text-[10px] text-slate-500">Seat '+(x.seat+1)+'</div><div class="text-xs font-bold truncate">'+esc(t?t.display_name:teamNames[x.seat])+': '+esc(x.name)+'</div></div><div class="text-right shrink-0"><div class="text-xs font-black text-cyan-300">'+(x.player?ss(x.player).toFixed(1):'—')+'</div><div class="text-[9px] text-slate-500">SS</div></div></div>';}).join(''):'<div class="text-xs text-slate-500">The first pick is coming up.</div>')+'</div><div class="rounded-2xl bg-slate-900 border border-white/10 p-3"><div class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Draft clock</div><div class="flex items-end justify-between mt-2"><div class="text-xl font-black '+(myTurn?'text-lime-300':'text-slate-400')+'">'+(myTurn?'YOUR PICK':'WAITING FOR SEAT '+(turn+1))+'</div><div id="sda-online-clock" class="text-3xl tabular-nums font-black text-cyan-300">24s</div></div><div class="h-1.5 rounded-full bg-white/10 overflow-hidden mt-2"><div id="sda-online-clockbar" class="h-full rounded-full bg-cyan-300" style="width:100%"></div></div><div class="text-[10px] text-slate-500 mt-2">'+(myTurn?'Make your pick before the 24-second clock expires.':'Every pick has a 24-second limit. An automatic pick follows when time expires.')+'</div><div class="mt-3 text-xs font-bold text-cyan-300">'+(picks.length?'Latest pick: '+esc(picks[picks.length-1].player_name):'The first pick is coming up.')+'</div></div></aside></div>';
     html+='<p id="sda-online-message" class="text-sm text-rose-300 mt-3"></p><div class="text-[10px] text-slate-500 mt-2">Snake draft · Schrift Score totals + mission bonuses + up to 10 chemistry points · Duplicate picks and out-of-turn picks are rejected by the database.</div>';
     var node=document.getElementById('sda-online-game');
     if(node)node.innerHTML=html;
@@ -288,8 +325,9 @@
     if(search)search.addEventListener('input',function(){var q=this.value.toLowerCase();Array.from(node.querySelectorAll('[data-online="select"]')).forEach(function(row){var name=row.getAttribute('data-player')||'';row.style.display=name.toLowerCase().includes(q)?'flex':'none';});});
     if(host&&vacant&&r.status==='live'&&picks.length<20&&!botBusy&&available.length){
       botBusy=true;
-      setTimeout(function(){var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:chosen.name});result.then(function(res){botBusy=false;if(res.error)setMessage(res.error.message);else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
+      setTimeout(function(){var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:chosen.name});result.then(function(res){botBusy=false;if(res.error){refreshRoom();if(!String(res.error.message||'').toLowerCase().includes('not your turn'))setMessage(res.error.message);}else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
     }
+    if(r.status==='live'&&picks.length<20)runOnlineClock(r,picks,turn,round,available,teams);
     if(r.status==='finished')renderOnlineResults(r,picks,pool,teams);
   }
   function renderOnlineResults(r,picks,pool,teams) {
@@ -305,7 +343,7 @@
     var leavingId = roomId;
     if (channel && client) { client.removeChannel(channel); channel = null; }
     if (publicStartTimer) clearTimeout(publicStartTimer);
-    publicStartTimer=null;publicStartRoomId=null;isPublicRoom=false;
+    publicStartTimer=null;publicStartRoomId=null;isPublicRoom=false;stopOnlineClock();
     if (leavingId && client && userId) {
       try {
         var result = await client.rpc('leave_draft_room', {p_room_id:leavingId});
