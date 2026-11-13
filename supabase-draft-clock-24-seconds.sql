@@ -31,6 +31,7 @@ declare
   v_turn integer;
   v_user_seat integer;
   v_is_empty_seat boolean;
+  v_turn_started timestamptz;
 begin
   select * into v_room from public.draft_rooms where id = p_room_id for update;
   if not found then raise exception 'Room not found.'; end if;
@@ -59,6 +60,17 @@ begin
   -- A member may fill a vacant AI seat. An occupied seat can only pick for itself.
   if v_turn <> v_user_seat and not v_is_empty_seat then
     raise exception 'It is not your turn.';
+  end if;
+  if v_turn = v_user_seat then
+    v_turn_started := coalesce(
+      nullif(v_room.state->>'turn_started_at','')::timestamptz,
+      case when v_count > 0 then nullif(v_picks->(v_count - 1)->>'picked_at','')::timestamptz else null end,
+      nullif(v_room.state->>'started_at','')::timestamptz,
+      v_room.created_at
+    );
+    if clock_timestamp() >= v_turn_started + interval '24 seconds' then
+      raise exception 'The 24-second clock expired. An automatic pick is being processed.';
+    end if;
   end if;
 
   v_picks := v_picks || jsonb_build_array(jsonb_build_object(
