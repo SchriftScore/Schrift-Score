@@ -90,7 +90,7 @@ begin
   if v_count >= 4 then
     update public.draft_rooms
     set status='live',
-        state=jsonb_build_object('picks','[]'::jsonb,'started_at',now())
+        state=jsonb_build_object('picks','[]'::jsonb,'started_at',now(),'turn_started_at',now())
     where id=v_room.id and status='waiting';
     v_room.status := 'live';
   end if;
