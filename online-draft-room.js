@@ -329,7 +329,7 @@
       botBusy=true;
       setTimeout(function(){var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:chosen.name});result.then(function(res){botBusy=false;if(res.error){refreshRoom();if(!String(res.error.message||'').toLowerCase().includes('not your turn'))setMessage(res.error.message);}else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
     }
-    if(r.status==='live'&&picks.length<20)runOnlineClock(r,picks,turn,round,available,teams);
+    if(r.status==='live'&&picks.length<20)runOnlineClock(r,picks,turn,round,available,teams);else stopOnlineClock();
     if(r.status==='finished')renderOnlineResults(r,picks,pool,teams);
   }
   function renderOnlineResults(r,picks,pool,teams) {
