@@ -2619,7 +2619,7 @@
       if(Object.prototype.hasOwnProperty.call(analyticsCache,cacheKey)){analyticsGames=analyticsCache[cacheKey];analyticsLoadedWindow=cacheKey;return;}
       if(analyticsLoadPromise)await analyticsLoadPromise;
       const status=document.getElementById('analytics-status');if(status)status.textContent='Loading Basketball-Reference box scores…';
-      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season',{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
+      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season');const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
       if(status)status.textContent='Basketball-Reference box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
       updateTopCards();
