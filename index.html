@@ -127,6 +127,12 @@
         border-right: 2px solid #e2e8f0;
       }
     }
+    .analytics-period-btn{padding:.45rem .7rem;border:1px solid #334155;border-radius:.55rem;font:700 10px 'JetBrains Mono',monospace;color:#94a3b8;background:transparent;transition:all .15s}
+    .analytics-period-btn:hover{border-color:#10b981;color:#10b981}
+    html:not(.dark) .analytics-period-btn{border-color:#cbd5e1;color:#475569}
+    html:not(.dark) .analytics-period-btn.bg-emerald-500{color:#07120f;border-color:#10b981}
+    .player-log-table th{position:sticky;top:0;background:#111827;z-index:2}
+    html:not(.dark) .player-log-table th{background:#f1f5f9}
   </style>
 </head>
 <body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
@@ -386,6 +392,38 @@
       </div>
     </section>
 
+    <!-- ANALYTICS TIMEFRAME + GAME SPLIT CONTROLS -->
+    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-4 shadow-sm space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h2 class="text-[11px] sm:text-xs font-extrabold tracking-wider text-slate-800 dark:text-slate-100 font-mono">ANALYTICS TIMEFRAME</h2>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Rankings recalculate from completed NBA box scores in the selected period.</p>
+        </div>
+        <div class="flex flex-wrap gap-1.5" id="analytics-timeframe-controls">
+          <button type="button" data-timeframe="season" onclick="setAnalyticsTimeframe('season')" class="analytics-period-btn bg-emerald-500 text-slate-950 border-emerald-500">Full Season</button>
+          <button type="button" data-timeframe="7" onclick="setAnalyticsTimeframe('7')" class="analytics-period-btn">Last 7 Days</button>
+          <button type="button" data-timeframe="14" onclick="setAnalyticsTimeframe('14')" class="analytics-period-btn">Last 14 Days</button>
+          <button type="button" data-timeframe="30" onclick="setAnalyticsTimeframe('30')" class="analytics-period-btn">Last 30 Days</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2.5 items-end">
+        <label class="block"><span class="block text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 mb-1">GAME SPLIT</span>
+          <select id="analytics-split" onchange="applyAnalyticsFilters()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-lg px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100">
+            <option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option>
+          </select>
+        </label>
+        <label class="block"><span class="block text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 mb-1">MINIMUM GAMES PLAYED</span>
+          <input id="analytics-min-games" type="number" min="0" max="82" step="1" value="0" onchange="applyAnalyticsFilters()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-lg px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100">
+          <span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span>
+        </label>
+        <label class="flex items-center gap-2 text-[10px] font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-court-border rounded-lg px-3 py-2.5">
+          <input id="analytics-65-game" type="checkbox" onchange="applyAnalyticsFilters()" class="accent-emerald-500">
+          <span><b class="block">65-game season minimum</b><span class="text-[9px] text-slate-400">Full Season only · not award certification</span></span>
+        </label>
+      </div>
+      <div id="analytics-data-status" class="border-t border-slate-200 dark:border-court-border pt-2 text-[9px] sm:text-[10px] font-mono text-slate-500 dark:text-slate-400">ESPN completed box scores · Loading player-game lines…</div>
+    </section>
+
     <!-- SEARCH & CONTROLS -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
       <div class="relative flex-1">
@@ -556,7 +594,7 @@
 
   <!-- MODAL: PLAYER STATS INSPECT CARD WITH "WHAT-IF" SLIDERS -->
   <div id="player-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+    <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-5xl rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
       <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
 
       <!-- Player Header in Modal -->
@@ -674,6 +712,40 @@
           <div class="text-right"><span id="slider-sim-score" class="text-sm font-black text-emerald-600 dark:text-emerald-400">--</span><div id="slider-live-rank" class="text-[10px] text-emerald-600 dark:text-emerald-300 font-bold mt-0.5">Projected leaderboard rank: --</div></div>
         </div>
       </div>
+
+      <!-- SCHRIFT SCORE PLAYER FILE -->
+      <section class="mt-4 border border-slate-200 dark:border-court-border rounded-xl overflow-hidden">
+        <div class="bg-slate-100 dark:bg-court-850 px-3 py-2.5 border-b border-slate-200 dark:border-court-border">
+          <div class="text-[9px] tracking-[.16em] font-mono font-black text-emerald-600 dark:text-emerald-400">SCHRIFT SCORE PLAYER FILE</div>
+          <div class="flex items-center justify-between gap-2 mt-1"><div class="text-xs font-bold text-slate-800 dark:text-white">Game-by-game performance</div><span id="player-file-season" class="text-[9px] text-slate-500 font-mono">2026–27 Regular Season</span></div>
+        </div>
+        <div class="p-3 space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-slate-50 dark:bg-court-850 rounded-lg border border-slate-200 dark:border-court-border p-2.5">
+              <div class="text-[8px] tracking-wider text-slate-500 font-mono">SEASON-HIGH SINGLE-GAME SS</div>
+              <div id="player-file-high" class="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">—</div>
+              <div id="player-file-high-date" class="text-[9px] text-slate-500 font-mono mt-0.5">—</div>
+            </div>
+            <div class="bg-slate-50 dark:bg-court-850 rounded-lg border border-slate-200 dark:border-court-border p-2.5">
+              <div class="text-[8px] tracking-wider text-slate-500 font-mono">GAMES LOGGED</div>
+              <div id="player-file-games" class="text-lg font-black text-slate-900 dark:text-white mt-1">—</div>
+              <div class="text-[9px] text-slate-500 font-mono mt-0.5">In selected filters</div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1"><span class="text-[9px] font-mono font-bold text-slate-500">SCHRIFT SCORE TREND</span><span class="text-[8px] text-slate-400">Oldest → newest</span></div>
+            <div id="player-file-trend" class="h-24 flex items-end gap-1 border-b border-slate-200 dark:border-court-border px-1 pb-1"><div class="text-[10px] text-slate-400">Loading player trend…</div></div>
+          </div>
+          <div>
+            <div class="text-[9px] font-mono font-bold text-slate-500 mb-1.5">GAME-BY-GAME LOG</div>
+            <p class="text-[9px] text-slate-400 mb-2">Individual completed regular-season box scores.</p>
+            <div id="player-file-log" class="overflow-auto max-h-64 rounded-lg border border-slate-200 dark:border-court-border">
+              <div class="p-4 text-center text-[10px] text-slate-400">Loading game log…</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="mt-3 text-center"><button type="button" onclick="document.getElementById('player-file-log')?.scrollIntoView({behavior:'smooth',block:'center'})" class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Open full player analysis &amp; What-If ↗</button></div>
 
       <!-- Action Buttons -->
       <div class="flex gap-2 font-mono">
