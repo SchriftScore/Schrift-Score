@@ -4,19 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NBA Schrift Score | Player Power Leaderboard</title>
-  <meta name="description" content="Schrift Score is an NBA player power leaderboard and basketball analytics platform created by Zachary Schriftman.">
-  <meta name="application-name" content="Schrift Score">
-  <meta property="og:type" content="website"><meta property="og:site_name" content="Schrift Score">
-  <meta property="og:title" content="NBA Schrift Score | Player Power Leaderboard">
-  <meta property="og:description" content="NBA player rankings and basketball analytics powered by Schrift Score.">
-  <meta property="og:url" content="https://nbaschriftscore.com/">
-  <meta property="og:image" content="https://nbaschriftscore.com/schrift%20score%20img.png">
-  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="NBA Schrift Score">
-  <meta name="twitter:description" content="NBA player rankings and basketball analytics.">
-  <meta name="twitter:image" content="https://nbaschriftscore.com/schrift%20score%20img.png">
-  <link rel="icon" href="/schrift%20score%20img.png" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/schrift%20score%20img.png">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Schrift Score","alternateName":"NBA Schrift Score","url":"https://nbaschriftscore.com/"}</script>
   
   <!-- Inter & JetBrains Mono Fonts + Tailwind CSS CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -127,12 +114,6 @@
         border-right: 2px solid #e2e8f0;
       }
     }
-    .analytics-period-btn{padding:.45rem .7rem;border:1px solid #334155;border-radius:.55rem;font:700 10px 'JetBrains Mono',monospace;color:#94a3b8;background:transparent;transition:all .15s}
-    .analytics-period-btn:hover{border-color:#10b981;color:#10b981}
-    html:not(.dark) .analytics-period-btn{border-color:#cbd5e1;color:#475569}
-    html:not(.dark) .analytics-period-btn.bg-emerald-500{color:#07120f;border-color:#10b981}
-    .player-log-table th{position:sticky;top:0;background:#111827;z-index:2}
-    html:not(.dark) .player-log-table th{background:#f1f5f9}
   </style>
 </head>
 <body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
@@ -141,7 +122,9 @@
   <header class="border-b border-court-border dark:border-court-border bg-court-900/95 dark:bg-court-900/95 backdrop-blur sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
       <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-        <img src="/schrift%20score%20img.png" alt="Schrift Score logo" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover border border-emerald-400/40 shadow-lg shadow-emerald-500/20 flex-shrink-0">
+        <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-base sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">
+          SS
+        </div>
         <div class="min-w-0">
           <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
             <span class="text-sm sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
@@ -392,38 +375,6 @@
       </div>
     </section>
 
-    <!-- ANALYTICS TIMEFRAME + GAME SPLIT CONTROLS -->
-    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-4 shadow-sm space-y-3">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h2 class="text-[11px] sm:text-xs font-extrabold tracking-wider text-slate-800 dark:text-slate-100 font-mono">ANALYTICS TIMEFRAME</h2>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Rankings recalculate from completed NBA box scores in the selected period.</p>
-        </div>
-        <div class="flex flex-wrap gap-1.5" id="analytics-timeframe-controls">
-          <button type="button" data-timeframe="season" onclick="setAnalyticsTimeframe('season')" class="analytics-period-btn bg-emerald-500 text-slate-950 border-emerald-500">Full Season</button>
-          <button type="button" data-timeframe="7" onclick="setAnalyticsTimeframe('7')" class="analytics-period-btn">Last 7 Days</button>
-          <button type="button" data-timeframe="14" onclick="setAnalyticsTimeframe('14')" class="analytics-period-btn">Last 14 Days</button>
-          <button type="button" data-timeframe="30" onclick="setAnalyticsTimeframe('30')" class="analytics-period-btn">Last 30 Days</button>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2.5 items-end">
-        <label class="block"><span class="block text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 mb-1">GAME SPLIT</span>
-          <select id="analytics-split" onchange="applyAnalyticsFilters()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-lg px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100">
-            <option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option>
-          </select>
-        </label>
-        <label class="block"><span class="block text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 mb-1">MINIMUM GAMES PLAYED</span>
-          <input id="analytics-min-games" type="number" min="0" max="82" step="1" value="0" onchange="applyAnalyticsFilters()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-200 dark:border-court-border rounded-lg px-2.5 py-2 text-xs text-slate-800 dark:text-slate-100">
-          <span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span>
-        </label>
-        <label class="flex items-center gap-2 text-[10px] font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-court-border rounded-lg px-3 py-2.5">
-          <input id="analytics-65-game" type="checkbox" onchange="applyAnalyticsFilters()" class="accent-emerald-500">
-          <span><b class="block">65-game season minimum</b><span class="text-[9px] text-slate-400">Full Season only · not award certification</span></span>
-        </label>
-      </div>
-      <div id="analytics-data-status" class="border-t border-slate-200 dark:border-court-border pt-2 text-[9px] sm:text-[10px] font-mono text-slate-500 dark:text-slate-400">ESPN completed box scores · Loading player-game lines…</div>
-    </section>
-
     <!-- SEARCH & CONTROLS -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
       <div class="relative flex-1">
@@ -465,6 +416,21 @@
           <span class="xs:hidden">Share</span>
         </button>
       </div>
+    </section>
+
+    <section class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border rounded-xl p-3 sm:p-4 space-y-3">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3"><div><h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">ANALYTICS TIMEFRAME</h3><p class="text-[10px] text-slate-500 dark:text-slate-400">Rankings recalculate from completed NBA box scores in the selected period.</p></div>
+      <div class="grid grid-cols-4 gap-1.5 font-mono text-[10px] sm:text-xs">
+        <button data-window="season" onclick="setAnalyticsWindow('season')" class="timeframe-btn px-2.5 py-2 rounded-lg border border-emerald-500 bg-emerald-500 text-slate-950 font-bold">Full Season</button>
+        <button data-window="7" onclick="setAnalyticsWindow('7')" class="timeframe-btn px-2.5 py-2 rounded-lg border border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300">Last 7 Days</button>
+        <button data-window="14" onclick="setAnalyticsWindow('14')" class="timeframe-btn px-2.5 py-2 rounded-lg border border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300">Last 14 Days</button>
+        <button data-window="30" onclick="setAnalyticsWindow('30')" class="timeframe-btn px-2.5 py-2 rounded-lg border border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300">Last 30 Days</button>
+      </div></div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-200 dark:border-court-border pt-3">
+        <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="block font-bold mb-1">GAME SPLIT</span><select id="analytics-split" onchange="applyAnalyticsControls()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-2 text-xs"><option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option></select></label>
+        <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="flex justify-between font-bold mb-1"><span>MINIMUM GAMES PLAYED</span><span id="min-games-value">0</span></span><input id="min-games-slider" type="range" min="0" max="82" step="1" value="0" oninput="applyAnalyticsControls()" class="w-full accent-emerald-500 mt-2"><span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span></label>
+        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">65-game season minimum</b><span class="text-[9px] text-slate-400">Full Season only · not award certification</span></span></label>
+      </div><p id="analytics-status" class="text-[10px] text-slate-500 dark:text-slate-400" aria-live="polite">Loading verified game-level analytics…</p>
     </section>
 
     <!-- LEADERBOARD TABLE (WITH SOLID OPAQUE HEADERS AND SS TOTAL BACKGROUND) -->
@@ -581,6 +547,13 @@
 
   </main>
 
+  <div id="player-profile-overlay" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closePlayerProfile()"><aside class="absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-court-900 border-l border-slate-200 dark:border-court-border shadow-2xl overflow-y-auto smooth-scroll">
+    <div class="sticky top-0 z-10 bg-white/95 dark:bg-court-900/95 backdrop-blur border-b border-slate-200 dark:border-court-border p-4 flex items-center justify-between"><div><div class="text-[9px] font-mono tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">SCHRIFT SCORE PLAYER FILE</div><h2 id="profile-title" class="text-lg font-black text-slate-900 dark:text-white">Player Profile</h2><div id="profile-subtitle" class="text-[10px] text-slate-500 font-mono"></div></div><button onclick="closePlayerProfile()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white text-xl p-2">✕</button></div>
+    <div class="p-4 sm:p-6 space-y-4"><div class="grid grid-cols-2 gap-2"><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">SEASON-HIGH SINGLE-GAME SS</div><div id="profile-high" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">—</div><div id="profile-high-date" class="text-[10px] text-slate-500"></div></div><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">GAMES LOGGED</div><div id="profile-games-count" class="text-2xl font-black text-slate-900 dark:text-white">—</div></div></div>
+    <section class="rounded-xl border border-slate-200 dark:border-court-border p-3"><div class="flex items-center justify-between mb-2"><h3 class="text-xs font-extrabold text-slate-900 dark:text-white">SCHRIFT SCORE TREND</h3><span class="text-[9px] text-slate-400 font-mono">Oldest → newest</span></div><div id="profile-chart" class="min-h-[150px] flex items-center justify-center text-xs text-slate-400">Loading game log…</div></section>
+    <section class="rounded-xl border border-slate-200 dark:border-court-border overflow-hidden"><div class="p-3 border-b border-slate-200 dark:border-court-border"><h3 class="text-xs font-extrabold text-slate-900 dark:text-white">GAME-BY-GAME LOG</h3><p class="text-[9px] text-slate-500">Individual completed regular-season box scores.</p></div><div class="overflow-x-auto max-h-[48vh]"><table class="w-full text-[10px] font-mono"><thead class="sticky top-0 bg-slate-100 dark:bg-court-850 text-slate-500"><tr><th class="p-2 text-left">DATE</th><th class="p-2 text-left">OPP</th><th class="p-2">W/L</th><th class="p-2 text-right">PTS</th><th class="p-2 text-right">REB</th><th class="p-2 text-right">AST</th><th class="p-2 text-right">STL</th><th class="p-2 text-right">BLK</th><th class="p-2 text-right">SS</th></tr></thead><tbody id="profile-game-log" class="divide-y divide-slate-200 dark:divide-court-border/50"></tbody></table></div></section>
+    <button id="profile-whatif-btn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">Open full player analysis & What-If</button></div></aside></div>
+
   <!-- STICKY BACK TO TOP BUTTON -->
   <button 
     id="back-to-top-btn" 
@@ -594,7 +567,7 @@
 
   <!-- MODAL: PLAYER STATS INSPECT CARD WITH "WHAT-IF" SLIDERS -->
   <div id="player-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-5xl rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
+    <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
       <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
 
       <!-- Player Header in Modal -->
@@ -712,40 +685,6 @@
           <div class="text-right"><span id="slider-sim-score" class="text-sm font-black text-emerald-600 dark:text-emerald-400">--</span><div id="slider-live-rank" class="text-[10px] text-emerald-600 dark:text-emerald-300 font-bold mt-0.5">Projected leaderboard rank: --</div></div>
         </div>
       </div>
-
-      <!-- SCHRIFT SCORE PLAYER FILE -->
-      <section class="mt-4 border border-slate-200 dark:border-court-border rounded-xl overflow-hidden">
-        <div class="bg-slate-100 dark:bg-court-850 px-3 py-2.5 border-b border-slate-200 dark:border-court-border">
-          <div class="text-[9px] tracking-[.16em] font-mono font-black text-emerald-600 dark:text-emerald-400">SCHRIFT SCORE PLAYER FILE</div>
-          <div class="flex items-center justify-between gap-2 mt-1"><div id="player-file-player-name" class="text-xs font-bold text-slate-800 dark:text-white">Player Name</div><span id="player-file-season" class="text-[9px] text-slate-500 font-mono">2026–27 Regular Season</span></div>
-        </div>
-        <div class="p-3 space-y-3">
-          <div class="grid grid-cols-2 gap-2">
-            <div class="bg-slate-50 dark:bg-court-850 rounded-lg border border-slate-200 dark:border-court-border p-2.5">
-              <div class="text-[8px] tracking-wider text-slate-500 font-mono">SEASON-HIGH SINGLE-GAME SS</div>
-              <div id="player-file-high" class="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">—</div>
-              <div id="player-file-high-date" class="text-[9px] text-slate-500 font-mono mt-0.5">—</div>
-            </div>
-            <div class="bg-slate-50 dark:bg-court-850 rounded-lg border border-slate-200 dark:border-court-border p-2.5">
-              <div class="text-[8px] tracking-wider text-slate-500 font-mono">GAMES LOGGED</div>
-              <div id="player-file-games" class="text-lg font-black text-slate-900 dark:text-white mt-1">—</div>
-              <div class="text-[9px] text-slate-500 font-mono mt-0.5">In selected filters</div>
-            </div>
-          </div>
-          <div>
-            <div class="flex items-center justify-between mb-1"><span class="text-[9px] font-mono font-bold text-slate-500">SCHRIFT SCORE TREND</span><span class="text-[8px] text-slate-400">Oldest → newest</span></div>
-            <div id="player-file-trend" class="h-24 flex items-end gap-1 border-b border-slate-200 dark:border-court-border px-1 pb-1"><div class="text-[10px] text-slate-400">Loading player trend…</div></div>
-          </div>
-          <div>
-            <div class="text-[9px] font-mono font-bold text-slate-500 mb-1.5">GAME-BY-GAME LOG</div>
-            <p class="text-[9px] text-slate-400 mb-2">Individual completed regular-season box scores.</p>
-            <div id="player-file-log" class="overflow-auto max-h-64 rounded-lg border border-slate-200 dark:border-court-border">
-              <div class="p-4 text-center text-[10px] text-slate-400">Loading game log…</div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <div class="mt-3 text-center"><button type="button" onclick="document.getElementById('player-file-log')?.scrollIntoView({behavior:'smooth',block:'center'})" class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Open full player analysis &amp; What-If ↗</button></div>
 
       <!-- Action Buttons -->
       <div class="flex gap-2 font-mono">
@@ -1441,15 +1380,17 @@
       faller: null
     };
 
-    // 2026-27 daily game data is loaded from the ESPN scoreboard/box-score feed.
+    // 2026-27 daily game data is loaded from Basketball-Reference via API.SH.
     // Basketball-Reference day index is linked on every game for independent verification.
     let yesterdayGames = [];
-    let playerGameLines = [];
-    let playerGameAnalyticsLoaded = false;
-    let analyticsBaselineData = new Map();
-    let analyticsTimeframe = 'season';
-    let analyticsLoadError = '';
-
+    let analyticsGames = [];
+    let analyticsCache = {};
+    let analyticsLoadedWindow = null;
+    let analyticsLoadPromise = null;
+    let activeAnalyticsWindow = 'season';
+    let activeAnalyticsSplit = 'all';
+    let analyticsMinGames = 0;
+    let analyticsQualifiedOnly = false;
     const GAME_WEIGHTS_2627 = { ppg:0.35, rpg:0.83, apg:1.14, spg:1.80, bpg:1.98, gp:0.04 };
     const ROOKIE_NAMES_2627 = new Set([
       "AJ Dybantsa","Darryn Peterson","Cameron Boozer","Caleb Wilson","Keaton Wagler","Mikel Brown Jr.","Darius Acuff Jr.","Kingston Flemings","Morez Johnson Jr.","Brayden Burries","Yaxel Lendeborg","Aday Mara","Nate Ament","Hannes Steinbach","Dailyn Swain","Bennett Stirtz","Christian Anderson Jr.","Karim Lopez","Labaron Philon Jr.","Cameron Carr","Meleek Thomas","Allen Graves","Jayden Quaintance","Zuby Ejiofor","Tarris Reed Jr.","Chris Cenac Jr.","Joshua Jefferson","Alex Karaban","Koa Peat","Bruce Thornton","Richie Saunders","Isaiah Evans","Trevon Brazile","Baba Miller","Ryan Conwell","Braden Smith","Dillon Mitchell","Otega Oweh","Ja'Kobi Gillespie","Tyler Bilodeau","Maliq Brown","Emanuel Sharp","Felix Okpara","Tobi Lawal","Jaden Bradley","Henri Veesaar","Ugonna Onyenso","Nick Martinelli","Jaron Pierre Jr.","Sergio de Larrea","Izaiyah Nelson","Tyler Nickel","Vsevolod Ishchenko","Narcisse Ngoy","Trey Kaufman-Renn","Malique Lewis","Jaden Akins","Jaron Pierre Jr.","Norchad Omier","Ernest Udeh Jr.","Carson Cooper","Nate Bittle","Ebuka Okorie","Bennett Stirtz","Josh Dix","Thomas Sorber","Graham Ike","Bogoljub Markovic","Malik Dia","Quadir Copeland","Yaxel Lendeborg"
@@ -2175,132 +2116,6 @@
     }
 
     // --- LIVE TIMESTAMP ENGINE ---
-    // --- BOX-SCORE-DRIVEN ANALYTICS ---
-    function setAnalyticsTimeframe(period) {
-      analyticsTimeframe = String(period);
-      document.querySelectorAll('.analytics-period-btn').forEach(btn => {
-        const active = btn.dataset.timeframe === analyticsTimeframe;
-        btn.classList.toggle('bg-emerald-500', active);
-        btn.classList.toggle('text-slate-950', active);
-        btn.classList.toggle('border-emerald-500', active);
-      });
-      const awardToggle = document.getElementById('analytics-65-game');
-      if (awardToggle) {
-        awardToggle.disabled = analyticsTimeframe !== 'season';
-        if (analyticsTimeframe !== 'season') awardToggle.checked = false;
-        awardToggle.closest('label')?.classList.toggle('opacity-40', analyticsTimeframe !== 'season');
-      }
-      applyAnalyticsFilters();
-    }
-
-    async function loadPlayerGameAnalytics() {
-      const status = document.getElementById('analytics-data-status');
-      if (activeSeason !== '2026/27') {
-        if (status) status.textContent = 'ESPN completed box scores · Game-log analytics currently available for 2026–27.';
-        return;
-      }
-      if (status) status.textContent = 'ESPN completed box scores · Fetching completed regular-season box scores…';
-      try {
-        const response = await fetch('/api/player-game-logs?season=2026-27', { cache: 'no-store' });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload?.error || `Box-score service returned HTTP ${response.status}`);
-        if (!Array.isArray(payload.playerGames) || !payload.playerGames.length) throw new Error('No completed regular-season player-game lines were returned.');
-        playerGameLines = payload.playerGames.map(g => ({...g, ss: gameSchriftScore(g)}));
-        playerGameAnalyticsLoaded = true;
-        analyticsLoadError = '';
-        const loadedAt = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',second:'2-digit'});
-        if (status) status.textContent = `ESPN completed box scores · ${playerGameLines.length.toLocaleString()} player-game lines loaded · ${loadedAt} ET`;
-        applyAnalyticsFilters();
-      } catch (error) {
-        analyticsLoadError = error.message || 'Box-score analytics unavailable';
-        console.error('Player-game analytics failed:', error);
-        if (status) status.textContent = `ESPN completed box scores · Unable to load player-game lines: ${analyticsLoadError}. Showing the existing season leaderboard.`;
-      }
-    }
-
-    function getFilteredPlayerGameLines() {
-      const split = document.getElementById('analytics-split')?.value || 'all';
-      const today = new Date();
-      const cutoff = analyticsTimeframe === 'season' ? null : new Date(today.getFullYear(), today.getMonth(), today.getDate() - Number(analyticsTimeframe) + 1);
-      return playerGameLines.filter(g => {
-        if (cutoff && new Date(`${g.gameDate}T12:00:00`) < cutoff) return false;
-        if (split === 'home' && g.homeAway !== 'home') return false;
-        if (split === 'away' && g.homeAway !== 'away') return false;
-        if (split === 'wins' && g.result !== 'W') return false;
-        if (split === 'losses' && g.result !== 'L') return false;
-        return true;
-      });
-    }
-
-    function applyAnalyticsFilters() {
-      if (!playerGameAnalyticsLoaded) return;
-      const rows = getFilteredPlayerGameLines();
-      const grouped = new Map();
-      rows.forEach(g => {
-        const key = String(g.name || '').trim().toLowerCase();
-        if (!key) return;
-        if (!grouped.has(key)) grouped.set(key, []);
-        grouped.get(key).push(g);
-      });
-      const minGames = Math.max(0, Math.min(82, Number(document.getElementById('analytics-min-games')?.value || 0)));
-      const use65 = analyticsTimeframe === 'season' && !!document.getElementById('analytics-65-game')?.checked;
-      const weights = SEASONS['2026/27'].weights;
-      const previous = analyticsBaselineData;
-      const rebuilt = [];
-      grouped.forEach((games, key) => {
-        const gp = games.length;
-        if (gp < minGames || (use65 && gp < 65)) return;
-        const sum = field => games.reduce((total, g) => total + (Number(g[field]) || 0), 0);
-        const ppg=sum('pts')/gp, rpg=sum('reb')/gp, apg=sum('ast')/gp, spg=sum('stl')/gp, bpg=sum('blk')/gp;
-        const base = previous.get(key) || {};
-        const p = {
-          name: games[games.length-1].name,
-          team: games.slice().sort((a,b)=>b.gameDate.localeCompare(a.gameDate))[0].team || base.team || 'NBA',
-          rank: 0, rankYesterday: base.rankYesterday ?? null, rankChange: base.rankChange || 0,
-          ppg, rpg, apg, spg, bpg, gp,
-          ssPpg: ppg*weights.ppg, ssRpg: rpg*weights.rpg, ssApg: apg*weights.apg,
-          ssSpg: spg*weights.spg, ssBpg: bpg*weights.bpg, ssGp: gp*weights.gp
-        };
-        p.total=p.ssPpg+p.ssRpg+p.ssApg+p.ssSpg+p.ssBpg+p.ssGp;
-        rebuilt.push(p);
-      });
-      rebuilt.sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
-      masterData=rebuilt.map((p,i)=>({...p,rank:i+1}));
-      populateTeams();
-      updateTopCards();
-      updateHeaderHighlights();
-      applyFilters();
-      const count=document.getElementById('player-count');
-      if(count) count.textContent=`${masterData.length} Players`;
-    }
-
-    function renderPlayerFile(player) {
-      const games = getFilteredPlayerGameLines().filter(g => String(g.name).toLowerCase() === player.name.toLowerCase())
-        .sort((a,b)=>b.gameDate.localeCompare(a.gameDate));
-      const seasonGames = playerGameLines.filter(g => String(g.name).toLowerCase() === player.name.toLowerCase());
-      const high = seasonGames.reduce((best,g)=>!best || g.ss>best.ss ? g : best,null);
-      const playerNameEl=document.getElementById('player-file-player-name');
-      const seasonEl=document.getElementById('player-file-season');
-      if(playerNameEl) playerNameEl.textContent=player.name;
-      if(seasonEl) seasonEl.textContent=`${player.team} · 2026–27 Regular Season`;
-      const highEl=document.getElementById('player-file-high');
-      const highDate=document.getElementById('player-file-high-date');
-      const count=document.getElementById('player-file-games');
-      const trend=document.getElementById('player-file-trend');
-      const log=document.getElementById('player-file-log');
-      if(count) count.textContent=String(games.length);
-      if(highEl) highEl.textContent=high ? `${high.ss.toFixed(2)} SS` : '—';
-      if(highDate) highDate.textContent=high ? `${high.gameDate} ${high.opp}` : 'No game in selected filters';
-      if(trend) {
-        const ordered=games.slice().reverse();
-        const max=Math.max(1,...ordered.map(g=>g.ss));
-        trend.innerHTML=ordered.length ? ordered.map((g,i)=>`<div title="${g.gameDate}: ${g.ss.toFixed(2)} SS" class="flex-1 min-w-[4px] rounded-t bg-emerald-500/80 hover:bg-emerald-400 relative" style="height:${Math.max(5,g.ss/max*100)}%"><span class="sr-only">${g.ss.toFixed(2)}</span></div>`).join('') : '<div class="text-[10px] text-slate-400">No game data for this selection.</div>';
-      }
-      if(log) {
-        log.innerHTML=games.length ? `<table class="w-full text-[9px] sm:text-[10px] font-mono whitespace-nowrap player-log-table"><thead><tr class="text-slate-500"><th class="text-left p-2">DATE</th><th class="text-left p-2">OPP</th><th class="text-left p-2">W/L</th><th class="text-right p-2">PTS</th><th class="text-right p-2">REB</th><th class="text-right p-2">AST</th><th class="text-right p-2">STL</th><th class="text-right p-2">BLK</th><th class="text-right p-2">SS</th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-court-border/60">${games.map(g=>`<tr class="text-slate-700 dark:text-slate-300"><td class="p-2">${g.gameDate}</td><td class="p-2">${g.opp}</td><td class="p-2 font-bold ${g.result==='W'?'text-emerald-500':'text-rose-400'}">${g.result}</td><td class="p-2 text-right">${g.pts}</td><td class="p-2 text-right">${g.reb}</td><td class="p-2 text-right">${g.ast}</td><td class="p-2 text-right">${g.stl}</td><td class="p-2 text-right">${g.blk}</td><td class="p-2 text-right font-black text-emerald-600 dark:text-emerald-400">${g.ss.toFixed(2)}</td></tr>`).join('')}</tbody></table>` : '<div class="p-4 text-center text-[10px] text-slate-400">No completed games for this player in the selected timeframe and split.</div>';
-      }
-    }
-
     function updateLastUpdatedTimestamp() {
       const el = document.getElementById('last-updated-text');
       if (!el) return;
@@ -2438,61 +2253,27 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
-      } else {
-        if (btn2526) btn2526.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
-        if (btn2627) btn2627.className = "flex-1 sm:flex-none px-3.5 py-2 rounded-xl font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-court-850 border border-slate-300 dark:border-court-border";
-      }
-
-      document.getElementById('season-badge').textContent = cfg.badgeText;
-      document.getElementById('formula-title').textContent = cfg.title;
-      document.getElementById('formula-desc').textContent = cfg.desc;
-
-      document.getElementById('w-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
-      document.getElementById('w-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
-      document.getElementById('w-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
-      document.getElementById('w-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
-      document.getElementById('w-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
-      document.getElementById('w-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
-
-      document.getElementById('col-weight-ppg').textContent = `× ${cfg.weights.ppg.toFixed(2)}`;
-      document.getElementById('col-weight-rpg').textContent = `× ${cfg.weights.rpg.toFixed(2)}`;
-      document.getElementById('col-weight-apg').textContent = `× ${cfg.weights.apg.toFixed(2)}`;
-      document.getElementById('col-weight-spg').textContent = `× ${cfg.weights.spg.toFixed(2)}`;
-      document.getElementById('col-weight-bpg').textContent = `× ${cfg.weights.bpg.toFixed(2)}`;
-      document.getElementById('col-weight-gp').textContent  = `× ${cfg.weights.gp.toFixed(2)}`;
-
-      document.getElementById('table-rows').innerHTML = `
-        <tr>
-          <td colspan="12" class="py-16 text-center text-slate-400 font-sans">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent mb-2"></div>
-            <p>Loading ${cfg.label} player analytics...</p>
-          </td>
-        </tr>
-      `;
-
-      if (seasonKey === '2026/27') {
-        // Always request the latest 2026/27 rows from Apps Script on page load/season selection.
+        // Basketball-Reference is the sole source for 2026-27 season per-game stats.
+        // Never load the supplied spreadsheet, ESPN, or a stale fallback for this leaderboard.
         try {
-          const liveRows = await fetchLive202627Leaderboard();
-          masterData = normalizeLiveLeaderboard(liveRows);
-          if (!masterData.length) throw new Error('No valid 2026/27 players were returned');
-          seasonsData[seasonKey] = masterData;
-          console.info(`Schrift Score: loaded ${masterData.length} live 2026/27 players from Google Sheets.`);
-        } catch (err) {
-          console.error('Live Google Sheets connection failed; trying the public CSV export.', err);
-          try {
-            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${cfg.gid}`;
-            const response = await fetch(csvUrl);
-            if (!response.ok) throw new Error('Google Sheets CSV request failed');
-            masterData = parseCSV(await response.text(), cfg.weights);
-            if (!masterData.length) throw new Error('CSV contained no player rows');
-            seasonsData[seasonKey] = masterData;
-          } catch (csvErr) {
-            console.warn('CSV fallback failed; showing the built-in fallback leaderboard.', csvErr);
-            masterData = getFallback202627Data();
+          const response = await fetch('/api/basketball-reference?season=2027', { cache: 'no-store' });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Basketball-Reference leaderboard unavailable');
+          if (payload.source !== 'Basketball-Reference' || !Array.isArray(payload.players) || !payload.players.length) {
+            throw new Error('Basketball-Reference returned an invalid leaderboard payload');
           }
+          masterData = payload.players;
+          seasonsData[seasonKey] = masterData;
+          const sourceStatus = document.getElementById('analytics-status');
+          if (sourceStatus) sourceStatus.textContent = 'Source: Basketball-Reference 2026–27 Per Game · ' + payload.count + ' players · Retrieved ' + new Date(payload.updatedAt).toLocaleString();
+          console.info('Schrift Score: loaded ' + payload.count + ' players from Basketball-Reference.');
+        } catch (err) {
+          console.error('Basketball-Reference leaderboard could not be loaded.', err);
+          masterData = [];
+          const rows = document.getElementById('table-rows');
+          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">Basketball-Reference stats could not be loaded. No spreadsheet, ESPN, or stale substitute stats were shown.</td></tr>';
+          const sourceStatus = document.getElementById('analytics-status');
+          if (sourceStatus) sourceStatus.textContent = 'Basketball-Reference unavailable · no substitute stats loaded';
         }
       } else if (seasonsData[seasonKey] && seasonsData[seasonKey].length > 0) {
         masterData = seasonsData[seasonKey];
@@ -2524,6 +2305,7 @@
       updateCompareCountBadge();
 
       document.getElementById('player-count').textContent = `${masterData.length} Players`;
+      if (seasonKey === '2026/27' && !analyticsLoadedWindow) setAnalyticsWindow('season');
     }
 
     function switchSeason(seasonKey) {
@@ -2637,42 +2419,44 @@
     }
 
     function updateTopCards() {
-      if (masterData.length === 0) return;
+      // In 2026–27, refresh the cards from the same verified game-level data as the table.
+      const cardData = activeSeason === '2026/27' && (analyticsCache.season || analyticsLoadedWindow === 'season')
+        ? getAnalyticsLeaderboard()
+        : masterData;
+      if (!cardData.length) return;
 
-      const leader = masterData[0];
+      const leader = cardData[0];
       highlightPlayers.leader = leader;
       document.getElementById('stat-leader').textContent = leader.name;
-      document.getElementById('stat-leader-score').textContent = `${leader.total.toFixed(2)} Total (${leader.team})`;
+      document.getElementById('stat-leader-score').textContent = `${Number(leader.total || 0).toFixed(2)} Total (${leader.team || '—'})`;
 
-      // Best Yesterday is calculated from the complete live 2026-27 box scores.
       updateDailyBestFromGames();
 
-      const topScorer = [...masterData].sort((a,b) => b.ppg - a.ppg)[0];
+      const topScorer = [...cardData].sort((a,b) => Number(b.ppg || 0) - Number(a.ppg || 0))[0];
       highlightPlayers.scorer = topScorer;
       document.getElementById('stat-scorer').textContent = topScorer.name;
-      document.getElementById('stat-scorer-val').textContent = `${topScorer.ppg.toFixed(1)} PPG (${topScorer.team})`;
+      document.getElementById('stat-scorer-val').textContent = `${Number(topScorer.ppg || 0).toFixed(1)} PPG (${topScorer.team || '—'})`;
 
-      const sortedByChange = [...masterData].sort((a,b) => b.rankChange - a.rankChange);
+      const sortedByChange = [...cardData].sort((a,b) => Number(b.rankChange || 0) - Number(a.rankChange || 0));
       const biggestRiser = sortedByChange[0];
       const biggestFaller = sortedByChange[sortedByChange.length - 1];
-
       highlightPlayers.riser = biggestRiser;
       highlightPlayers.faller = biggestFaller;
 
-      if (biggestRiser && biggestRiser.rankChange > 0) {
+      if (biggestRiser && Number(biggestRiser.rankChange || 0) > 0) {
         document.getElementById('stat-riser').textContent = biggestRiser.name;
         document.getElementById('stat-riser-val').textContent = `▲ +${biggestRiser.rankChange} (#${biggestRiser.rank})`;
       } else {
-        document.getElementById('stat-riser').textContent = "None";
-        document.getElementById('stat-riser-val').textContent = "0";
+        document.getElementById('stat-riser').textContent = 'None';
+        document.getElementById('stat-riser-val').textContent = '0';
       }
 
-      if (biggestFaller && biggestFaller.rankChange < 0) {
+      if (biggestFaller && Number(biggestFaller.rankChange || 0) < 0) {
         document.getElementById('stat-faller').textContent = biggestFaller.name;
         document.getElementById('stat-faller-val').textContent = `▼ ${biggestFaller.rankChange} (#${biggestFaller.rank})`;
       } else {
-        document.getElementById('stat-faller').textContent = "None";
-        document.getElementById('stat-faller-val').textContent = "0";
+        document.getElementById('stat-faller').textContent = 'None';
+        document.getElementById('stat-faller-val').textContent = '0';
       }
     }
 
@@ -2731,7 +2515,7 @@
         }
 
         return `
-          <tr onclick="inspectPlayer(${p.rank})" class="hover:bg-slate-100 dark:hover:bg-court-800/70 cursor-pointer transition-colors group">
+          <tr onclick="openPlayerProfile(${p.rank})" class="hover:bg-slate-100 dark:hover:bg-court-800/70 cursor-pointer transition-colors group">
             <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${sortColumn === 'rank' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-slate-900 dark:text-white'}">${p.rank}</td>
             <td class="py-2.5 sm:py-3 px-1.5 text-center text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ${colClass('rankYesterday')} font-mono">#${p.rankYesterday || '-'}</td>
             <td class="py-2.5 sm:py-3 px-1.5 text-center text-[10px] sm:text-[11px] ${colClass('rankChange')}">${changeBadge}</td>
@@ -2784,29 +2568,122 @@
     }
 
     function applyFilters() {
-      const q = document.getElementById('search-input').value.toLowerCase().trim();
-      const team = document.getElementById('team-select').value;
-
-      const rookiesOnly = document.getElementById('rookies-only')?.checked || false;
-      currentData = masterData.filter(p => {
-        const matchesQuery = !q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q);
-        const matchesTeam = (team === "ALL") || (p.team === team);
-        const isRookie = ROOKIE_NAMES_2627.has(p.name);
-        return matchesQuery && matchesTeam && (!rookiesOnly || isRookie);
-      });
-
+      applyAnalyticsControls(false);
+      const q=document.getElementById('search-input').value.toLowerCase().trim();
+      const team=document.getElementById('team-select').value;
+      const rookiesOnly=document.getElementById('rookies-only')?.checked||false;
+      const source=getAnalyticsLeaderboard();
+      currentData=source.filter(p=>(!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))&&(team==='ALL'||team===p.team)&&(!rookiesOnly||ROOKIE_NAMES_2627.has(p.name)));
+      currentData.sort((a,b)=>b.total-a.total);
+      currentData.forEach((p,i)=>p.rank=i+1);
+      currentData.sort((a,b)=>sortDirection==='asc'?(a[sortColumn]??0)-(b[sortColumn]??0):(b[sortColumn]??0)-(a[sortColumn]??0));
+      const count=document.getElementById('player-count');if(count)count.textContent=currentData.length+' Players';
       renderTable();
     }
 
+    function getAnalyticsLeaderboard() {
+      const sourceGames=analyticsCache.season||(analyticsLoadedWindow==='season'?analyticsGames:null);
+      if(!sourceGames) return activeAnalyticsWindow==='season'?masterData:[];
+      let timeframeGames=sourceGames;
+      if(activeAnalyticsWindow!=='season'){
+        const cutoff=new Date();cutoff.setDate(cutoff.getDate()-(Number(activeAnalyticsWindow)-1));
+        const cutoffKey=dateKeyET(cutoff).replace(/^(\\d{4})(\\d{2})(\\d{2})$/,'$1-$2-$3');
+        timeframeGames=sourceGames.filter(g=>String(g.date||'')>=cutoffKey);
+      }
+      const filtered=timeframeGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
+      const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const unique=new Map();
+      filtered.forEach(g=>{
+        const player=norm(g.name),event=String(g.eventId||g.date+'|'+g.team+'|'+g.opponent);
+        if(!player||!event)return;
+        const key=player+'|'+event;
+        if(!unique.has(key))unique.set(key,g);
+      });
+      const groups=new Map();
+      unique.forEach(g=>{const k=norm(g.name);if(!groups.has(k))groups.set(k,{name:g.name,team:g.team,games:[]});groups.get(k).games.push(g);});
+      const w=SEASONS[activeSeason].weights,rows=[];
+      groups.forEach(group=>{
+        const gp=group.games.length;
+        if(gp<analyticsMinGames||(analyticsQualifiedOnly&&gp<65))return;
+        const avg=k=>group.games.reduce((sum,g)=>sum+Number(g[k]||0),0)/gp;
+        const ppg=avg('pts'),rpg=avg('reb'),apg=avg('ast'),spg=avg('stl'),bpg=avg('blk');
+        const base=masterData.find(p=>norm(p.name)===norm(group.name));
+        rows.push({...base,name:base?.name||group.name,team:base?.team||group.team,ppg,rpg,apg,spg,bpg,gp,ssPpg:ppg*w.ppg,ssRpg:rpg*w.rpg,ssApg:apg*w.apg,ssSpg:spg*w.spg,ssBpg:bpg*w.bpg,ssGp:gp*w.gp,total:ppg*w.ppg+rpg*w.rpg+apg*w.apg+spg*w.spg+bpg*w.bpg+gp*w.gp});
+      });
+      rows.sort((a,b)=>b.total-a.total);
+      return rows.map((p,i)=>({...p,rank:i+1}));
+    }
+
+    async function loadGameAnalytics(key) {
+      const cacheKey='season';
+      if(Object.prototype.hasOwnProperty.call(analyticsCache,cacheKey)){analyticsGames=analyticsCache[cacheKey];analyticsLoadedWindow=cacheKey;return;}
+      if(analyticsLoadPromise)await analyticsLoadPromise;
+      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading Basketball-Reference box scores…';
+      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season',{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
+      try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
+      if(status)status.textContent='Basketball-Reference box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
+      updateTopCards();
+      applyFilters();
+    }
+
+    async function setAnalyticsWindow(key) {
+      activeAnalyticsWindow=key;
+      const qualifiedToggle=document.getElementById('nba-qualified-only');if(qualifiedToggle){qualifiedToggle.disabled=key!=='season';if(qualifiedToggle.disabled)qualifiedToggle.checked=false;}
+      const minGamesSlider=document.getElementById('min-games-slider');if(minGamesSlider){minGamesSlider.max=key==='season'?'82':key;if(Number(minGamesSlider.value)>Number(minGamesSlider.max))minGamesSlider.value=minGamesSlider.max;}
+      document.querySelectorAll('.timeframe-btn').forEach(btn=>{const on=btn.dataset.window===key;btn.className='timeframe-btn px-2.5 py-2 rounded-lg border font-mono text-[10px] sm:text-xs '+(on?'border-emerald-500 bg-emerald-500 text-slate-950 font-bold':'border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300');});
+      try{await loadGameAnalytics('season');applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Basketball-Reference game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
+    }
+
+    function applyAnalyticsControls(rerender=true) {
+      activeAnalyticsSplit=document.getElementById('analytics-split')?.value||'all';
+      analyticsMinGames=Number(document.getElementById('min-games-slider')?.value||0);
+      analyticsQualifiedOnly=!!document.getElementById('nba-qualified-only')?.checked;
+      const v=document.getElementById('min-games-value');if(v)v.textContent=String(analyticsMinGames);
+      if(rerender&&masterData.length)applyFilters();
+    }
+
+    async function openPlayerProfile(rank) {
+      const p=currentData.find(x=>x.rank===rank)||masterData.find(x=>x.rank===rank);if(!p)return;
+      document.getElementById('profile-title').textContent=p.name;
+      document.getElementById('profile-subtitle').textContent=p.team+' · 2026–27 Regular Season';
+      ['profile-high','profile-games-count'].forEach(id=>document.getElementById(id).textContent='…');
+      document.getElementById('profile-high-date').textContent='Calculating from game logs';
+      document.getElementById('profile-chart').textContent='Loading verified game log…';
+      document.getElementById('profile-game-log').innerHTML='<tr><td colspan="9" class="p-5 text-center text-slate-400">Loading game log…</td></tr>';
+      document.getElementById('player-profile-overlay').classList.remove('hidden');document.body.classList.add('overflow-hidden');
+      try{
+        await loadGameAnalytics('season');
+        const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+        const profileGames=analyticsCache.season||analyticsGames;const logs=profileGames.filter(g=>norm(g.name)===norm(p.name)).sort((a,b)=>a.date.localeCompare(b.date));
+        if(!logs.length)throw new Error('No completed game logs returned for this player.');
+        const high=logs.reduce((best,g)=>g.ss>best.ss?g:best,logs[0]);
+        document.getElementById('profile-high').textContent=high.ss.toFixed(2)+' SS';
+        document.getElementById('profile-high-date').textContent=high.date+' vs '+high.opponent;
+        document.getElementById('profile-games-count').textContent=String(logs.length);
+        const w=560,h=150,pad=22,vals=logs.map(g=>g.ss),lo=Math.min(...vals),hi=Math.max(...vals),range=Math.max(1,hi-lo);
+        const points=vals.map((v,i)=>({x:pad+(logs.length===1?0:i*(w-pad*2)/(logs.length-1)),y:h-pad-((v-lo)/range)*(h-pad*2)}));
+        const poly=points.map(v=>v.x.toFixed(1)+','+v.y.toFixed(1)).join(' ');
+        const dots=points.map((v,i)=>'<circle cx="'+v.x+'" cy="'+v.y+'" r="3" fill="#10b981"><title>'+logs[i].date+': '+logs[i].ss.toFixed(2)+' SS</title></circle>').join('');
+        document.getElementById('profile-chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Game-by-game Schrift Score trend" class="w-full"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="currentColor" opacity=".2"/><polyline points="'+poly+'" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'<text x="'+pad+'" y="12" fill="currentColor" font-size="10" opacity=".65">'+hi.toFixed(1)+' SS</text><text x="'+pad+'" y="'+(h-3)+'" fill="currentColor" font-size="10" opacity=".65">'+lo.toFixed(1)+' SS</text></svg>';
+        document.getElementById('profile-game-log').innerHTML=[...logs].reverse().map(g=>'<tr class="text-slate-700 dark:text-slate-300"><td class="p-2 whitespace-nowrap">'+g.date+'</td><td class="p-2">'+(g.homeAway==='home'?'vs ':'@ ')+g.opponent+'</td><td class="p-2 text-center">'+g.result+'</td><td class="p-2 text-right">'+g.pts+'</td><td class="p-2 text-right">'+g.reb+'</td><td class="p-2 text-right">'+g.ast+'</td><td class="p-2 text-right">'+g.stl+'</td><td class="p-2 text-right">'+g.blk+'</td><td class="p-2 text-right font-bold text-emerald-500">'+g.ss.toFixed(2)+'</td></tr>').join('');
+        document.getElementById('profile-whatif-btn').onclick=()=>{closePlayerProfile();const base=masterData.find(x=>norm(x.name)===norm(p.name));if(base)inspectPlayer(base.rank);};
+      }catch(err){document.getElementById('profile-chart').textContent='Game log unavailable: '+err.message;document.getElementById('profile-game-log').innerHTML='<tr><td colspan="9" class="p-4 text-center text-rose-500">'+err.message+'</td></tr>';}
+    }
+
+    function closePlayerProfile(){document.getElementById('player-profile-overlay').classList.add('hidden');document.body.classList.remove('overflow-hidden');}
+
     document.getElementById('search-input').addEventListener('input', applyFilters);
     document.getElementById('team-select').addEventListener('change', applyFilters);
-    document.getElementById('reset-btn').addEventListener('click', () => {
-      document.getElementById('search-input').value = "";
-      document.getElementById('team-select').value = "ALL";
-      const rookieToggle=document.getElementById('rookies-only'); if(rookieToggle) rookieToggle.checked=false;
-      currentData = [...masterData];
-      renderTable();
+    document.getElementById('reset-btn')?.addEventListener('click',()=>{
+      document.getElementById('search-input').value='';
+      document.getElementById('team-select').value='ALL';
+      document.getElementById('rookies-only').checked=false;
+      document.getElementById('analytics-split').value='all';
+      document.getElementById('min-games-slider').value='0';
+      document.getElementById('nba-qualified-only').checked=false;
+      applyFilters();
     });
+
 
     function sortTable(col) {
       if (sortColumn === col) {
@@ -2990,7 +2867,6 @@
         compareText.textContent = "Add to Compare ⚔️";
       }
 
-      renderPlayerFile(p);
       document.getElementById('player-modal').classList.remove('hidden');
     }
 
