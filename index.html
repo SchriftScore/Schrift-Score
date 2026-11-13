@@ -2618,10 +2618,10 @@
       const cacheKey='season';
       if(Object.prototype.hasOwnProperty.call(analyticsCache,cacheKey)){analyticsGames=analyticsCache[cacheKey];analyticsLoadedWindow=cacheKey;return;}
       if(analyticsLoadPromise)await analyticsLoadPromise;
-      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading Basketball-Reference box scores…';
-      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season');const data=await r.json();if(!r.ok)throw new Error(data.error||'Basketball-Reference game data unavailable');if(data.source!=='Basketball-Reference'||!Array.isArray(data.games))throw new Error('Invalid Basketball-Reference game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
+      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading NBA box scores…';
+      analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season');const data=await r.json();if(!r.ok)throw new Error(data.error||'NBA game data unavailable');if(data.source!=='ESPN'||!Array.isArray(data.games))throw new Error('Invalid ESPN game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
-      if(status)status.textContent='Basketball-Reference box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
+      if(status)status.textContent='ESPN box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
       updateTopCards();
       applyFilters();
     }
@@ -2631,7 +2631,7 @@
       const qualifiedToggle=document.getElementById('nba-qualified-only');if(qualifiedToggle){qualifiedToggle.disabled=key!=='season';if(qualifiedToggle.disabled)qualifiedToggle.checked=false;}
       const minGamesSlider=document.getElementById('min-games-slider');if(minGamesSlider){minGamesSlider.max=key==='season'?'82':key;if(Number(minGamesSlider.value)>Number(minGamesSlider.max))minGamesSlider.value=minGamesSlider.max;}
       document.querySelectorAll('.timeframe-btn').forEach(btn=>{const on=btn.dataset.window===key;btn.className='timeframe-btn px-2.5 py-2 rounded-lg border font-mono text-[10px] sm:text-xs '+(on?'border-emerald-500 bg-emerald-500 text-slate-950 font-bold':'border-slate-300 dark:border-court-border bg-slate-100 dark:bg-court-850 text-slate-600 dark:text-slate-300');});
-      try{await loadGameAnalytics('season');applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='Basketball-Reference game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
+      try{await loadGameAnalytics('season');applyFilters();}catch(err){const s=document.getElementById('analytics-status');if(s)s.textContent='NBA game data unavailable: '+err.message;if(key!=='season'){analyticsGames=[];applyFilters();}}
     }
 
     function applyAnalyticsControls(rerender=true) {
@@ -2648,7 +2648,7 @@
       document.getElementById('profile-subtitle').textContent=p.team+' · 2026–27 Regular Season';
       ['profile-high','profile-games-count'].forEach(id=>document.getElementById(id).textContent='…');
       document.getElementById('profile-high-date').textContent='Calculating from game logs';
-      document.getElementById('profile-chart').textContent='Loading verified game log…';
+      document.getElementById('profile-chart').textContent='Loading game log…';
       document.getElementById('profile-game-log').innerHTML='<tr><td colspan="9" class="p-5 text-center text-slate-400">Loading game log…</td></tr>';
       document.getElementById('player-profile-overlay').classList.remove('hidden');document.body.classList.add('overflow-hidden');
       try{
