@@ -108,10 +108,44 @@ export default async function handler(req, res) {
 
     if (descriptors.length && !games.length) throw new Error('ESPN returned no valid player game lines.');
     games.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+
+    // Build the season leaderboard from the exact same completed-game box scores.
+    // This keeps the leaderboard and player profiles on one consistent data source.
+    const playerMap = new Map();
+    for (const game of games) {
+      const key = normalizeName(game.name);
+      if (!playerMap.has(key)) playerMap.set(key, {
+        name: game.name, team: game.team, gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
+        lastGameDate: ''
+      });
+      const player = playerMap.get(key);
+      player.gp += 1;
+      player.pts += game.pts; player.reb += game.reb; player.ast += game.ast;
+      player.stl += game.stl; player.blk += game.blk;
+      if (game.date >= player.lastGameDate) {
+        player.team = game.team;
+        player.lastGameDate = game.date;
+      }
+    }
+    const weights = { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 };
+    const players = [...playerMap.values()].map(player => {
+      const ppg = player.pts / player.gp, rpg = player.reb / player.gp;
+      const apg = player.ast / player.gp, spg = player.stl / player.gp, bpg = player.blk / player.gp;
+      const ssPpg = ppg * weights.ppg, ssRpg = rpg * weights.rpg;
+      const ssApg = apg * weights.apg, ssSpg = spg * weights.spg, ssBpg = bpg * weights.bpg;
+      const ssGp = player.gp * weights.gp;
+      return {
+        name: player.name, team: player.team, gp: player.gp,
+        ppg, rpg, apg, spg, bpg, ssPpg, ssRpg, ssApg, ssSpg, ssBpg, ssGp,
+        total: ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp
+      };
+    }).sort((a, b) => b.total - a.total).map((player, index) => ({ ...player, rank: index + 1 }));
+
     return res.status(200).json({
       source: 'ESPN', retrieval: 'ESPN public scoreboard and box-score feeds',
       window: 'season', startDate: seasonStart, endDate: today,
-      games, gameCount: descriptors.length, playerGameLineCount: games.length,
+      games, players, count: players.length,
+      gameCount: descriptors.length, playerGameLineCount: games.length,
       generatedAt: new Date().toISOString()
     });
   } catch (error) {
