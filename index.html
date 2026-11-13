@@ -2510,7 +2510,7 @@
       };
 
       tbody.innerHTML = currentData.map((p) => {
-        let changeBadge = `<span class="text-slate-400">• 0</span>`;
+        let changeBadge = p.rankYesterday == null ? `<span class="text-slate-400 text-[9px] font-bold">NEW</span>` : `<span class="text-slate-400">• 0</span>`;
         if (p.rankChange > 0) {
           changeBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">▲${p.rankChange}</span>`;
         } else if (p.rankChange < 0) {
