@@ -1,11 +1,13 @@
+export const config = { maxDuration: 60 };
+
 // Game-level analytics sourced only from Basketball-Reference via API.SH.
 // Parse only the two official basic box-score tables for each completed game.
 // Duplicate rows and duplicate game descriptors are rejected before returning data.
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=3600');
   const apiKey = process.env.APISH_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ error: 'Basketball-Reference data is not configured. Add APISH_API_KEY to Vercel Preview.' });
+    return res.status(503).json({ error: 'Basketball-Reference data is not configured. Add APISH_API_KEY to the Vercel Production environment and redeploy.' });
   }
 
   const seasonStart = '2026-10-20';
@@ -48,9 +50,16 @@ export default async function handler(req, res) {
   const normalizeName = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
   try {
-    const dailyPayloads = await Promise.all(dayKeys.map(date =>
-      apiGet('scores', date === today ? { date, fresh: 1 } : { date })
-    ));
+    // Keep upstream requests bounded. Fetching every date at once can trigger
+    // API.SH rate limits and cause the Vercel function to time out.
+    const dailyPayloads = new Array(dayKeys.length);
+    const scoreWorkers = Array.from({ length: Math.min(4, dayKeys.length) }, async (_, worker) => {
+      for (let index = worker; index < dayKeys.length; index += 4) {
+        const date = dayKeys[index];
+        dailyPayloads[index] = await apiGet('scores', date === today ? { date, fresh: 1 } : { date });
+      }
+    });
+    await Promise.all(scoreWorkers);
     const descriptorMap = new Map();
     for (let index = 0; index < dailyPayloads.length; index += 1) {
       const date = dayKeys[index];
