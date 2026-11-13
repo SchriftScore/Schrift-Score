@@ -126,7 +126,7 @@ begin
   end if;
   update public.draft_rooms
   set status='live',
-      state=jsonb_build_object('picks','[]'::jsonb,'started_at',now())
+      state=jsonb_build_object('picks','[]'::jsonb,'started_at',now(),'turn_started_at',now())
   where id=p_room_id
   returning * into v_room;
   return jsonb_build_object('status',v_room.status,'state',v_room.state);
