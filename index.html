@@ -2590,8 +2590,8 @@
       let timeframeGames=sourceGames;
       if(activeAnalyticsWindow!=='season'){
         const cutoff=new Date();cutoff.setDate(cutoff.getDate()-(Number(activeAnalyticsWindow)-1));
-        const cutoffKey=dateKeyET(cutoff).replace(/^(\\d{4})(\\d{2})(\\d{2})$/,'$1-$2-$3');
-        timeframeGames=sourceGames.filter(g=>String(g.date||'')>=cutoffKey);
+        const cutoffKey=dateKeyET(cutoff);
+        timeframeGames=sourceGames.filter(g=>String(g.date||'').replace(/-/g,'')>=cutoffKey);
       }
       const filtered=timeframeGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
       const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
