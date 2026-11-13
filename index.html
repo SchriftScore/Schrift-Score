@@ -717,7 +717,7 @@
       <section class="mt-4 border border-slate-200 dark:border-court-border rounded-xl overflow-hidden">
         <div class="bg-slate-100 dark:bg-court-850 px-3 py-2.5 border-b border-slate-200 dark:border-court-border">
           <div class="text-[9px] tracking-[.16em] font-mono font-black text-emerald-600 dark:text-emerald-400">SCHRIFT SCORE PLAYER FILE</div>
-          <div class="flex items-center justify-between gap-2 mt-1"><div class="text-xs font-bold text-slate-800 dark:text-white">Game-by-game performance</div><span id="player-file-season" class="text-[9px] text-slate-500 font-mono">2026–27 Regular Season</span></div>
+          <div class="flex items-center justify-between gap-2 mt-1"><div id="player-file-player-name" class="text-xs font-bold text-slate-800 dark:text-white">Player Name</div><span id="player-file-season" class="text-[9px] text-slate-500 font-mono">2026–27 Regular Season</span></div>
         </div>
         <div class="p-3 space-y-3">
           <div class="grid grid-cols-2 gap-2">
@@ -2277,7 +2277,12 @@
     function renderPlayerFile(player) {
       const games = getFilteredPlayerGameLines().filter(g => String(g.name).toLowerCase() === player.name.toLowerCase())
         .sort((a,b)=>b.gameDate.localeCompare(a.gameDate));
-      const high = games.reduce((best,g)=>!best || g.ss>best.ss ? g : best,null);
+      const seasonGames = playerGameLines.filter(g => String(g.name).toLowerCase() === player.name.toLowerCase());
+      const high = seasonGames.reduce((best,g)=>!best || g.ss>best.ss ? g : best,null);
+      const playerNameEl=document.getElementById('player-file-player-name');
+      const seasonEl=document.getElementById('player-file-season');
+      if(playerNameEl) playerNameEl.textContent=player.name;
+      if(seasonEl) seasonEl.textContent=`${player.team} · 2026–27 Regular Season`;
       const highEl=document.getElementById('player-file-high');
       const highDate=document.getElementById('player-file-high-date');
       const count=document.getElementById('player-file-games');
