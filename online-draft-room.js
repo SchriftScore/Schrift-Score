@@ -74,6 +74,23 @@
   function aiValue(p, round) {
     return ss(p)+missionBonus(p,round);
   }
+  function chooseOnlineAi(available, teamSeat, round, pickCount, roster) {
+    var style=['user','film','numbers','bold'][teamSeat]||'numbers';
+    var seen={};
+    (roster||[]).forEach(function(p){seen[archetype(p)]=true;});
+    return available.map(function(p){
+      var role=archetype(p),value=aiValue(p,round);
+      if(style==='film'){if(role==='DEFENSE'||role==='ALL-AROUND')value+=2.2;if(seen[role])value-=1.5;}
+      if(style==='numbers'){value+=ss(p)*0.08;if(seen[role])value-=0.5;}
+      if(style==='bold'){
+        var seed=String(roomId||'')+'|'+pickCount+'|'+p.name,h=0;
+        for(var i=0;i<seed.length;i++)h=(Math.imul(h,31)+seed.charCodeAt(i))|0;
+        value+=((h>>>0)%5000)/1000;
+        if(ss(p)>25)value+=1.8;
+      }
+      return {player:p,value:value};
+    }).sort(function(a,b){return b.value-a.value;})[0].player;
+  }
   function turnAt(n) {
     var round = Math.floor(n / 4), slot = n % 4;
     return round % 2 === 0 ? slot : 3 - slot;
@@ -271,7 +288,7 @@
     if(search)search.addEventListener('input',function(){var q=this.value.toLowerCase();Array.from(node.querySelectorAll('[data-online="select"]')).forEach(function(row){var name=row.getAttribute('data-player')||'';row.style.display=name.toLowerCase().includes(q)?'flex':'none';});});
     if(host&&vacant&&r.status==='live'&&picks.length<20&&!botBusy&&available.length){
       botBusy=true;
-      setTimeout(function(){var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:available[0].name});result.then(function(res){botBusy=false;if(res.error)setMessage(res.error.message);else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
+      setTimeout(function(){var chosen=chooseOnlineAi(available,turn,round,picks.length,teams[turn].roster);var result=client.rpc('submit_draft_pick',{p_room_id:roomId,p_player_name:chosen.name});result.then(function(res){botBusy=false;if(res.error)setMessage(res.error.message);else refreshRoom();}).catch(function(e){botBusy=false;setMessage(e.message);});},600);
     }
     if(r.status==='finished')renderOnlineResults(r,picks,pool,teams);
   }
