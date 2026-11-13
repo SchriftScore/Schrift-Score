@@ -129,8 +129,12 @@ export default async function handler(req, res) {
     }
     const weights = { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 };
     let players = [...playerMap.values()].map(player => {
-      const ppg = player.pts / player.gp, rpg = player.reb / player.gp;
-      const apg = player.ast / player.gp, spg = player.stl / player.gp, bpg = player.blk / player.gp;
+      // Schrift Score is calculated from the same one-decimal averages shown in the leaderboard.
+      const ppg = Number((player.pts / player.gp).toFixed(1));
+      const rpg = Number((player.reb / player.gp).toFixed(1));
+      const apg = Number((player.ast / player.gp).toFixed(1));
+      const spg = Number((player.stl / player.gp).toFixed(1));
+      const bpg = Number((player.blk / player.gp).toFixed(1));
       const ssPpg = ppg * weights.ppg, ssRpg = rpg * weights.rpg;
       const ssApg = apg * weights.apg, ssSpg = spg * weights.spg, ssBpg = bpg * weights.bpg;
       const ssGp = player.gp * weights.gp;
@@ -157,11 +161,11 @@ export default async function handler(req, res) {
     }
     const priorRankByName = new Map([...priorTotals.entries()]
       .map(([key, p]) => {
-        const score = (p.pts / p.gp) * weights.ppg
-          + (p.reb / p.gp) * weights.rpg
-          + (p.ast / p.gp) * weights.apg
-          + (p.stl / p.gp) * weights.spg
-          + (p.blk / p.gp) * weights.bpg
+        const score = Number((p.pts / p.gp).toFixed(1)) * weights.ppg
+          + Number((p.reb / p.gp).toFixed(1)) * weights.rpg
+          + Number((p.ast / p.gp).toFixed(1)) * weights.apg
+          + Number((p.stl / p.gp).toFixed(1)) * weights.spg
+          + Number((p.blk / p.gp).toFixed(1)) * weights.bpg
           + p.gp * weights.gp;
         return { key, score };
       })
