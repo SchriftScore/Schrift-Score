@@ -8,6 +8,14 @@ set state = jsonb_set(
   '{turn_started_at}',
   to_jsonb(coalesce(
     nullif(r.state->>'turn_started_at','')::timestamptz,
+    case
+      when jsonb_array_length(coalesce(r.state->'picks','[]'::jsonb)) > 0
+      then nullif(
+        r.state->'picks'->(jsonb_array_length(coalesce(r.state->'picks','[]'::jsonb))-1)->>'picked_at',
+        ''
+      )::timestamptz
+      else null
+    end,
     nullif(r.state->>'started_at','')::timestamptz,
     r.created_at
   )),
