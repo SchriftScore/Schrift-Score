@@ -128,7 +128,7 @@ export default async function handler(req, res) {
       }
     }
     const weights = { ppg: 0.35, rpg: 0.83, apg: 1.14, spg: 1.80, bpg: 1.98, gp: 0.04 };
-    const players = [...playerMap.values()].map(player => {
+    let players = [...playerMap.values()].map(player => {
       const ppg = player.pts / player.gp, rpg = player.reb / player.gp;
       const apg = player.ast / player.gp, spg = player.stl / player.gp, bpg = player.blk / player.gp;
       const ssPpg = ppg * weights.ppg, ssRpg = rpg * weights.rpg;
@@ -140,6 +140,41 @@ export default async function handler(req, res) {
         total: ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp
       };
     }).sort((a, b) => b.total - a.total).map((player, index) => ({ ...player, rank: index + 1 }));
+
+    // Compare today's leaderboard with the standings immediately before the
+    // latest completed game date. This makes rank movement a real day-over-day
+    // comparison instead of defaulting every player to zero.
+    const latestGameDate = games.reduce((latest, game) => game.date > latest ? game.date : latest, '');
+    const priorTotals = new Map();
+    for (const game of games) {
+      if (!latestGameDate || game.date >= latestGameDate) continue;
+      const key = normalizeName(game.name);
+      if (!priorTotals.has(key)) priorTotals.set(key, { gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 });
+      const prior = priorTotals.get(key);
+      prior.gp += 1;
+      prior.pts += game.pts; prior.reb += game.reb; prior.ast += game.ast;
+      prior.stl += game.stl; prior.blk += game.blk;
+    }
+    const priorRankByName = new Map([...priorTotals.entries()]
+      .map(([key, p]) => {
+        const score = (p.pts / p.gp) * weights.ppg
+          + (p.reb / p.gp) * weights.rpg
+          + (p.ast / p.gp) * weights.apg
+          + (p.stl / p.gp) * weights.spg
+          + (p.blk / p.gp) * weights.bpg
+          + p.gp * weights.gp;
+        return { key, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map((p, index) => [p.key, index + 1]));
+    players = players.map(player => {
+      const priorRank = priorRankByName.get(normalizeName(player.name));
+      return {
+        ...player,
+        rankYesterday: priorRank ?? null,
+        rankChange: priorRank == null ? null : priorRank - player.rank
+      };
+    });
 
     return res.status(200).json({
       source: 'ESPN', retrieval: 'ESPN public scoreboard and box-score feeds',
