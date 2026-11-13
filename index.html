@@ -2253,27 +2253,30 @@
       const btn2526 = document.getElementById('btn-season-2526');
 
       if (seasonKey === '2026/27') {
-        // Basketball-Reference is the sole source for 2026-27 season per-game stats.
-        // Never load the supplied spreadsheet, ESPN, or a stale fallback for this leaderboard.
+        // The 2026-27 leaderboard and game logs are both calculated from ESPN box scores.
+        // No API key, paid provider, spreadsheet, or stale fallback is required.
         try {
-          const response = await fetch('/api/basketball-reference?season=2027', { cache: 'no-store' });
+          const response = await fetch('/api/nba-analytics?window=season', { cache: 'no-store' });
           const payload = await response.json();
-          if (!response.ok) throw new Error(payload.error || 'Basketball-Reference leaderboard unavailable');
-          if (payload.source !== 'Basketball-Reference' || !Array.isArray(payload.players) || !payload.players.length) {
-            throw new Error('Basketball-Reference returned an invalid leaderboard payload');
+          if (!response.ok) throw new Error(payload.error || 'NBA season data unavailable');
+          if (payload.source !== 'ESPN' || !Array.isArray(payload.players) || !payload.players.length || !Array.isArray(payload.games)) {
+            throw new Error('ESPN returned an invalid season data response');
           }
           masterData = payload.players;
           seasonsData[seasonKey] = masterData;
+          analyticsGames = payload.games;
+          analyticsCache.season = payload.games;
+          analyticsLoadedWindow = 'season';
           const sourceStatus = document.getElementById('analytics-status');
-          if (sourceStatus) sourceStatus.textContent = 'Source: Basketball-Reference 2026–27 Per Game · ' + payload.count + ' players · Retrieved ' + new Date(payload.updatedAt).toLocaleString();
-          console.info('Schrift Score: loaded ' + payload.count + ' players from Basketball-Reference.');
+          if (sourceStatus) sourceStatus.textContent = 'ESPN box scores · ' + payload.count + ' players · ' + payload.gameCount + ' completed games · Retrieved ' + new Date(payload.generatedAt).toLocaleString();
+          console.info('Schrift Score: loaded ' + payload.count + ' players and ' + payload.playerGameLineCount + ' player-game lines from ESPN.');
         } catch (err) {
-          console.error('Basketball-Reference leaderboard could not be loaded.', err);
+          console.error('ESPN season leaderboard could not be loaded.', err);
           masterData = [];
           const rows = document.getElementById('table-rows');
-          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">Basketball-Reference stats could not be loaded. No spreadsheet, ESPN, or stale substitute stats were shown.</td></tr>';
+          if (rows) rows.innerHTML = '<tr><td colspan="12" class="py-12 text-center text-rose-500">NBA season stats could not be loaded. Try refreshing the page.</td></tr>';
           const sourceStatus = document.getElementById('analytics-status');
-          if (sourceStatus) sourceStatus.textContent = 'Basketball-Reference unavailable · no substitute stats loaded';
+          if (sourceStatus) sourceStatus.textContent = 'ESPN season data unavailable · ' + err.message;
         }
       } else if (seasonsData[seasonKey] && seasonsData[seasonKey].length > 0) {
         masterData = seasonsData[seasonKey];
