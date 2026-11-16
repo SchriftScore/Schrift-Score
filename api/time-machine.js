@@ -36,7 +36,7 @@ function normalizeName(value) {
   return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 function parseSeasonTable(html, year) {
-  // Basketball-Reference sometimes wraps stat tables in HTML comments.
+  // Basketball-Reference sometimes wraps stat tables in HTML comments.\n  // Its team column uses team_name_abbr on many historical pages; older table\n  // variants may expose team_id instead, so accept both.
   const visibleHtml = String(html).replace(/<!--/g, "").replace(/-->/g, "");
   const match = visibleHtml.match(/<table\b[^>]*id=["']per_game_stats["'][\s\S]*?<\/table>/i);
   if (!match) throw new Error("Basketball-Reference per-game table was not found for " + (year - 1) + "-" + String(year).slice(-2) + ".");
@@ -52,7 +52,7 @@ function parseSeasonTable(html, year) {
     }
     const name = cells.player;
     if (!name || /^player$/i.test(name)) continue;
-    const team = String(cells.team_id || "").trim();
+    const team = String(cells.team_name_abbr || cells.team_id || cells.team || "").trim();
     const gp = numeric(cells.games);
     if (!team || gp <= 0) continue;
     rawRows.push({
