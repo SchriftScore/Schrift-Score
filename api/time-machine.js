@@ -3,12 +3,13 @@
 // For a selected season, the formula is calculated from the 10 preceding seasons.
 export const config = { maxDuration: 60 };
 
+// Parsed player rows use normalized property names; baseline ranking must use these keys.
 const STAT_KEYS = {
-  ppg: "pts_per_g",
-  rpg: "trb_per_g",
-  apg: "ast_per_g",
-  spg: "stl_per_g",
-  bpg: "blk_per_g",
+  ppg: "ppg",
+  rpg: "rpg",
+  apg: "apg",
+  spg: "spg",
+  bpg: "bpg",
   gp: "gp"
 };
 const STAT_LABELS = { ppg:"PPG", rpg:"RPG", apg:"APG", spg:"SPG", bpg:"BPG", gp:"GP" };
