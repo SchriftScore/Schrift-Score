@@ -53,7 +53,7 @@ function parseSeasonTable(html, year) {
     const name = cells.player;
     if (!name || /^player$/i.test(name)) continue;
     const team = String(cells.team_name_abbr || cells.team_id || cells.team || "").trim();
-    const gp = numeric(cells.games);
+    const gp = numeric(cells.g ?? cells.games);
     if (!team || gp <= 0) continue;
     rawRows.push({
       name, team, gp,
