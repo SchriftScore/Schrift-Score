@@ -9,7 +9,7 @@ const STAT_KEYS = {
   apg: "ast_per_g",
   spg: "stl_per_g",
   bpg: "blk_per_g",
-  gp: "games"
+  gp: "gp"
 };
 const STAT_LABELS = { ppg:"PPG", rpg:"RPG", apg:"APG", spg:"SPG", bpg:"BPG", gp:"GP" };
 
