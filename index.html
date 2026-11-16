@@ -2460,8 +2460,14 @@
       if (count) count.textContent = 'Calculating…';
       try {
         const response = await fetch('/api/time-machine?season=' + encodeURIComponent(year), { cache:'no-store' });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Historical season unavailable.');
+        const responseText = await response.text();
+        let payload;
+        try { payload = JSON.parse(responseText); }
+        catch (_) {
+          const detail = responseText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220);
+          throw new Error(detail || ('The server returned an unreadable response (HTTP ' + response.status + ').'));
+        }
+        if (!response.ok) throw new Error(payload.error || ('Historical season unavailable (HTTP ' + response.status + ').'));
         if (!Array.isArray(payload.rows) || !payload.rows.length || !payload.weights) throw new Error('The historical data response was incomplete.');
         timeMachineCache[year] = payload;
         timeMachineData = payload;
