@@ -2491,7 +2491,7 @@
       document.getElementById('tm-season-heading').textContent = payload.seasonLabel + ' Leaderboard';
       const start = payload.rollingWindow.startYear;
       const end = payload.rollingWindow.endYear;
-      document.getElementById('tm-window-label').textContent = 'Formula window: ' + (start - 1) + '–' + String(start).slice(-2) + ' through ' + (end - 1) + '–' + String(end).slice(-2);
+      const logoYear = payload.seasonEndYear;\n      const logoSourcePage = 'https://www.sportslogos.net/teams/list_by_year/62' + logoYear + '/' + logoYear + '-NBA-Logos-By-Year/';\n      document.getElementById('tm-window-label').innerHTML = 'Formula window: ' + (start - 1) + '–' + String(start).slice(-2) + ' through ' + (end - 1) + '–' + String(end).slice(-2) + ' · <a href="' + logoSourcePage + '" target="_blank" rel="noopener" class="text-cyan-400 underline">Team logos: SportsLogos.Net</a>';
       document.getElementById('tm-player-count').textContent = payload.playerCount + ' players · Basketball-Reference';
       document.getElementById('tm-formula-weights').innerHTML = [
         ['PTS',weights.pts,baselines.pts,'scoring'],['TRB',weights.trb,baselines.trb,'scoring'],
