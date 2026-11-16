@@ -1387,23 +1387,23 @@
             <div class="text-[9px] text-slate-500 font-mono">Regular season · All listed players</div>
           </div>
           <div id="tm-status" class="px-4 py-8 text-center text-xs text-slate-400">Choose a season to load historical statistics.</div>
-          <div id="tm-table-wrap" class="hidden overflow-x-auto">
-            <table class="min-w-[850px] w-full text-[11px] sm:text-xs font-mono">
-              <thead class="bg-court-850 text-slate-400 uppercase text-[9px] sticky top-0">
-                <tr>
-                  <th class="py-3 px-2 text-center">Rank</th>
-                  <th class="py-3 px-3 text-left">Player</th>
-                  <th class="py-3 px-2 text-left">Team</th>
-                  <th class="py-3 px-3 text-right text-cyan-300">SS Total</th>
-                  <th class="py-3 px-2 text-right">PTS</th>
-                  <th class="py-3 px-2 text-right">REB</th>
-                  <th class="py-3 px-2 text-right">AST</th>
-                  <th class="py-3 px-2 text-right">STL</th>
-                  <th class="py-3 px-2 text-right">BLK</th>
-                  <th class="py-3 px-2 text-right">GP</th>
+          <div id="tm-table-wrap" class="hidden overflow-x-auto max-h-[66vh] sm:max-h-[72vh] table-fixed-header relative smooth-scroll">
+            <table class="w-full min-w-[850px] text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-court-850 border-b border-court-border text-[9px] sm:text-[11px] font-mono text-slate-400 uppercase tracking-wider select-none">
+                  <th class="sticky-col-rank py-3 px-2 text-center">Rk</th>
+                  <th class="sticky-col-player py-3 px-3 sm:px-4 whitespace-nowrap">Player</th>
+                  <th class="py-3 px-2">Team</th>
+                  <th class="py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap text-emerald-400 bg-emerald-500/20 border-x border-emerald-500/20">SS Total</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">PTS</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">REB</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">AST</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">STL</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">BLK</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">GP</th>
                 </tr>
               </thead>
-              <tbody id="tm-table-rows" class="divide-y divide-court-border/50 text-slate-300"></tbody>
+              <tbody id="tm-table-rows" class="divide-y divide-court-border/40 text-slate-300 font-mono text-[11px] sm:text-xs"></tbody>
             </table>
           </div>
         </section>
@@ -2509,22 +2509,28 @@
       if (!tbody || !timeMachineData) return;
       const query = (document.getElementById('tm-search')?.value || '').toLowerCase().trim();
       const rows = timeMachineData.rows.filter(p => !query || String(p.name).toLowerCase().includes(query) || String(p.team).toLowerCase().includes(query));
-      const statCell = (avg, contribution, color='text-emerald-400', integer=false) => '<td class="py-2.5 px-2 text-right whitespace-nowrap"><div class="font-bold text-white">' + (integer ? Number(avg).toFixed(0) : Number(avg).toFixed(1)) + '</div><div class="text-[9px] ' + color + ' mt-0.5">+' + Number(contribution).toFixed(2) + '</div></td>';
+      const statCell = (avg, contribution, color='text-emerald-600 dark:text-emerald-400', integer=false) =>
+        '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right whitespace-nowrap">' +
+          '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + (integer ? Number(avg).toFixed(0) : Number(avg).toFixed(1)) + '</div>' +
+          '<div class="text-[9px] sm:text-[10px] ' + color + ' font-mono leading-tight mt-0.5">+' + Number(contribution).toFixed(2) + '</div>' +
+        '</td>';
       tbody.innerHTML = rows.map(p => {
-        const medal = p.rank === 1 ? '🥇 ' : p.rank === 2 ? '🥈 ' : p.rank === 3 ? '🥉 ' : '';
-        const color = p.rank === 1 ? 'text-amber-300' : p.rank === 2 ? 'text-slate-300' : p.rank === 3 ? 'text-orange-300' : 'text-slate-300';
-        return '<tr class="hover:bg-court-800/60">' +
-          '<td class="py-2.5 px-2 text-center font-bold ' + color + '">' + medal + p.rank + '</td>' +
-          '<td class="py-2.5 px-3 font-semibold text-white whitespace-nowrap"><span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
-          '<td class="py-2.5 px-2 text-slate-400">' + escapeDraftText(p.team) + '</td>' +
-          '<td class="py-2.5 px-3 text-right font-black text-cyan-300 bg-cyan-500/10">' + Number(p.total).toFixed(2) + '</td>' +
+        const medalClass = p.rank===1 ? 'leader-row-gold' : p.rank===2 ? 'leader-row-silver' : p.rank===3 ? 'leader-row-bronze' : '';
+        const medalText = p.rank===1 ? 'leader-medal-gold' : p.rank===2 ? 'leader-medal-silver' : p.rank===3 ? 'leader-medal-bronze' : '';
+        const medal = p.rank===1 ? '🥇 ' : p.rank===2 ? '🥈 ' : p.rank===3 ? '🥉 ' : '';
+        return '<tr class="hover:bg-court-800/70 transition-colors group ' + medalClass + '">' +
+          '<td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ' + medalText + '">' + medal + p.rank + '</td>' +
+          '<td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-white whitespace-nowrap">' +
+            '<span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
+          '<td class="py-2.5 sm:py-3 px-2"><span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-court-800 border border-court-border text-slate-300">' + escapeDraftText(p.team) + '</span></td>' +
+          '<td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-400"><span class="text-xs sm:text-sm font-black">' + Number(p.total).toFixed(2) + '</span></td>' +
           statCell(p.ppg,p.ssPpg) + statCell(p.rpg,p.ssRpg) + statCell(p.apg,p.ssApg) +
-          statCell(p.spg,p.ssSpg,'text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-300') +
-          statCell(p.gp,p.ssGp,'text-amber-300',true) + '</tr>';
+          statCell(p.spg,p.ssSpg,'text-teal-600 dark:text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-600 dark:text-teal-300') +
+          statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300',true) + '</tr>';
       }).join('');
       const count = document.getElementById('tm-player-count');
       if (count) count.textContent = rows.length + ' of ' + timeMachineData.playerCount + ' players';
-      if (!rows.length) tbody.innerHTML = '<tr><td colspan="10" class="py-10 text-center text-slate-500">No players match that search.</td></tr>';
+      if (!rows.length) tbody.innerHTML = '<tr><td colspan="10" class="py-12 text-center text-slate-500 font-sans">No players match that search.</td></tr>';
     }
 
     function switchSeason(seasonKey) {
