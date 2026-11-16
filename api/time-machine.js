@@ -4,15 +4,8 @@
 export const config = { maxDuration: 60 };
 
 // Parsed player rows use normalized property names; baseline ranking must use these keys.
-const STAT_KEYS = {
-  ppg: "ppg",
-  rpg: "rpg",
-  apg: "apg",
-  spg: "spg",
-  bpg: "bpg",
-  gp: "gp"
-};
-const STAT_LABELS = { ppg:"PPG", rpg:"RPG", apg:"APG", spg:"SPG", bpg:"BPG", gp:"GP" };
+const STAT_KEYS = { pts: "pts", trb: "trb", ast: "ast", stl: "stl", blk: "blk" };
+const STAT_LABELS = { pts:"PTS", trb:"TRB", ast:"AST", stl:"STL", blk:"BLK" };
 
 function decodeHtml(value) {
   return String(value || "")
@@ -39,10 +32,10 @@ function normalizeName(value) {
 function parseSeasonTable(html, year) {
   const source = String(html || "");
   const visibleHtml = source.replace(/<!--/g, "").replace(/-->/g, "");
-  const match = visibleHtml.match(/<table\b[^>]*id\s*=\s*["']per_game_stats["'][\s\S]*?<\/table>/i);
+  const match = visibleHtml.match(/<table\b[^>]*id\s*=\s*["']totals_stats["'][\s\S]*?<\/table>/i);
   if (!match) {
     const title = (source.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [,""])[1].replace(/<[^>]*>/g, " ").trim();
-    throw new Error("Basketball-Reference per-game table was not found for season ending " + year + (title ? " (page title: " + title.slice(0, 100) + ")" : "") + ".");
+    throw new Error("Basketball-Reference totals table was not found for season ending " + year + (title ? " (page title: " + title.slice(0, 100) + ")" : "") + ".");
   }
 
   const tableRows = match[0].match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || [];
@@ -65,15 +58,15 @@ function parseSeasonTable(html, year) {
     rowsWithPlayer++;
     const gp = numeric(cells.games ?? cells.g ?? cells.gp);
     if (gp > 0) rowsWithGp++;
-    const hasStats = ["pts_per_g","trb_per_g","ast_per_g","stl_per_g","blk_per_g"].some(k => cells[k] !== undefined);
+    const hasStats = ["pts","trb","ast","stl","blk"].some(k => cells[k] !== undefined);
     if (hasStats) rowsWithStats++;
     if (gp <= 0) continue;
     const team = String(cells.team_name_abbr || cells.team_id || cells.team || cells.team_name || "UNK").trim();
     rawRows.push({
       name, team, gp,
-      ppg:numeric(cells.pts_per_g), rpg:numeric(cells.trb_per_g),
-      apg:numeric(cells.ast_per_g), spg:numeric(cells.stl_per_g),
-      bpg:numeric(cells.blk_per_g),
+      pts:numeric(cells.pts), trb:numeric(cells.trb),
+      ast:numeric(cells.ast), stl:numeric(cells.stl),
+      blk:numeric(cells.blk),
       qualified:false
     });
   }
@@ -106,8 +99,8 @@ function parseSeasonTable(html, year) {
       const weighted = key => rows.reduce((sum, r) => sum + r[key] * r.gp, 0) / gp;
       player = {
         ...rows[rows.length - 1], gp,
-        ppg:weighted("ppg"), rpg:weighted("rpg"), apg:weighted("apg"),
-        spg:weighted("spg"), bpg:weighted("bpg"),
+        pts:weighted("pts"), trb:weighted("trb"), ast:weighted("ast"),
+        stl:weighted("stl"), blk:weighted("blk"),
         qualified:rows.some(r => r.qualified)
       };
     }
@@ -177,34 +170,30 @@ export default async function handler(req, res) {
       const baseline = aggregate / 100;
       if (!(baseline > 0)) throw new Error("Could not calculate a valid " + category + " baseline.");
       baselines[category] = baseline;
-      weights[category] = category === "gp" ? 0.04 : 10 / baseline;
+      weights[category] = ["stl", "blk"].includes(category) ? baseline : 10 / baseline;
     }
 
     const targetPlayers = seasons.get(rawYear);
     const rows = targetPlayers.map(player => {
-      const ppg = Number(player.ppg.toFixed(1));
-      const rpg = Number(player.rpg.toFixed(1));
-      const apg = Number(player.apg.toFixed(1));
-      const spg = Number(player.spg.toFixed(1));
-      const bpg = Number(player.bpg.toFixed(1));
+      const pts = player.pts, trb = player.trb, ast = player.ast, stl = player.stl, blk = player.blk;
       const gp = player.gp;
-      const ssPpg = ppg * weights.ppg;
-      const ssRpg = rpg * weights.rpg;
-      const ssApg = apg * weights.apg;
-      const ssSpg = spg * weights.spg;
-      const ssBpg = bpg * weights.bpg;
-      const ssGp = gp * weights.gp;
+      const ssPts = pts * weights.pts;
+      const ssTrb = trb * weights.trb;
+      const ssAst = ast * weights.ast;
+      const ssStl = stl * weights.stl;
+      const ssBlk = blk * weights.blk;
+      const ssGp = gp * 0.04;
       return {
         name:player.name, team:player.team, gp,
-        ppg,rpg,apg,spg,bpg,
-        ssPpg,ssRpg,ssApg,ssSpg,ssBpg,ssGp,
-        total:ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp
+        pts,trb,ast,stl,blk,
+        ssPts,ssTrb,ssAst,ssStl,ssBlk,ssGp,
+        total:ssPts + ssTrb + ssAst + ssStl + ssBlk + ssGp
       };
     }).sort((a, b) => b.total - a.total)
       .map((player, index) => ({ ...player, rank:index + 1 }));
 
     return res.status(200).json({
-      source:"Basketball-Reference",
+      source:"Basketball-Reference totals",
       seasonEndYear:rawYear,
       seasonLabel:(rawYear - 1) + "–" + String(rawYear).slice(-2),
       rollingWindow:{
@@ -212,7 +201,7 @@ export default async function handler(req, res) {
         endYear:rawYear - 1,
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
-      method:"For PPG, RPG, APG, SPG, and BPG, the top 10 qualified players from each of the 10 prior seasons are averaged (100 values per category), then the multiplier is 10 divided by that baseline. Games played always uses a fixed 0.04 coefficient and is not recalculated from the rolling baseline.",
+      method:"For PTS, TRB, and AST, the top 10 qualified players by season total from each of the 10 prior seasons are averaged (100 values per category), then the weight is 10 divided by that baseline. For STL and BLK, the same 100-value average is used directly as the weight. Games played uses a fixed 0.04 coefficient.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows,
       playerCount:rows.length,
