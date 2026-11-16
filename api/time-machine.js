@@ -152,9 +152,11 @@ async function getSportsLogosForSeason(year) {
       const image = anchor.match(/<(?:img|source)\b[^>]*(?:src|data-src)=["'](https?:\/\/content\.sportslogos\.net\/[^"']+)["'][^>]*>/i);
       if (!image) continue;
       const alt = (anchor.match(/alt=["']([^"']+)["']/i) || [,""])[1];
-      const label = decodeHtml(alt || anchor.replace(/<[^>]*>/g," "));
+      const href = (anchor.match(/href=["']([^"']+)["']/i) || [,""])[1];
+      const label = decodeHtml(alt || href || anchor.replace(/<[^>]*>/g," ")).toLowerCase().replace(/[^a-z0-9]/g,"");
       for (const [abbr, name] of Object.entries(TEAM_NAMES)) {
-        if (label.toLowerCase().includes(name.toLowerCase())) logos[abbr] = image[1];
+        const normalizedName = name.toLowerCase().replace(/[^a-z0-9]/g,"");
+        if (label.includes(normalizedName)) logos[abbr] = image[1];
       }
     }
     return logos;
