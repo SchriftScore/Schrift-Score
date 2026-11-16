@@ -1388,22 +1388,22 @@
           </div>
           <div id="tm-status" class="px-4 py-8 text-center text-xs text-slate-400">Choose a season to load historical statistics.</div>
           <div id="tm-table-wrap" class="hidden overflow-x-auto max-h-[66vh] sm:max-h-[72vh] table-fixed-header relative smooth-scroll">
-            <table class="w-full min-w-[850px] text-left border-collapse text-xs sm:text-sm">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm" id="tm-main-table">
               <thead>
-                <tr class="bg-court-850 border-b border-court-border text-[9px] sm:text-[11px] font-mono text-slate-400 uppercase tracking-wider select-none">
+                <tr class="bg-slate-100 dark:bg-court-850 border-b border-slate-200 dark:border-court-border text-[9px] sm:text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
                   <th class="sticky-col-rank py-3 px-2 text-center">Rk</th>
                   <th class="sticky-col-player py-3 px-3 sm:px-4 whitespace-nowrap">Player</th>
                   <th class="py-3 px-2">Team</th>
-                  <th class="py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap text-emerald-400 bg-emerald-500/20 border-x border-emerald-500/20">SS Total</th>
+                  <th class="py-3 px-3 sm:px-4 font-black text-right whitespace-nowrap text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20">SS Total</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">PTS</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">REB</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">TRB</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">AST</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">STL</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">BLK</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">GP</th>
                 </tr>
               </thead>
-              <tbody id="tm-table-rows" class="divide-y divide-court-border/40 text-slate-300 font-mono text-[11px] sm:text-xs"></tbody>
+              <tbody id="tm-table-rows" class="divide-y divide-slate-200 dark:divide-court-border/40 text-slate-700 dark:text-slate-300 font-mono text-[11px] sm:text-xs"></tbody>
             </table>
           </div>
         </section>
@@ -2496,9 +2496,9 @@
       document.getElementById('tm-formula-weights').innerHTML = [
         ['PPG',weights.ppg,baselines.ppg],['RPG',weights.rpg,baselines.rpg],
         ['APG',weights.apg,baselines.apg],['SPG',weights.spg,baselines.spg],
-        ['BPG',weights.bpg,baselines.bpg],['GP',weights.gp,baselines.gp]
-      ].map(([label,weight,baseline]) => '<div class="rounded-lg bg-court-950 border border-court-border p-2 text-center"><div class="text-[9px] text-slate-500">' + label + '</div><div class="text-sm sm:text-base font-black text-cyan-300">× ' + Number(weight).toFixed(4) + '</div><div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + Number(baseline).toFixed(2) + '</div></div>').join('');
-      document.getElementById('tm-formula-details').textContent = 'Each baseline is the average of 100 values: the top 10 qualified players in that category from each of the 10 prior seasons. Multiplier = 10 ÷ baseline. ' + payload.method;
+        ['BPG',weights.bpg,baselines.bpg],['GP',0.04,null]
+      ].map(([label,weight,baseline]) => '<div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center min-w-0"><div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">' + label + '</div><div class="font-bold ' + (label==='SPG'||label==='BPG'?'text-teal-600 dark:text-teal-300':label==='GP'?'text-amber-600 dark:text-amber-300':'text-emerald-600 dark:text-emerald-400') + '">× ' + Number(weight).toFixed(2) + '</div>' + (baseline===null?'<div class="text-[8px] text-slate-500 mt-0.5">Fixed coefficient</div>':'<div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + Number(baseline).toFixed(2) + '</div>') + '</div>').join('');
+      document.getElementById('tm-formula-details').textContent = 'The five statistical coefficients use the top 10 qualified players in each category from each of the 10 prior seasons (100 values per category). Each multiplier = 10 ÷ its baseline. Games played is always worth a fixed 0.04 SS per game. ' + payload.method;
       if (status) status.classList.add('hidden');
       if (table) table.classList.remove('hidden');
       renderTimeMachineRows();
@@ -2510,7 +2510,7 @@
       const query = (document.getElementById('tm-search')?.value || '').toLowerCase().trim();
       const rows = timeMachineData.rows.filter(p => !query || String(p.name).toLowerCase().includes(query) || String(p.team).toLowerCase().includes(query));
       const statCell = (avg, contribution, color='text-emerald-600 dark:text-emerald-400', integer=false) =>
-        '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right whitespace-nowrap">' +
+        '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ' + (integer?'':'') + '">' +
           '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + (integer ? Number(avg).toFixed(0) : Number(avg).toFixed(1)) + '</div>' +
           '<div class="text-[9px] sm:text-[10px] ' + color + ' font-mono leading-tight mt-0.5">+' + Number(contribution).toFixed(2) + '</div>' +
         '</td>';
@@ -2518,12 +2518,11 @@
         const medalClass = p.rank===1 ? 'leader-row-gold' : p.rank===2 ? 'leader-row-silver' : p.rank===3 ? 'leader-row-bronze' : '';
         const medalText = p.rank===1 ? 'leader-medal-gold' : p.rank===2 ? 'leader-medal-silver' : p.rank===3 ? 'leader-medal-bronze' : '';
         const medal = p.rank===1 ? '🥇 ' : p.rank===2 ? '🥈 ' : p.rank===3 ? '🥉 ' : '';
-        return '<tr class="hover:bg-court-800/70 transition-colors group ' + medalClass + '">' +
-          '<td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ' + medalText + '">' + medal + p.rank + '</td>' +
-          '<td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-white whitespace-nowrap">' +
-            '<span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
-          '<td class="py-2.5 sm:py-3 px-2"><span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-court-800 border border-court-border text-slate-300">' + escapeDraftText(p.team) + '</span></td>' +
-          '<td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-400"><span class="text-xs sm:text-sm font-black">' + Number(p.total).toFixed(2) + '</span></td>' +
+        return '<tr class="hover:bg-slate-100 dark:hover:bg-court-800/70 transition-colors group ' + medalClass + '">' +
+          '<td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ' + medalText + ' text-slate-900 dark:text-white">' + medal + p.rank + '</td>' +
+          '<td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors whitespace-nowrap"><span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
+          '<td class="py-2.5 sm:py-3 px-2"><span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border text-slate-600 dark:text-slate-300">' + escapeDraftText(p.team) + '</span></td>' +
+          '<td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-600 dark:text-emerald-400"><span class="text-xs sm:text-sm font-black">' + Number(p.total).toFixed(2) + '</span></td>' +
           statCell(p.ppg,p.ssPpg) + statCell(p.rpg,p.ssRpg) + statCell(p.apg,p.ssApg) +
           statCell(p.spg,p.ssSpg,'text-teal-600 dark:text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-600 dark:text-teal-300') +
           statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300',true) + '</tr>';
