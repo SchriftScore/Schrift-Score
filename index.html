@@ -429,7 +429,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-200 dark:border-court-border pt-3">
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="block font-bold mb-1">GAME SPLIT</span><select id="analytics-split" onchange="applyAnalyticsControls()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-2 text-xs"><option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option></select></label>
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="flex justify-between font-bold mb-1"><span>MINIMUM GAMES PLAYED</span><span id="min-games-value">0</span></span><input id="min-games-slider" type="range" min="0" max="82" step="1" value="0" oninput="applyAnalyticsControls()" class="w-full accent-emerald-500 mt-2"><span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span></label>
-        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">70% team-games minimum</b><span class="text-[9px] text-slate-400">58 of 82 games · Full Season only</span></span></label>
+        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">70% team-games minimum</b><span class="text-[9px] text-slate-400">At least 70% of your team's games · Full Season only</span></span></label>
       </div><p id="analytics-status" class="text-[10px] text-slate-500 dark:text-slate-400" aria-live="polite">Loading verified game-level analytics…</p>
     </section>
 
@@ -1391,9 +1391,7 @@
     let activeAnalyticsSplit = 'all';
     let analyticsMinGames = 0;
     let analyticsQualifiedOnly = false;
-    const NBA_REGULAR_SEASON_GAMES = 82;
     const NBA_QUALIFYING_PERCENT = 0.70;
-    const NBA_QUALIFYING_GAMES = Math.ceil(NBA_REGULAR_SEASON_GAMES * NBA_QUALIFYING_PERCENT);
     const GAME_WEIGHTS_2627 = { ppg:0.35, rpg:0.83, apg:1.14, spg:1.80, bpg:1.98, gp:0.04 };
     const ROOKIE_NAMES_2627 = new Set([
       "AJ Dybantsa","Darryn Peterson","Cameron Boozer","Caleb Wilson","Keaton Wagler","Mikel Brown Jr.","Darius Acuff Jr.","Kingston Flemings","Morez Johnson Jr.","Brayden Burries","Yaxel Lendeborg","Aday Mara","Nate Ament","Hannes Steinbach","Dailyn Swain","Bennett Stirtz","Christian Anderson Jr.","Karim Lopez","Labaron Philon Jr.","Cameron Carr","Meleek Thomas","Allen Graves","Jayden Quaintance","Zuby Ejiofor","Tarris Reed Jr.","Chris Cenac Jr.","Joshua Jefferson","Alex Karaban","Koa Peat","Bruce Thornton","Richie Saunders","Isaiah Evans","Trevon Brazile","Baba Miller","Ryan Conwell","Braden Smith","Dillon Mitchell","Otega Oweh","Ja'Kobi Gillespie","Tyler Bilodeau","Maliq Brown","Emanuel Sharp","Felix Okpara","Tobi Lawal","Jaden Bradley","Henri Veesaar","Ugonna Onyenso","Nick Martinelli","Jaron Pierre Jr.","Sergio de Larrea","Izaiyah Nelson","Tyler Nickel","Vsevolod Ishchenko","Narcisse Ngoy","Trey Kaufman-Renn","Malique Lewis","Jaden Akins","Jaron Pierre Jr.","Norchad Omier","Ernest Udeh Jr.","Carson Cooper","Nate Bittle","Ebuka Okorie","Bennett Stirtz","Josh Dix","Thomas Sorber","Graham Ike","Bogoljub Markovic","Malik Dia","Quadir Copeland","Yaxel Lendeborg"
@@ -2597,6 +2595,8 @@
         timeframeGames=sourceGames.filter(g=>String(g.date||'').replace(/-/g,'')>=cutoffKey);
       }
       const filtered=timeframeGames.filter(g=>(activeAnalyticsSplit!=='home'||g.homeAway==='home')&&(activeAnalyticsSplit!=='away'||g.homeAway==='away')&&(activeAnalyticsSplit!=='wins'||g.result==='W')&&(activeAnalyticsSplit!=='losses'||g.result==='L'));
+      const teamGameCounts=new Map();
+      sourceGames.forEach(g=>{const team=String(g.team||'').trim();const event=String(g.eventId||g.date+'|'+g.opponent);if(!team||!event)return;if(!teamGameCounts.has(team))teamGameCounts.set(team,new Set());teamGameCounts.get(team).add(event);});
       const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
       const unique=new Map();
       filtered.forEach(g=>{
@@ -2610,7 +2610,9 @@
       const w=SEASONS[activeSeason].weights,rows=[];
       groups.forEach(group=>{
         const gp=group.games.length;
-        if(gp<analyticsMinGames||(analyticsQualifiedOnly&&gp<NBA_QUALIFYING_GAMES))return;
+        const teamGames=teamGameCounts.get(group.team)?.size||0;
+        const requiredGames=Math.ceil(teamGames*NBA_QUALIFYING_PERCENT);
+        if(gp<analyticsMinGames||(analyticsQualifiedOnly&&(!teamGames||gp<requiredGames)))return;
         // Round averages to the one decimal displayed in the table BEFORE applying SS weights.
         const avg=k=>Number((group.games.reduce((sum,g)=>sum+Number(g[k]||0),0)/gp).toFixed(1));
         const ppg=avg('pts'),rpg=avg('reb'),apg=avg('ast'),spg=avg('stl'),bpg=avg('blk');
