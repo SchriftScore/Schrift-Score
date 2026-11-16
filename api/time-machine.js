@@ -1,5 +1,5 @@
 // Historical Schrift Score Time Machine.
-// Source: Basketball-Reference regular-season per-game tables.
+// Source: Basketball-Reference regular-season totals tables. SportsLogos.Net provides season-specific team logo assets when available.
 // For a selected season, the formula is calculated from the 10 preceding seasons.
 export const config = { maxDuration: 60 };
 
@@ -126,6 +126,42 @@ async function getSeason(year) {
   const html = await response.text();
   return parseSeasonTable(html, year);
 }
+
+const TEAM_NAMES = {
+  ATL:"Atlanta Hawks", BOS:"Boston Celtics", BRK:"Brooklyn Nets", BKN:"Brooklyn Nets", NJN:"New Jersey Nets",
+  CHA:"Charlotte Hornets", CHH:"Charlotte Hornets", CHO:"Charlotte Hornets", CHI:"Chicago Bulls", CLE:"Cleveland Cavaliers",
+  DAL:"Dallas Mavericks", DEN:"Denver Nuggets", DET:"Detroit Pistons", GSW:"Golden State Warriors", HOU:"Houston Rockets",
+  IND:"Indiana Pacers", LAC:"Los Angeles Clippers", LAL:"Los Angeles Lakers", MEM:"Memphis Grizzlies", VAN:"Vancouver Grizzlies",
+  MIA:"Miami Heat", MIL:"Milwaukee Bucks", MIN:"Minnesota Timberwolves", NOH:"New Orleans Hornets", NOK:"New Orleans/Oklahoma City Hornets",
+  NOP:"New Orleans Pelicans", NYK:"New York Knicks", OKC:"Oklahoma City Thunder", ORL:"Orlando Magic", PHI:"Philadelphia 76ers",
+  PHX:"Phoenix Suns", POR:"Portland Trail Blazers", SAC:"Sacramento Kings", SAS:"San Antonio Spurs", SEA:"Seattle SuperSonics",
+  TOR:"Toronto Raptors", UTA:"Utah Jazz", WAS:"Washington Wizards", WSB:"Washington Bullets"
+};
+async function getSportsLogosForSeason(year) {
+  try {
+    const url = "https://www.sportslogos.net/teams/list_by_year/62" + year + "/" + year + "-NBA-Logos-By-Year/";
+    const response = await fetch(url, {
+      headers: { "User-Agent":"Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)", "Accept":"text/html" },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) return {};
+    const html = await response.text();
+    const logos = {};
+    const anchors = html.match(/<a\\b[^>]*>[\\s\\S]*?<\\/a>/gi) || [];
+    for (const anchor of anchors) {
+      const image = anchor.match(/<(?:img|source)\\b[^>]*(?:src|data-src)=["'](https?:\\/\\/content\\.sportslogos\\.net\\/[^"']+)["'][^>]*>/i);
+      if (!image) continue;
+      const alt = (anchor.match(/alt=["']([^"']+)["']/i) || [,""])[1];
+      const label = decodeHtml(alt || anchor.replace(/<[^>]*>/g," "));
+      for (const [abbr, name] of Object.entries(TEAM_NAMES)) {
+        if (label.toLowerCase().includes(name.toLowerCase())) logos[abbr] = image[1];
+      }
+    }
+    return logos;
+  } catch (_) {
+    return {};
+  }
+}
 async function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -173,7 +209,7 @@ export default async function handler(req, res) {
       weights[category] = ["stl", "blk"].includes(category) ? baseline : 10 / baseline;
     }
 
-    const targetPlayers = seasons.get(rawYear);
+    const teamLogos = await getSportsLogosForSeason(rawYear);\n\n    const targetPlayers = seasons.get(rawYear);
     const rows = targetPlayers.map(player => {
       const pts = player.pts, trb = player.trb, ast = player.ast, stl = player.stl, blk = player.blk;
       const gp = player.gp;
@@ -203,7 +239,7 @@ export default async function handler(req, res) {
       },
       method:"For PTS, TRB, and AST, the top 10 qualified players by season total from each of the 10 prior seasons are averaged (100 values per category), then the weight is 10 divided by that baseline. For STL and BLK, the same 100-value average is used directly as the weight. Games played uses a fixed 0.04 coefficient.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
-      baselines, weights, rows,
+      baselines, weights, rows, teamLogos,
       playerCount:rows.length,
       qualifiedCounts:Object.fromEntries(historicalSeasons.map(s => [s.year, s.players.length])),
       generatedAt:new Date().toISOString()
