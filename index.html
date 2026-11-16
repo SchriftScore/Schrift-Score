@@ -2503,7 +2503,7 @@
       if (!tbody || !timeMachineData) return;
       const query = (document.getElementById('tm-search')?.value || '').toLowerCase().trim();
       const rows = timeMachineData.rows.filter(p => !query || String(p.name).toLowerCase().includes(query) || String(p.team).toLowerCase().includes(query));
-      const statCell = (avg, contribution, color='text-emerald-400') => '<td class="py-2.5 px-2 text-right whitespace-nowrap"><div class="font-bold text-white">' + Number(avg).toFixed(1) + '</div><div class="text-[9px] ' + color + ' mt-0.5">+' + Number(contribution).toFixed(2) + '</div></td>';
+      const statCell = (avg, contribution, color='text-emerald-400', integer=false) => '<td class="py-2.5 px-2 text-right whitespace-nowrap"><div class="font-bold text-white">' + (integer ? Number(avg).toFixed(0) : Number(avg).toFixed(1)) + '</div><div class="text-[9px] ' + color + ' mt-0.5">+' + Number(contribution).toFixed(2) + '</div></td>';
       tbody.innerHTML = rows.map(p => {
         const medal = p.rank === 1 ? '🥇 ' : p.rank === 2 ? '🥈 ' : p.rank === 3 ? '🥉 ' : '';
         const color = p.rank === 1 ? 'text-amber-300' : p.rank === 2 ? 'text-slate-300' : p.rank === 3 ? 'text-orange-300' : 'text-slate-300';
@@ -2514,7 +2514,7 @@
           '<td class="py-2.5 px-3 text-right font-black text-cyan-300 bg-cyan-500/10">' + Number(p.total).toFixed(2) + '</td>' +
           statCell(p.ppg,p.ssPpg) + statCell(p.rpg,p.ssRpg) + statCell(p.apg,p.ssApg) +
           statCell(p.spg,p.ssSpg,'text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-300') +
-          statCell(p.gp,p.ssGp,'text-amber-300') + '</tr>';
+          statCell(p.gp,p.ssGp,'text-amber-300',true) + '</tr>';
       }).join('');
       const count = document.getElementById('tm-player-count');
       if (count) count.textContent = rows.length + ' of ' + timeMachineData.playerCount + ' players';
