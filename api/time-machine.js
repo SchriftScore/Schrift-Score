@@ -52,9 +52,9 @@ function parseSeasonTable(html, year) {
     }
     const name = cells.player;
     if (!name || /^player$/i.test(name)) continue;
-    const team = String(cells.team_name_abbr || cells.team_id || cells.team || "").trim();
+    const team = String(cells.team_name_abbr || cells.team_id || cells.team || cells.team_name || "UNK").trim();
     const gp = numeric(cells.g ?? cells.games);
-    if (!team || gp <= 0) continue;
+    if (gp <= 0) continue;
     rawRows.push({
       name, team, gp,
       ppg:numeric(cells.pts_per_g), rpg:numeric(cells.trb_per_g),
@@ -65,7 +65,7 @@ function parseSeasonTable(html, year) {
   }
   if (!rawRows.length) throw new Error("Basketball-Reference returned no player rows for season ending " + year + ".");
 
-  // Estimate each team schedule from the highest player games-played value in its rows.
+  // Estimate schedules from the highest player GP per team. If a historical table omits its team field, UNK falls back to the league-high GP for a 70% cutoff.
   const teamGames = new Map();
   for (const row of rawRows) {
     if (/^(TOT|\d+TM)$/.test(row.team)) continue;
@@ -200,7 +200,7 @@ export default async function handler(req, res) {
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
       method:"For each of the 10 prior seasons, the top 10 Basketball-Reference qualified players in each category are selected. The 100 values are averaged, then the multiplier is 10 divided by that baseline.",
-      qualification:"At least 70% of the player's team games. Team schedule is estimated from the highest games-played total among players on that team in the Basketball-Reference season table.",
+      qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows,
       playerCount:rows.length,
       qualifiedCounts:Object.fromEntries(historicalSeasons.map(s => [s.year, s.players.length])),
