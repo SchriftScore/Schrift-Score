@@ -36,25 +36,38 @@ function normalizeName(value) {
   return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 function parseSeasonTable(html, year) {
-  // Basketball-Reference sometimes wraps stat tables in HTML comments.\n  // Its team column uses team_name_abbr on many historical pages; older table\n  // variants may expose team_id instead, so accept both.
-  const visibleHtml = String(html).replace(/<!--/g, "").replace(/-->/g, "");
-  const match = visibleHtml.match(/<table\b[^>]*id=["']per_game_stats["'][\s\S]*?<\/table>/i);
-  if (!match) throw new Error("Basketball-Reference per-game table was not found for " + (year - 1) + "-" + String(year).slice(-2) + ".");
-  const tableRows = match[0].match(/<tr\b[\s\S]*?<\/tr>/gi) || [];
+  const source = String(html || "");
+  const visibleHtml = source.replace(/<!--/g, "").replace(/-->/g, "");
+  const match = visibleHtml.match(/<table\\b[^>]*id\\s*=\\s*["']per_game_stats["'][\\s\\S]*?<\\/table>/i);
+  if (!match) {
+    const title = (source.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i) || [,""])[1].replace(/<[^>]*>/g, " ").trim();
+    throw new Error("Basketball-Reference per-game table was not found for season ending " + year + (title ? " (page title: " + title.slice(0, 100) + ")" : "") + ".");
+  }
+
+  const tableRows = match[0].match(/<tr\\b[^>]*>[\\s\\S]*?<\\/tr>/gi) || [];
   const rawRows = [];
+  let rowsWithPlayer = 0;
+  let rowsWithGp = 0;
+  let rowsWithStats = 0;
+  const sampleCells = [];
   for (const tr of tableRows) {
     const cells = {};
-    const cellPattern = /<t[dh]\b([^>]*)>([\s\S]*?)<\/t[dh]>/gi;
+    const cellPattern = /<(?:th|td)\\b([^>]*)>([\\s\\S]*?)<\\/(?:th|td)>/gi;
     let cell;
     while ((cell = cellPattern.exec(tr))) {
-      const attr = cell[1].match(/data-stat=["']([^"']+)["']/i);
+      const attr = cell[1].match(/data-stat\\s*=\\s*["']([^"']+)["']/i);
       if (attr) cells[attr[1]] = decodeHtml(cell[2]);
     }
+    if (Object.keys(cells).length && sampleCells.length < 3) sampleCells.push(Object.keys(cells).join(","));
     const name = cells.player;
     if (!name || /^player$/i.test(name)) continue;
-    const team = String(cells.team_name_abbr || cells.team_id || cells.team || cells.team_name || "UNK").trim();
-    const gp = numeric(cells.g ?? cells.games);
+    rowsWithPlayer++;
+    const gp = numeric(cells.g ?? cells.games ?? cells.gp);
+    if (gp > 0) rowsWithGp++;
+    const hasStats = ["pts_per_g","trb_per_g","ast_per_g","stl_per_g","blk_per_g"].some(k => cells[k] !== undefined);
+    if (hasStats) rowsWithStats++;
     if (gp <= 0) continue;
+    const team = String(cells.team_name_abbr || cells.team_id || cells.team || cells.team_name || "UNK").trim();
     rawRows.push({
       name, team, gp,
       ppg:numeric(cells.pts_per_g), rpg:numeric(cells.trb_per_g),
@@ -63,17 +76,16 @@ function parseSeasonTable(html, year) {
       qualified:false
     });
   }
-  if (!rawRows.length) throw new Error("Basketball-Reference returned no player rows for season ending " + year + ".");
+  if (!rawRows.length) {
+    throw new Error("No usable player rows for season ending " + year + " (table rows: " + tableRows.length + ", player cells: " + rowsWithPlayer + ", rows with GP: " + rowsWithGp + ", rows with stat cells: " + rowsWithStats + ", sample data-stat keys: " + (sampleCells.join(" | ") || "none") + ").");
+  }
 
-  // Estimate schedules from the highest player GP per team. If a historical table omits its team field, UNK falls back to the league-high GP for a 70% cutoff.
   const teamGames = new Map();
   for (const row of rawRows) {
-    if (/^(TOT|\d+TM)$/.test(row.team)) continue;
+    if (/^(TOT|\\d+TM)$/.test(row.team)) continue;
     teamGames.set(row.team, Math.max(teamGames.get(row.team) || 0, row.gp));
   }
 
-  // Use Basketball-Reference's combined TOT/2TM line for traded players.
-  // If no combined line exists, combine team stints using games played as weights.
   const grouped = new Map();
   for (const row of rawRows) {
     const key = normalizeName(row.name);
@@ -82,7 +94,7 @@ function parseSeasonTable(html, year) {
   }
   const players = [];
   for (const rows of grouped.values()) {
-    const combined = rows.find(r => /^(TOT|\d+TM)$/.test(r.team));
+    const combined = rows.find(r => /^(TOT|\\d+TM)$/.test(r.team));
     let player;
     if (combined) {
       player = { ...combined };
@@ -98,7 +110,7 @@ function parseSeasonTable(html, year) {
         qualified:rows.some(r => r.qualified)
       };
     }
-    const teamStints = rows.filter(r => !/^(TOT|\d+TM)$/.test(r.team));
+    const teamStints = rows.filter(r => !/^(TOT|\\d+TM)$/.test(r.team));
     const relevantTeams = teamStints.length ? teamStints : [player];
     const teamGamesPlayed = Math.max(...relevantTeams.map(r => teamGames.get(r.team) || r.gp));
     player.qualified = player.gp >= Math.ceil(teamGamesPlayed * 0.70);
