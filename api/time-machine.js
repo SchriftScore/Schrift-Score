@@ -59,10 +59,10 @@ function parseSeasonTable(html, year) {
       if (attr) cells[attr[1]] = decodeHtml(cell[2]);
     }
     if (Object.keys(cells).length && sampleCells.length < 3) sampleCells.push(Object.keys(cells).join(","));
-    const name = cells.player;
+    const name = cells.player || cells.name_display || cells.player_name;
     if (!name || /^player$/i.test(name)) continue;
     rowsWithPlayer++;
-    const gp = numeric(cells.g ?? cells.games ?? cells.gp);
+    const gp = numeric(cells.games ?? cells.g ?? cells.gp);
     if (gp > 0) rowsWithGp++;
     const hasStats = ["pts_per_g","trb_per_g","ast_per_g","stl_per_g","blk_per_g"].some(k => cells[k] !== undefined);
     if (hasStats) rowsWithStats++;
