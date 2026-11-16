@@ -147,9 +147,9 @@ async function getSportsLogosForSeason(year) {
     if (!response.ok) return {};
     const html = await response.text();
     const logos = {};
-    const anchors = html.match(/<a\\b[^>]*>[\\s\\S]*?<\\/a>/gi) || [];
+    const anchors = html.match(/<a\b[^>]*>[\s\S]*?<\/a>/gi) || [];
     for (const anchor of anchors) {
-      const image = anchor.match(/<(?:img|source)\\b[^>]*(?:src|data-src)=["'](https?:\\/\\/content\\.sportslogos\\.net\\/[^"']+)["'][^>]*>/i);
+      const image = anchor.match(/<(?:img|source)\b[^>]*(?:src|data-src)=["'](https?:\/\/content\.sportslogos\.net\/[^"']+)["'][^>]*>/i);
       if (!image) continue;
       const alt = (anchor.match(/alt=["']([^"']+)["']/i) || [,""])[1];
       const label = decodeHtml(alt || anchor.replace(/<[^>]*>/g," "));
