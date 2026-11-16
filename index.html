@@ -183,6 +183,7 @@
           <span>Stat Calculator</span>
         </button>
 
+        <button onclick="openTimeMachine()" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-cyan-500/30 transition-colors"><span>⏳</span><span>Time Machine</span></button>
         <button onclick="openDraftNight()" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-amber-500/30 transition-colors"><span>🏆</span><span>Draft Night</span></button>
 
         <div class="hidden md:flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-court-850 px-2.5 py-1.5 rounded-full border border-slate-300 dark:border-court-border">
@@ -1333,6 +1334,84 @@
     </div>
   </div>
 
+  <!-- HISTORICAL TIME MACHINE -->
+  <div id="time-machine-overlay" class="hidden fixed inset-0 z-50 bg-court-950 text-slate-100 overflow-y-auto">
+    <div class="min-h-screen">
+      <header class="sticky top-0 z-30 border-b border-court-border bg-court-900/95 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center">⏳</div>
+            <div class="min-w-0">
+              <div class="font-extrabold tracking-tight text-white">SCHRIFT <span class="text-cyan-300">TIME MACHINE</span></div>
+              <div class="text-[9px] sm:text-[10px] text-slate-400 font-mono">HISTORICAL NBA LEADERBOARDS</div>
+            </div>
+          </div>
+          <button onclick="closeTimeMachine()" class="px-3 py-2 rounded-lg bg-court-800 hover:bg-court-700 border border-court-border text-xs font-bold">← Back to Live</button>
+        </div>
+      </header>
+      <main class="max-w-7xl mx-auto px-3 sm:px-6 py-5 space-y-4">
+        <section class="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-court-900 p-4 sm:p-6">
+          <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div>
+              <div class="text-[10px] font-mono uppercase tracking-widest text-cyan-300 mb-1">The 10-Year Rolling Model</div>
+              <h1 class="text-2xl sm:text-3xl font-black text-white">Travel through NBA history.</h1>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">Every season gets its own Schrift Score formula, calculated from the 10 seasons immediately before it.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <label class="text-[10px] text-slate-400 font-mono">SELECT NBA SEASON
+                <select id="tm-season-select" onchange="loadTimeMachineSeason(this.value)" class="block mt-1 w-full sm:w-44 rounded-lg bg-court-950 border border-court-border px-3 py-2.5 text-sm text-white font-bold">
+                </select>
+              </label>
+              <label class="text-[10px] text-slate-400 font-mono">SEARCH PLAYERS
+                <input id="tm-search" oninput="renderTimeMachineRows()" placeholder="Player name or team..." class="block mt-1 w-full sm:w-56 rounded-lg bg-court-950 border border-court-border px-3 py-2.5 text-sm text-white">
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-court-border bg-court-900 p-3 sm:p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <div id="tm-season-heading" class="font-extrabold text-white text-lg">2015–16 Leaderboard</div>
+              <div id="tm-window-label" class="text-[10px] text-slate-400 font-mono">Formula window: 2005–06 through 2014–15</div>
+            </div>
+            <div id="tm-player-count" class="text-[10px] font-mono text-cyan-300">Loading historical data…</div>
+          </div>
+          <div id="tm-formula-weights" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+          <div id="tm-formula-details" class="mt-3 text-[10px] text-slate-400 leading-relaxed"></div>
+        </section>
+
+        <section class="rounded-xl border border-court-border bg-court-900 overflow-hidden">
+          <div class="px-3 sm:px-4 py-3 border-b border-court-border flex items-center justify-between gap-2">
+            <div class="font-bold text-sm text-white">Full Season Rankings</div>
+            <div class="text-[9px] text-slate-500 font-mono">Regular season · All listed players</div>
+          </div>
+          <div id="tm-status" class="px-4 py-8 text-center text-xs text-slate-400">Choose a season to load historical statistics.</div>
+          <div id="tm-table-wrap" class="hidden overflow-x-auto">
+            <table class="min-w-[850px] w-full text-[11px] sm:text-xs font-mono">
+              <thead class="bg-court-850 text-slate-400 uppercase text-[9px] sticky top-0">
+                <tr>
+                  <th class="py-3 px-2 text-center">Rank</th>
+                  <th class="py-3 px-3 text-left">Player</th>
+                  <th class="py-3 px-2 text-left">Team</th>
+                  <th class="py-3 px-3 text-right text-cyan-300">SS Total</th>
+                  <th class="py-3 px-2 text-right">PTS</th>
+                  <th class="py-3 px-2 text-right">REB</th>
+                  <th class="py-3 px-2 text-right">AST</th>
+                  <th class="py-3 px-2 text-right">STL</th>
+                  <th class="py-3 px-2 text-right">BLK</th>
+                  <th class="py-3 px-2 text-right">GP</th>
+                </tr>
+              </thead>
+              <tbody id="tm-table-rows" class="divide-y divide-court-border/50 text-slate-300"></tbody>
+            </table>
+          </div>
+        </section>
+        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season per-game tables. The rolling formula uses the top 10 qualified players in each category from each of the previous 10 seasons (100 values per category). Historical player rows include all players with a regular-season entry. Older seasons are calculated with their own rolling multipliers, not today's weights.</p>
+      </main>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="border-t border-slate-200 dark:border-court-border bg-slate-100 dark:bg-court-950 py-4 text-center text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono transition-colors">
     <p>NBA Schrift Score © 2026–2027 • Created by Zachary Schriftman</p>
@@ -2325,6 +2404,121 @@
 
       document.getElementById('player-count').textContent = `${masterData.length} Players`;
       if (seasonKey === '2026/27' && !analyticsLoadedWindow) setAnalyticsWindow('season');
+    }
+
+    // -------------------------------------------------------------
+    // HISTORICAL TIME MACHINE
+    // -------------------------------------------------------------
+    let timeMachineCache = {};
+    let timeMachineData = null;
+    let timeMachineLoading = false;
+
+    function initTimeMachineSeasons() {
+      const select = document.getElementById('tm-season-select');
+      if (!select || select.options.length) return;
+      for (let year = 2027; year >= 1984; year--) {
+        const label = (year - 1) + '–' + String(year).slice(-2) + (year === 2027 ? ' (in progress)' : '');
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = label;
+        if (year === 2016) option.selected = true;
+        select.appendChild(option);
+      }
+    }
+
+    function openTimeMachine() {
+      const overlay = document.getElementById('time-machine-overlay');
+      if (!overlay) return;
+      initTimeMachineSeasons();
+      overlay.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      loadTimeMachineSeason(document.getElementById('tm-season-select').value || '2016');
+    }
+
+    function closeTimeMachine() {
+      document.getElementById('time-machine-overlay')?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    async function loadTimeMachineSeason(yearValue) {
+      const year = String(yearValue || '2016');
+      const status = document.getElementById('tm-status');
+      const table = document.getElementById('tm-table-wrap');
+      const count = document.getElementById('tm-player-count');
+      if (timeMachineCache[year]) {
+        timeMachineData = timeMachineCache[year];
+        renderTimeMachine(timeMachineData);
+        return;
+      }
+      if (timeMachineLoading) return;
+      timeMachineLoading = true;
+      if (status) {
+        status.classList.remove('hidden');
+        status.innerHTML = '<div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent mb-2"></div><div>Loading 11 Basketball-Reference seasons and calculating the rolling formula…</div><div class="text-[10px] text-slate-500 mt-1">The first load can take up to a minute.</div>';
+      }
+      if (table) table.classList.add('hidden');
+      if (count) count.textContent = 'Calculating…';
+      try {
+        const response = await fetch('/api/time-machine?season=' + encodeURIComponent(year), { cache:'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Historical season unavailable.');
+        if (!Array.isArray(payload.rows) || !payload.rows.length || !payload.weights) throw new Error('The historical data response was incomplete.');
+        timeMachineCache[year] = payload;
+        timeMachineData = payload;
+        renderTimeMachine(payload);
+      } catch (error) {
+        if (status) {
+          status.classList.remove('hidden');
+          status.innerHTML = '<div class="text-rose-400 font-bold mb-1">Historical data could not be loaded.</div><div class="text-xs">' + escapeDraftText(error.message) + '</div><div class="text-[10px] text-slate-500 mt-2">Basketball-Reference may temporarily block automated requests. Try again later.</div><button onclick="loadTimeMachineSeason(\'' + year + '\')" class="mt-3 px-3 py-2 rounded-lg bg-court-800 border border-court-border text-xs font-bold">Try Again</button>';
+        }
+        if (count) count.textContent = 'Unavailable';
+      } finally {
+        timeMachineLoading = false;
+      }
+    }
+
+    function renderTimeMachine(payload) {
+      const status = document.getElementById('tm-status');
+      const table = document.getElementById('tm-table-wrap');
+      const weights = payload.weights || {};
+      const baselines = payload.baselines || {};
+      document.getElementById('tm-season-heading').textContent = payload.seasonLabel + ' Leaderboard';
+      const start = payload.rollingWindow.startYear;
+      const end = payload.rollingWindow.endYear;
+      document.getElementById('tm-window-label').textContent = 'Formula window: ' + (start - 1) + '–' + String(start).slice(-2) + ' through ' + (end - 1) + '–' + String(end).slice(-2);
+      document.getElementById('tm-player-count').textContent = payload.playerCount + ' players · Basketball-Reference';
+      document.getElementById('tm-formula-weights').innerHTML = [
+        ['PPG',weights.ppg,baselines.ppg],['RPG',weights.rpg,baselines.rpg],
+        ['APG',weights.apg,baselines.apg],['SPG',weights.spg,baselines.spg],
+        ['BPG',weights.bpg,baselines.bpg],['GP',weights.gp,baselines.gp]
+      ].map(([label,weight,baseline]) => '<div class="rounded-lg bg-court-950 border border-court-border p-2 text-center"><div class="text-[9px] text-slate-500">' + label + '</div><div class="text-sm sm:text-base font-black text-cyan-300">× ' + Number(weight).toFixed(4) + '</div><div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + Number(baseline).toFixed(2) + '</div></div>').join('');
+      document.getElementById('tm-formula-details').textContent = 'Each baseline is the average of 100 values: the top 10 qualified players in that category from each of the 10 prior seasons. Multiplier = 10 ÷ baseline. ' + payload.method;
+      if (status) status.classList.add('hidden');
+      if (table) table.classList.remove('hidden');
+      renderTimeMachineRows();
+    }
+
+    function renderTimeMachineRows() {
+      const tbody = document.getElementById('tm-table-rows');
+      if (!tbody || !timeMachineData) return;
+      const query = (document.getElementById('tm-search')?.value || '').toLowerCase().trim();
+      const rows = timeMachineData.rows.filter(p => !query || String(p.name).toLowerCase().includes(query) || String(p.team).toLowerCase().includes(query));
+      const statCell = (avg, contribution, color='text-emerald-400') => '<td class="py-2.5 px-2 text-right whitespace-nowrap"><div class="font-bold text-white">' + Number(avg).toFixed(1) + '</div><div class="text-[9px] ' + color + ' mt-0.5">+' + Number(contribution).toFixed(2) + '</div></td>';
+      tbody.innerHTML = rows.map(p => {
+        const medal = p.rank === 1 ? '🥇 ' : p.rank === 2 ? '🥈 ' : p.rank === 3 ? '🥉 ' : '';
+        const color = p.rank === 1 ? 'text-amber-300' : p.rank === 2 ? 'text-slate-300' : p.rank === 3 ? 'text-orange-300' : 'text-slate-300';
+        return '<tr class="hover:bg-court-800/60">' +
+          '<td class="py-2.5 px-2 text-center font-bold ' + color + '">' + medal + p.rank + '</td>' +
+          '<td class="py-2.5 px-3 font-semibold text-white whitespace-nowrap"><span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
+          '<td class="py-2.5 px-2 text-slate-400">' + escapeDraftText(p.team) + '</td>' +
+          '<td class="py-2.5 px-3 text-right font-black text-cyan-300 bg-cyan-500/10">' + Number(p.total).toFixed(2) + '</td>' +
+          statCell(p.ppg,p.ssPpg) + statCell(p.rpg,p.ssRpg) + statCell(p.apg,p.ssApg) +
+          statCell(p.spg,p.ssSpg,'text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-300') +
+          statCell(p.gp,p.ssGp,'text-amber-300') + '</tr>';
+      }).join('');
+      const count = document.getElementById('tm-player-count');
+      if (count) count.textContent = rows.length + ' of ' + timeMachineData.playerCount + ' players';
+      if (!rows.length) tbody.innerHTML = '<tr><td colspan="10" class="py-10 text-center text-slate-500">No players match that search.</td></tr>';
     }
 
     function switchSeason(seasonKey) {
