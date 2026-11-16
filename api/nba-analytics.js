@@ -97,6 +97,7 @@ export default async function handler(req, res) {
               name, team, date: game.date, eventId: game.eventId,
               opponent, homeAway: isHome ? 'home' : 'away',
               result: ownScore > opponentScore ? 'W' : 'L',
+              teamScore: ownScore, opponentScore,
               pts, reb, ast, stl, blk,
               ss: pts * 0.35 + reb * 0.83 + ast * 1.14 + stl * 1.80 + blk * 1.98 + 0.04,
               minutes: minuteText
