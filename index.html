@@ -569,6 +569,7 @@
   <div id="player-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div id="modal-content-card" class="bg-white dark:bg-court-900 border border-slate-200 dark:border-court-border w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92vh] overflow-y-auto smooth-scroll" onclick="event.stopPropagation()">
       <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-lg p-1">✕</button>
+      <button id="player-modal-back-profile" onclick="returnToPlayerProfile()" class="hidden absolute top-4 left-4 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">← Back to Player File</button>
 
       <!-- Player Header in Modal -->
       <div class="flex items-center space-x-3 mb-3.5">
@@ -2674,8 +2675,8 @@
         const poly=points.map(v=>v.x.toFixed(1)+','+v.y.toFixed(1)).join(' ');
         const dots=points.map((v,i)=>'<circle cx="'+v.x+'" cy="'+v.y+'" r="3" fill="#10b981"><title>'+logs[i].date+': '+logs[i].ss.toFixed(2)+' SS</title></circle>').join('');
         document.getElementById('profile-chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Game-by-game Schrift Score trend" class="w-full"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="currentColor" opacity=".2"/><polyline points="'+poly+'" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'<text x="'+pad+'" y="12" fill="currentColor" font-size="10" opacity=".65">'+hi.toFixed(1)+' SS</text><text x="'+pad+'" y="'+(h-3)+'" fill="currentColor" font-size="10" opacity=".65">'+lo.toFixed(1)+' SS</text></svg>';
-        document.getElementById('profile-game-log').innerHTML=[...logs].reverse().map(g=>'<tr class="text-slate-700 dark:text-slate-300"><td class="p-2 whitespace-nowrap">'+g.date+'</td><td class="p-2">'+(g.homeAway==='home'?'vs ':'@ ')+g.opponent+'</td><td class="p-2 text-center">'+g.result+'</td><td class="p-2 text-right">'+g.pts+'</td><td class="p-2 text-right">'+g.reb+'</td><td class="p-2 text-right">'+g.ast+'</td><td class="p-2 text-right">'+g.stl+'</td><td class="p-2 text-right">'+g.blk+'</td><td class="p-2 text-right font-bold text-emerald-500">'+g.ss.toFixed(2)+'</td></tr>').join('');
-        document.getElementById('profile-whatif-btn').onclick=()=>{closePlayerProfile();const base=masterData.find(x=>norm(x.name)===norm(p.name));if(base)inspectPlayer(base.rank);};
+        document.getElementById('profile-game-log').innerHTML=[...logs].reverse().map(g=>'<tr class="text-slate-700 dark:text-slate-300"><td class="p-2 whitespace-nowrap">'+g.date+'</td><td class="p-2">'+(g.homeAway==='home'?'vs ':'@ ')+g.opponent+'</td><td class="p-2 text-center font-bold '+(g.result==='W'?'text-emerald-500':'text-rose-500')+'">'+g.result+' '+(g.teamScore??'—')+'-'+(g.opponentScore??'—')+'</td><td class="p-2 text-right">'+g.pts+'</td><td class="p-2 text-right">'+g.reb+'</td><td class="p-2 text-right">'+g.ast+'</td><td class="p-2 text-right">'+g.stl+'</td><td class="p-2 text-right">'+g.blk+'</td><td class="p-2 text-right font-bold text-emerald-500">'+g.ss.toFixed(2)+'</td></tr>').join('');
+        document.getElementById('profile-whatif-btn').onclick=()=>{const base=masterData.find(x=>norm(x.name)===norm(p.name));if(base){closePlayerProfile();inspectPlayer(base.rank);document.getElementById('player-modal-back-profile')?.classList.remove('hidden');}};
       }catch(err){document.getElementById('profile-chart').textContent='Game log unavailable: '+err.message;document.getElementById('profile-game-log').innerHTML='<tr><td colspan="9" class="p-4 text-center text-rose-500">'+err.message+'</td></tr>';}
     }
 
@@ -2797,6 +2798,7 @@
     let inspectingPlayerBase = null;
 
     function inspectPlayer(rank) {
+      document.getElementById('player-modal-back-profile')?.classList.add('hidden');
       const p = masterData.find(player => player.rank === rank);
       if (!p) return;
 
@@ -2945,6 +2947,13 @@
 
     function closeModal() {
       document.getElementById('player-modal').classList.add('hidden');
+    }
+
+    function returnToPlayerProfile() {
+      closeModal();
+      document.getElementById('player-modal-back-profile')?.classList.add('hidden');
+      document.getElementById('player-profile-overlay').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
     }
 
     function handleBackdropClick(event) {
