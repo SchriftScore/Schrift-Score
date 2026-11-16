@@ -1407,7 +1407,7 @@
             </table>
           </div>
         </section>
-        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season per-game tables. The rolling formula uses the top 10 qualified players in each category from each of the previous 10 seasons (100 values per category). Historical player rows include all players with a regular-season entry. Older seasons are calculated with their own rolling multipliers, not today's weights.</p>
+        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season totals tables. Historical team-logo reference: SportsLogos.Net NBA logos by year. The rolling formula uses the top 10 qualified players in each category from each of the previous 10 seasons (100 values per category). Historical player rows include all players with a regular-season entry. Older seasons are calculated with their own rolling multipliers, not today's weights.</p>
       </main>
     </div>
   </div>
@@ -2494,11 +2494,11 @@
       document.getElementById('tm-window-label').textContent = 'Formula window: ' + (start - 1) + '–' + String(start).slice(-2) + ' through ' + (end - 1) + '–' + String(end).slice(-2);
       document.getElementById('tm-player-count').textContent = payload.playerCount + ' players · Basketball-Reference';
       document.getElementById('tm-formula-weights').innerHTML = [
-        ['PPG',weights.ppg,baselines.ppg],['RPG',weights.rpg,baselines.rpg],
-        ['APG',weights.apg,baselines.apg],['SPG',weights.spg,baselines.spg],
-        ['BPG',weights.bpg,baselines.bpg],['GP',0.04,null]
-      ].map(([label,weight,baseline]) => '<div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center min-w-0"><div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">' + label + '</div><div class="font-bold ' + (label==='SPG'||label==='BPG'?'text-teal-600 dark:text-teal-300':label==='GP'?'text-amber-600 dark:text-amber-300':'text-emerald-600 dark:text-emerald-400') + '">× ' + Number(weight).toFixed(2) + '</div>' + (baseline===null?'<div class="text-[8px] text-slate-500 mt-0.5">Fixed coefficient</div>':'<div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + Number(baseline).toFixed(2) + '</div>') + '</div>').join('');
-      document.getElementById('tm-formula-details').textContent = 'The five statistical coefficients use the top 10 qualified players in each category from each of the 10 prior seasons (100 values per category). Each multiplier = 10 ÷ its baseline. Games played is always worth a fixed 0.04 SS per game. ' + payload.method;
+        ['PTS',weights.pts,baselines.pts,'scoring'],['TRB',weights.trb,baselines.trb,'scoring'],
+        ['AST',weights.ast,baselines.ast,'scoring'],['STL',weights.stl,baselines.stl,'defense'],
+        ['BLK',weights.blk,baselines.blk,'defense'],['GP',0.04,null,'games']
+      ].map(([label,weight,baseline,kind]) => '<div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center min-w-0"><div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">' + label + '</div><div class="font-bold ' + (kind==='defense'?'text-teal-600 dark:text-teal-300':kind==='games'?'text-amber-600 dark:text-amber-300':'text-emerald-600 dark:text-emerald-400') + '">× ' + Number(weight).toFixed(4) + '</div><div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + (baseline===null?'—':Number(baseline).toFixed(1)) + '</div></div>').join('');
+      document.getElementById('tm-formula-details').textContent = payload.method + ' GP remains fixed at 0.04 per game.';
       if (status) status.classList.add('hidden');
       if (table) table.classList.remove('hidden');
       renderTimeMachineRows();
@@ -2509,9 +2509,9 @@
       if (!tbody || !timeMachineData) return;
       const query = (document.getElementById('tm-search')?.value || '').toLowerCase().trim();
       const rows = timeMachineData.rows.filter(p => !query || String(p.name).toLowerCase().includes(query) || String(p.team).toLowerCase().includes(query));
-      const statCell = (avg, contribution, color='text-emerald-600 dark:text-emerald-400', integer=false) =>
-        '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right ' + (integer?'':'') + '">' +
-          '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + (integer ? Number(avg).toFixed(0) : Number(avg).toFixed(1)) + '</div>' +
+      const statCell = (value, contribution, color='text-emerald-600 dark:text-emerald-400') =>
+        '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right">' +
+          '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + Number(value).toLocaleString('en-US',{maximumFractionDigits:0}) + '</div>' +
           '<div class="text-[9px] sm:text-[10px] ' + color + ' font-mono leading-tight mt-0.5">+' + Number(contribution).toFixed(2) + '</div>' +
         '</td>';
       tbody.innerHTML = rows.map(p => {
@@ -2523,9 +2523,9 @@
           '<td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors whitespace-nowrap"><span class="inline-flex items-center gap-2">' + teamLogoMarkup(p.team,20) + '<span>' + escapeDraftText(p.name) + '</span></span></td>' +
           '<td class="py-2.5 sm:py-3 px-2"><span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border text-slate-600 dark:text-slate-300">' + escapeDraftText(p.team) + '</span></td>' +
           '<td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-600 dark:text-emerald-400"><span class="text-xs sm:text-sm font-black">' + Number(p.total).toFixed(2) + '</span></td>' +
-          statCell(p.ppg,p.ssPpg) + statCell(p.rpg,p.ssRpg) + statCell(p.apg,p.ssApg) +
-          statCell(p.spg,p.ssSpg,'text-teal-600 dark:text-teal-300') + statCell(p.bpg,p.ssBpg,'text-teal-600 dark:text-teal-300') +
-          statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300',true) + '</tr>';
+          statCell(p.pts,p.ssPts) + statCell(p.trb,p.ssTrb) + statCell(p.ast,p.ssAst) +
+          statCell(p.stl,p.ssStl,'text-teal-600 dark:text-teal-300') + statCell(p.blk,p.ssBlk,'text-teal-600 dark:text-teal-300') +
+          statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300') + '</tr>';
       }).join('');
       const count = document.getElementById('tm-player-count');
       if (count) count.textContent = rows.length + ' of ' + timeMachineData.playerCount + ' players';
