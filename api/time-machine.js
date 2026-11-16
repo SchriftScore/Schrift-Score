@@ -60,10 +60,17 @@ function parseSeasonTable(html, year) {
       ppg:numeric(cells.pts_per_g), rpg:numeric(cells.trb_per_g),
       apg:numeric(cells.ast_per_g), spg:numeric(cells.stl_per_g),
       bpg:numeric(cells.blk_per_g),
-      qualified: /^\d+$/.test(String(cells.ranker || "").trim())
+      qualified:false
     });
   }
   if (!rawRows.length) throw new Error("Basketball-Reference returned no player rows for season ending " + year + ".");
+
+  // Estimate each team schedule from the highest player games-played value in its rows.
+  const teamGames = new Map();
+  for (const row of rawRows) {
+    if (/^(TOT|\d+TM)$/.test(row.team)) continue;
+    teamGames.set(row.team, Math.max(teamGames.get(row.team) || 0, row.gp));
+  }
 
   // Use Basketball-Reference's combined TOT/2TM line for traded players.
   // If no combined line exists, combine team stints using games played as weights.
@@ -91,6 +98,10 @@ function parseSeasonTable(html, year) {
         qualified:rows.some(r => r.qualified)
       };
     }
+    const teamStints = rows.filter(r => !/^(TOT|\d+TM)$/.test(r.team));
+    const relevantTeams = teamStints.length ? teamStints : [player];
+    const teamGamesPlayed = Math.max(...relevantTeams.map(r => teamGames.get(r.team) || r.gp));
+    player.qualified = player.gp >= Math.ceil(teamGamesPlayed * 0.70);
     players.push(player);
   }
   return players;
@@ -189,7 +200,7 @@ export default async function handler(req, res) {
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
       method:"For each of the 10 prior seasons, the top 10 Basketball-Reference qualified players in each category are selected. The 100 values are averaged, then the multiplier is 10 divided by that baseline.",
-      qualification:"Basketball-Reference's qualified-player designation on each season's regular-season per-game table.",
+      qualification:"At least 70% of the player's team games. Team schedule is estimated from the highest games-played total among players on that team in the Basketball-Reference season table.",
       baselines, weights, rows,
       playerCount:rows.length,
       qualifiedCounts:Object.fromEntries(historicalSeasons.map(s => [s.year, s.players.length])),
