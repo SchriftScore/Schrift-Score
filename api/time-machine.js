@@ -177,7 +177,7 @@ export default async function handler(req, res) {
       const baseline = aggregate / 100;
       if (!(baseline > 0)) throw new Error("Could not calculate a valid " + category + " baseline.");
       baselines[category] = baseline;
-      weights[category] = 10 / baseline;
+      weights[category] = category === "gp" ? 0.04 : 10 / baseline;
     }
 
     const targetPlayers = seasons.get(rawYear);
@@ -212,7 +212,7 @@ export default async function handler(req, res) {
         endYear:rawYear - 1,
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
-      method:"For each of the 10 prior seasons, the top 10 Basketball-Reference qualified players in each category are selected. The 100 values are averaged, then the multiplier is 10 divided by that baseline.",
+      method:"For PPG, RPG, APG, SPG, and BPG, the top 10 qualified players from each of the 10 prior seasons are averaged (100 values per category), then the multiplier is 10 divided by that baseline. Games played always uses a fixed 0.04 coefficient and is not recalculated from the rolling baseline.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows,
       playerCount:rows.length,
