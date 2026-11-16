@@ -38,13 +38,13 @@ function normalizeName(value) {
 function parseSeasonTable(html, year) {
   const source = String(html || "");
   const visibleHtml = source.replace(/<!--/g, "").replace(/-->/g, "");
-  const match = visibleHtml.match(/<table\\b[^>]*id\\s*=\\s*["']per_game_stats["'][\\s\\S]*?<\\/table>/i);
+  const match = visibleHtml.match(/<table\b[^>]*id\s*=\s*["']per_game_stats["'][\s\S]*?<\/table>/i);
   if (!match) {
-    const title = (source.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i) || [,""])[1].replace(/<[^>]*>/g, " ").trim();
+    const title = (source.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [,""])[1].replace(/<[^>]*>/g, " ").trim();
     throw new Error("Basketball-Reference per-game table was not found for season ending " + year + (title ? " (page title: " + title.slice(0, 100) + ")" : "") + ".");
   }
 
-  const tableRows = match[0].match(/<tr\\b[^>]*>[\\s\\S]*?<\\/tr>/gi) || [];
+  const tableRows = match[0].match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || [];
   const rawRows = [];
   let rowsWithPlayer = 0;
   let rowsWithGp = 0;
@@ -52,10 +52,10 @@ function parseSeasonTable(html, year) {
   const sampleCells = [];
   for (const tr of tableRows) {
     const cells = {};
-    const cellPattern = /<(?:th|td)\\b([^>]*)>([\\s\\S]*?)<\\/(?:th|td)>/gi;
+    const cellPattern = /<(?:th|td)\b([^>]*)>([\s\S]*?)<\/(?:th|td)>/gi;
     let cell;
     while ((cell = cellPattern.exec(tr))) {
-      const attr = cell[1].match(/data-stat\\s*=\\s*["']([^"']+)["']/i);
+      const attr = cell[1].match(/data-stat\s*=\s*["']([^"']+)["']/i);
       if (attr) cells[attr[1]] = decodeHtml(cell[2]);
     }
     if (Object.keys(cells).length && sampleCells.length < 3) sampleCells.push(Object.keys(cells).join(","));
@@ -82,7 +82,7 @@ function parseSeasonTable(html, year) {
 
   const teamGames = new Map();
   for (const row of rawRows) {
-    if (/^(TOT|\\d+TM)$/.test(row.team)) continue;
+    if (/^(TOT|\d+TM)$/.test(row.team)) continue;
     teamGames.set(row.team, Math.max(teamGames.get(row.team) || 0, row.gp));
   }
 
@@ -94,7 +94,7 @@ function parseSeasonTable(html, year) {
   }
   const players = [];
   for (const rows of grouped.values()) {
-    const combined = rows.find(r => /^(TOT|\\d+TM)$/.test(r.team));
+    const combined = rows.find(r => /^(TOT|\d+TM)$/.test(r.team));
     let player;
     if (combined) {
       player = { ...combined };
@@ -110,7 +110,7 @@ function parseSeasonTable(html, year) {
         qualified:rows.some(r => r.qualified)
       };
     }
-    const teamStints = rows.filter(r => !/^(TOT|\\d+TM)$/.test(r.team));
+    const teamStints = rows.filter(r => !/^(TOT|\d+TM)$/.test(r.team));
     const relevantTeams = teamStints.length ? teamStints : [player];
     const teamGamesPlayed = Math.max(...relevantTeams.map(r => teamGames.get(r.team) || r.gp));
     player.qualified = player.gp >= Math.ceil(teamGamesPlayed * 0.70);
