@@ -47,6 +47,8 @@
   </script>
 
   <style>
+    button { transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+    button:active { transform: translateY(1px); }
     body {
       font-feature-settings: "tnum" 1;
       -webkit-tap-highlight-color: transparent;
@@ -73,6 +75,17 @@
       background-color: #f1f5f9 !important;
     }
 
+    /* Sticky rank and player columns remain visible while scrolling horizontally. */
+    .sticky-col-rank { position:sticky; left:0; z-index:15; background:#0c111d !important; width:48px; min-width:48px; }
+    .sticky-col-player { position:sticky; left:48px; z-index:15; background:#0c111d !important; border-right:2px solid #1f2e47; box-shadow:4px 0 10px rgba(0,0,0,.22); }
+    html:not(.dark) .sticky-col-rank, html:not(.dark) .sticky-col-player { background:#fff !important; }
+    .table-fixed-header thead th.sticky-col-rank, .table-fixed-header thead th.sticky-col-player { z-index:35; }
+    html:not(.dark) .table-fixed-header thead th.sticky-col-rank, html:not(.dark) .table-fixed-header thead th.sticky-col-player { background:#f1f5f9 !important; }
+    .leader-row-gold { background:linear-gradient(90deg,rgba(234,179,8,.10),transparent 72%); }
+    .leader-row-silver { background:linear-gradient(90deg,rgba(148,163,184,.12),transparent 72%); }
+    .leader-row-bronze { background:linear-gradient(90deg,rgba(180,83,9,.10),transparent 72%); }
+    .leader-medal-gold { color:#eab308 !important; } .leader-medal-silver { color:#94a3b8 !important; } .leader-medal-bronze { color:#c08457 !important; }
+    .stats-loading { animation:statsPulse 1.15s ease-in-out infinite; } @keyframes statsPulse { 50% { opacity:.48; } }
     /* Fixed Column Freezing */
     @media (max-width: 768px) {
       .sticky-col-rank {
@@ -80,12 +93,12 @@
         left: 0;
         z-index: 15;
         background-color: #0c111d !important;
-        width: 38px;
-        min-width: 38px;
+        width: 48px;
+        min-width: 48px;
       }
       .sticky-col-player {
         position: sticky;
-        left: 38px;
+        left: 48px;
         z-index: 15;
         background-color: #0c111d !important;
         border-right: 2px solid #1f2e47;
@@ -213,9 +226,10 @@
           <div class="flex items-center space-x-1.5">
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
             <h2 id="formula-title" class="text-[11px] sm:text-sm font-semibold tracking-wide text-slate-700 dark:text-slate-300 uppercase font-mono">2026–2027 Formula Weights</h2>
+            <span title="Schrift Score adds six weighted stats: points, rebounds, assists, steals, blocks, and games played. Higher scores mean a stronger statistical season under this formula." class="cursor-help inline-flex items-center justify-center w-4 h-4 rounded-full border border-slate-400 text-[9px] font-bold text-slate-500">i</span>
           </div>
           <p id="formula-desc" class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            1 PPG = 0.35 SS • 1 RPG = 0.83 SS • 1 APG = 1.14 SS • 1 SPG = 1.80 SS • 1 BPG = 1.98 SS • 1 GP = 0.04 SS
+            Higher SS means a stronger statistical season by this formula. Points, rebounds, assists, steals, blocks, and games played all add to the total.
           </p>
         </div>
 
@@ -429,7 +443,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-200 dark:border-court-border pt-3">
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="block font-bold mb-1">GAME SPLIT</span><select id="analytics-split" onchange="applyAnalyticsControls()" class="w-full bg-slate-50 dark:bg-court-850 border border-slate-300 dark:border-court-border rounded-lg px-2.5 py-2 text-xs"><option value="all">All Games</option><option value="home">Home Games</option><option value="away">Away Games</option><option value="wins">Wins</option><option value="losses">Losses</option></select></label>
         <label class="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300"><span class="flex justify-between font-bold mb-1"><span>MINIMUM GAMES PLAYED</span><span id="min-games-value">0</span></span><input id="min-games-slider" type="range" min="0" max="82" step="1" value="0" oninput="applyAnalyticsControls()" class="w-full accent-emerald-500 mt-2"><span class="block text-[9px] text-slate-400 mt-1">Custom sample-size filter</span></label>
-        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">70% team-games minimum</b><span class="text-[9px] text-slate-400">At least 70% of your team's games · Full Season only</span></span></label>
+        <label class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-court-border rounded-lg px-3 py-2"><input id="nba-qualified-only" type="checkbox" onchange="applyAnalyticsControls()" class="accent-emerald-500"><span><b class="block">70% team-games minimum</b><span class="text-[9px] text-slate-400">At least 70% of your team's games · Full Season only</span></span><span class="block text-[9px] text-slate-500 mt-0.5">Requires appearances in at least 70% of team games.</span></label>
       </div><p id="analytics-status" class="text-[10px] text-slate-500 dark:text-slate-400" aria-live="polite">Loading verified game-level analytics…</p>
     </section>
 
@@ -548,8 +562,8 @@
   </main>
 
   <div id="player-profile-overlay" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closePlayerProfile()"><aside class="absolute right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-court-900 border-l border-slate-200 dark:border-court-border shadow-2xl overflow-y-auto smooth-scroll">
-    <div class="sticky top-0 z-10 bg-white/95 dark:bg-court-900/95 backdrop-blur border-b border-slate-200 dark:border-court-border p-4 flex items-center justify-between"><div><div class="text-[9px] font-mono tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">SCHRIFT SCORE PLAYER FILE</div><h2 id="profile-title" class="text-lg font-black text-slate-900 dark:text-white">Player Profile</h2><div id="profile-subtitle" class="text-[10px] text-slate-500 font-mono"></div></div><button onclick="closePlayerProfile()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white text-xl p-2">✕</button></div>
-    <div class="p-4 sm:p-6 space-y-4"><div class="grid grid-cols-2 gap-2"><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">SEASON-HIGH SINGLE-GAME SS</div><div id="profile-high" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">—</div><div id="profile-high-date" class="text-[10px] text-slate-500"></div></div><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">GAMES LOGGED</div><div id="profile-games-count" class="text-2xl font-black text-slate-900 dark:text-white">—</div></div></div>
+    <div class="sticky top-0 z-10 bg-white/95 dark:bg-court-900/95 backdrop-blur border-b border-slate-200 dark:border-court-border p-4 flex items-center justify-between"><div><div class="text-[9px] font-mono tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">SCHRIFT SCORE PLAYER FILE</div><div class="flex items-center gap-2"><img id="profile-headshot" alt="" class="w-12 h-12 rounded-full object-cover bg-slate-200 dark:bg-court-800 border border-slate-300 dark:border-court-border" src="" onerror="this.style.display='none'"><img id="profile-team-logo" alt="" class="w-7 h-7 object-contain" src="" onerror="this.style.display='none'"><h2 id="profile-title" class="text-lg font-black text-slate-900 dark:text-white">Player Profile</h2></div><div id="profile-subtitle" class="text-[10px] text-slate-500 font-mono"></div></div><button onclick="closePlayerProfile()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white text-xl p-2">✕</button></div>
+    <div class="p-4 sm:p-6 space-y-4"><section class="rounded-xl border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] font-mono text-slate-500 mb-2">SEASON AVERAGES</div><div class="grid grid-cols-5 gap-2 text-center"><div><div class="text-[9px] text-slate-500">PTS</div><div id="profile-ppg" class="font-black text-sm">—</div></div><div><div class="text-[9px] text-slate-500">REB</div><div id="profile-rpg" class="font-black text-sm">—</div></div><div><div class="text-[9px] text-slate-500">AST</div><div id="profile-apg" class="font-black text-sm">—</div></div><div><div class="text-[9px] text-slate-500">STL</div><div id="profile-spg" class="font-black text-sm">—</div></div><div><div class="text-[9px] text-slate-500">BLK</div><div id="profile-bpg" class="font-black text-sm">—</div></div></div><div id="profile-contributions" class="mt-2 text-[9px] text-slate-500 font-mono">Weighted stat contributions to SS Total.</div></section><div class="grid grid-cols-3 gap-2"><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">SEASON-HIGH SINGLE-GAME SS</div><div id="profile-high" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">—</div><div id="profile-high-date" class="text-[10px] text-slate-500"></div></div><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">GAMES LOGGED</div><div id="profile-games-count" class="text-2xl font-black text-slate-900 dark:text-white">—</div></div><div class="rounded-xl bg-slate-100 dark:bg-court-850 border border-slate-200 dark:border-court-border p-3"><div class="text-[9px] text-slate-500 font-mono">LAST 5 GAMES AVG</div><div id="profile-last5" class="text-xl font-black text-teal-600 dark:text-teal-300">—</div></div></div>
     <section class="rounded-xl border border-slate-200 dark:border-court-border p-3"><div class="flex items-center justify-between mb-2"><h3 class="text-xs font-extrabold text-slate-900 dark:text-white">SCHRIFT SCORE TREND</h3><span class="text-[9px] text-slate-400 font-mono">Oldest → newest</span></div><div id="profile-chart" class="min-h-[150px] flex items-center justify-center text-xs text-slate-400">Loading game log…</div></section>
     <section class="rounded-xl border border-slate-200 dark:border-court-border overflow-hidden"><div class="p-3 border-b border-slate-200 dark:border-court-border"><h3 class="text-xs font-extrabold text-slate-900 dark:text-white">GAME-BY-GAME LOG</h3><p class="text-[9px] text-slate-500">Individual completed regular-season box scores.</p></div><div class="overflow-x-auto max-h-[48vh]"><table class="w-full text-[10px] font-mono"><thead class="sticky top-0 bg-slate-100 dark:bg-court-850 text-slate-500"><tr><th class="p-2 text-left">DATE</th><th class="p-2 text-left">OPP</th><th class="p-2">W/L</th><th class="p-2 text-right">PTS</th><th class="p-2 text-right">REB</th><th class="p-2 text-right">AST</th><th class="p-2 text-right">STL</th><th class="p-2 text-right">BLK</th><th class="p-2 text-right">SS</th></tr></thead><tbody id="profile-game-log" class="divide-y divide-slate-200 dark:divide-court-border/50"></tbody></table></div></section>
     <button id="profile-whatif-btn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">Open full player analysis & What-If</button></div></aside></div>
@@ -2496,10 +2510,13 @@
       }
     }
 
+    function teamLogoUrl(team) { const a=String(team||'').toLowerCase().replace(/[^a-z]/g,''); return a?'https://a.espncdn.com/i/teamlogos/nba/500/'+a+'.png':''; }
+    function teamLogoMarkup(team,size=20) { const u=teamLogoUrl(team); return u?'<img src="'+u+'" alt="'+String(team||'')+' logo" loading="lazy" class="inline-block object-contain flex-shrink-0" style="width:'+size+'px;height:'+size+'px" onerror="this.style.display=\'none\'">':''; }
+    function playerHeadshotUrl(p) { return p?.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''; }
     function renderTable() {
       const tbody = document.getElementById('table-rows');
       if (currentData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-slate-500 font-sans">No matching players found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-slate-500 font-sans"><div class="font-bold text-sm mb-1">No players match those filters.</div><div class="text-xs mb-3">Try another name or team, or clear your filters.</div><button onclick="document.getElementById('reset-btn')?.click()" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold">Clear filters</button></td></tr>`;
         return;
       }
 
@@ -2512,20 +2529,23 @@
       };
 
       tbody.innerHTML = currentData.map((p) => {
-        let changeBadge = p.rankYesterday == null ? `<span class="text-slate-400 text-[9px] font-bold">NEW</span>` : `<span class="text-slate-400">• 0</span>`;
+        let changeBadge = p.rankYesterday == null ? `<span class="text-emerald-600 dark:text-emerald-300 text-[9px] font-black tracking-wide bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">NEW</span>` : `<span class="text-slate-400">• 0</span>`;
         if (p.rankChange > 0) {
           changeBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20">▲${p.rankChange}</span>`;
         } else if (p.rankChange < 0) {
           changeBadge = `<span class="text-rose-500 dark:text-rose-400 font-bold bg-rose-500/10 px-1 py-0.5 rounded border border-rose-500/20">▼${Math.abs(p.rankChange)}</span>`;
         }
 
+        const medalClass=p.rank===1?'leader-row-gold':p.rank===2?'leader-row-silver':p.rank===3?'leader-row-bronze':'';
+        const medalText=p.rank===1?'leader-medal-gold':p.rank===2?'leader-medal-silver':p.rank===3?'leader-medal-bronze':'';
+        const isNew=p.rankYesterday==null;
         return `
-          <tr onclick="openPlayerProfile(${p.rank})" class="hover:bg-slate-100 dark:hover:bg-court-800/70 cursor-pointer transition-colors group">
-            <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${sortColumn === 'rank' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-slate-900 dark:text-white'}">${p.rank}</td>
+          <tr onclick="openPlayerProfile(${p.rank})" class="hover:bg-slate-100 dark:hover:bg-court-800/70 cursor-pointer transition-colors group ${medalClass}">
+            <td class="sticky-col-rank py-2.5 sm:py-3 px-2 text-center font-bold ${medalText} ${sortColumn === 'rank' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-slate-900 dark:text-white'}">${p.rank===1?'🥇 ':p.rank===2?'🥈 ':p.rank===3?'🥉 ':''}${p.rank}</td>
             <td class="py-2.5 sm:py-3 px-1.5 text-center text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] ${colClass('rankYesterday')} font-mono">#${p.rankYesterday || '-'}</td>
             <td class="py-2.5 sm:py-3 px-1.5 text-center text-[10px] sm:text-[11px] ${colClass('rankChange')}">${changeBadge}</td>
             <td class="sticky-col-player py-2.5 sm:py-3 px-3 sm:px-4 font-sans font-semibold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors whitespace-nowrap ${sortColumn === 'name' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : ''}">
-              ${p.name}
+              <span class="inline-flex items-center gap-2">${teamLogoMarkup(p.team,20)}<span>${p.name}</span>${isNew?'<span class="text-[8px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded px-1 py-0.5">NEW</span>':''}</span>
             </td>
             <td class="py-2.5 sm:py-3 px-2 ${colClass('team')}">
               <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border text-slate-600 dark:text-slate-300">
@@ -2628,10 +2648,10 @@
       const cacheKey='season';
       if(Object.prototype.hasOwnProperty.call(analyticsCache,cacheKey)){analyticsGames=analyticsCache[cacheKey];analyticsLoadedWindow=cacheKey;return;}
       if(analyticsLoadPromise)await analyticsLoadPromise;
-      const status=document.getElementById('analytics-status');if(status)status.textContent='Loading NBA box scores…';
+      const status=document.getElementById('analytics-status');if(status){status.textContent='Updating NBA stats…';status.classList.add('stats-loading');}
       analyticsLoadPromise=(async()=>{const r=await fetch('/api/nba-analytics?window=season');const data=await r.json();if(!r.ok)throw new Error(data.error||'NBA game data unavailable');if(data.source!=='ESPN'||!Array.isArray(data.games))throw new Error('Invalid ESPN game data response');analyticsGames=data.games;analyticsCache[cacheKey]=analyticsGames;analyticsLoadedWindow=cacheKey;})();
       try{await analyticsLoadPromise;}finally{analyticsLoadPromise=null;}
-      if(status)status.textContent='ESPN box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();
+      if(status){status.textContent='ESPN box scores · '+(analyticsGames.length)+' unique player-game lines across '+(analyticsGames.reduce((set,g)=>set.add(g.eventId),new Set()).size)+' completed games · '+new Date().toLocaleTimeString();status.classList.remove('stats-loading');}
       updateTopCards();
       applyFilters();
     }
@@ -2656,6 +2676,9 @@
       const p=currentData.find(x=>x.rank===rank)||masterData.find(x=>x.rank===rank);if(!p)return;
       document.getElementById('profile-title').textContent=p.name;
       document.getElementById('profile-subtitle').textContent=p.team+' · 2026–27 Regular Season';
+      const headshot=document.getElementById('profile-headshot');headshot.src=playerHeadshotUrl(p);headshot.style.display=p.playerId?'block':'none';headshot.alt=p.name+' headshot';
+      const logo=document.getElementById('profile-team-logo');logo.src=teamLogoUrl(p.team);logo.style.display='block';logo.alt=p.team+' logo';
+      ['profile-ppg','profile-rpg','profile-apg','profile-spg','profile-bpg','profile-last5'].forEach(id=>document.getElementById(id).textContent='…');
       ['profile-high','profile-games-count'].forEach(id=>document.getElementById(id).textContent='…');
       document.getElementById('profile-high-date').textContent='Calculating from game logs';
       document.getElementById('profile-chart').textContent='Loading game log…';
@@ -2666,6 +2689,10 @@
         const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
         const profileGames=analyticsCache.season||analyticsGames;const logs=profileGames.filter(g=>norm(g.name)===norm(p.name)).sort((a,b)=>a.date.localeCompare(b.date));
         if(!logs.length)throw new Error('No completed game logs returned for this player.');
+        const avgStat=k=>logs.reduce((sum,g)=>sum+Number(g[k]||0),0)/logs.length;
+        ['pts','reb','ast','stl','blk'].forEach((k,i)=>document.getElementById(['profile-ppg','profile-rpg','profile-apg','profile-spg','profile-bpg'][i]).textContent=avgStat(k).toFixed(1));
+        const lastFive=logs.slice(-5);document.getElementById('profile-last5').textContent=(lastFive.reduce((sum,g)=>sum+g.ss,0)/lastFive.length).toFixed(2)+' SS';
+        const wts=SEASONS[activeSeason].weights;document.getElementById('profile-contributions').textContent='SS adds: PTS +'+(avgStat('pts')*wts.ppg).toFixed(2)+' · REB +'+(avgStat('reb')*wts.rpg).toFixed(2)+' · AST +'+(avgStat('ast')*wts.apg).toFixed(2)+' · STL +'+(avgStat('stl')*wts.spg).toFixed(2)+' · BLK +'+(avgStat('blk')*wts.bpg).toFixed(2)+' · GP +'+(logs.length*wts.gp).toFixed(2);
         const high=logs.reduce((best,g)=>g.ss>best.ss?g:best,logs[0]);
         document.getElementById('profile-high').textContent=high.ss.toFixed(2)+' SS';
         document.getElementById('profile-high-date').textContent=high.date+' vs '+high.opponent;
@@ -2673,9 +2700,9 @@
         const w=560,h=150,pad=22,vals=logs.map(g=>g.ss),lo=Math.min(...vals),hi=Math.max(...vals),range=Math.max(1,hi-lo);
         const points=vals.map((v,i)=>({x:pad+(logs.length===1?0:i*(w-pad*2)/(logs.length-1)),y:h-pad-((v-lo)/range)*(h-pad*2)}));
         const poly=points.map(v=>v.x.toFixed(1)+','+v.y.toFixed(1)).join(' ');
-        const dots=points.map((v,i)=>'<circle cx="'+v.x+'" cy="'+v.y+'" r="3" fill="#10b981"><title>'+logs[i].date+': '+logs[i].ss.toFixed(2)+' SS</title></circle>').join('');
+        const dots=points.map((v,i)=>'<circle cx="'+v.x+'" cy="'+v.y+'" r="4" fill="#10b981" stroke="currentColor" stroke-width="1"><title>'+logs[i].date+' · '+logs[i].ss.toFixed(2)+' Schrift Score · '+logs[i].pts+' PTS, '+logs[i].reb+' REB, '+logs[i].ast+' AST</title></circle>').join('');
         document.getElementById('profile-chart').innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Game-by-game Schrift Score trend" class="w-full"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="currentColor" opacity=".2"/><polyline points="'+poly+'" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'<text x="'+pad+'" y="12" fill="currentColor" font-size="10" opacity=".65">'+hi.toFixed(1)+' SS</text><text x="'+pad+'" y="'+(h-3)+'" fill="currentColor" font-size="10" opacity=".65">'+lo.toFixed(1)+' SS</text></svg>';
-        document.getElementById('profile-game-log').innerHTML=[...logs].reverse().map(g=>'<tr class="text-slate-700 dark:text-slate-300"><td class="p-2 whitespace-nowrap">'+g.date+'</td><td class="p-2">'+(g.homeAway==='home'?'vs ':'@ ')+g.opponent+'</td><td class="p-2 text-center font-bold '+(g.result==='W'?'text-emerald-500':'text-rose-500')+'">'+g.result+' '+(g.teamScore??'—')+'-'+(g.opponentScore??'—')+'</td><td class="p-2 text-right">'+g.pts+'</td><td class="p-2 text-right">'+g.reb+'</td><td class="p-2 text-right">'+g.ast+'</td><td class="p-2 text-right">'+g.stl+'</td><td class="p-2 text-right">'+g.blk+'</td><td class="p-2 text-right font-bold text-emerald-500">'+g.ss.toFixed(2)+'</td></tr>').join('');
+        document.getElementById('profile-game-log').innerHTML=[...logs].reverse().map(g=>'<tr class="text-slate-700 dark:text-slate-300 '+(g.eventId===high.eventId?'bg-amber-500/10 ring-1 ring-inset ring-amber-500/30':'')+'"><td class="p-2 whitespace-nowrap">'+g.date+'</td><td class="p-2">'+(g.homeAway==='home'?'vs ':'@ ')+g.opponent+'</td><td class="p-2 text-center font-bold '+(g.result==='W'?'text-emerald-500':'text-rose-500')+'">'+g.result+' '+(g.teamScore??'—')+'-'+(g.opponentScore??'—')+'</td><td class="p-2 text-right">'+g.pts+'</td><td class="p-2 text-right">'+g.reb+'</td><td class="p-2 text-right">'+g.ast+'</td><td class="p-2 text-right">'+g.stl+'</td><td class="p-2 text-right">'+g.blk+'</td><td class="p-2 text-right font-bold text-emerald-500">'+g.ss.toFixed(2)+'</td></tr>').join('');
         document.getElementById('profile-whatif-btn').onclick=()=>{const base=masterData.find(x=>norm(x.name)===norm(p.name));if(base){closePlayerProfile();inspectPlayer(base.rank);document.getElementById('player-modal-back-profile')?.classList.remove('hidden');}};
       }catch(err){document.getElementById('profile-chart').textContent='Game log unavailable: '+err.message;document.getElementById('profile-game-log').innerHTML='<tr><td colspan="9" class="p-4 text-center text-rose-500">'+err.message+'</td></tr>';}
     }
