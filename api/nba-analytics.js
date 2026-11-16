@@ -94,7 +94,7 @@ export default async function handler(req, res) {
             const pts = num(get('PTS')), reb = num(get('REB')), ast = num(get('AST'));
             const stl = num(get('STL')), blk = num(get('BLK'));
             games.push({
-              name, team, date: game.date, eventId: game.eventId,
+              name, team, playerId: athlete.id ? String(athlete.id) : '', date: game.date, eventId: game.eventId,
               opponent, homeAway: isHome ? 'home' : 'away',
               result: ownScore > opponentScore ? 'W' : 'L',
               teamScore: ownScore, opponentScore,
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
     for (const game of games) {
       const key = normalizeName(game.name);
       if (!playerMap.has(key)) playerMap.set(key, {
-        name: game.name, team: game.team, gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
+        name: game.name, team: game.team, playerId: game.playerId || '', gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
         lastGameDate: ''
       });
       const player = playerMap.get(key);
@@ -125,6 +125,7 @@ export default async function handler(req, res) {
       player.stl += game.stl; player.blk += game.blk;
       if (game.date >= player.lastGameDate) {
         player.team = game.team;
+        if (game.playerId) player.playerId = game.playerId;
         player.lastGameDate = game.date;
       }
     }
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
       const ssApg = apg * weights.apg, ssSpg = spg * weights.spg, ssBpg = bpg * weights.bpg;
       const ssGp = player.gp * weights.gp;
       return {
-        name: player.name, team: player.team, gp: player.gp,
+        name: player.name, team: player.team, playerId: player.playerId || '', gp: player.gp,
         ppg, rpg, apg, spg, bpg, ssPpg, ssRpg, ssApg, ssSpg, ssBpg, ssGp,
         total: ssPpg + ssRpg + ssApg + ssSpg + ssBpg + ssGp
       };
