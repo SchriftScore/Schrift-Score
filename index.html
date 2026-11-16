@@ -2510,7 +2510,7 @@
       }
     }
 
-    function teamLogoUrl(team) { const a=String(team||'').toLowerCase().replace(/[^a-z]/g,''); return a?'https://a.espncdn.com/i/teamlogos/nba/500/'+a+'.png':''; }
+    function teamLogoUrl(team) { const raw=String(team||'').toUpperCase(); const map={NYK:'ny',GSW:'gs',NOP:'no',SAS:'sa',UTA:'utah'}; const a=map[raw]||raw.toLowerCase().replace(/[^a-z]/g,''); return a?'https://a.espncdn.com/i/teamlogos/nba/500/'+a+'.png':''; }
     function teamLogoMarkup(team,size=20) { const u=teamLogoUrl(team); return u?'<img src="'+u+'" alt="'+String(team||'')+' logo" loading="lazy" class="inline-block object-contain flex-shrink-0" style="width:'+size+'px;height:'+size+'px" onerror="this.style.display=\'none\'">':''; }
     function playerHeadshotUrl(p) { return p?.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''; }
     function renderTable() {
@@ -2689,7 +2689,7 @@
         const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
         const profileGames=analyticsCache.season||analyticsGames;const logs=profileGames.filter(g=>norm(g.name)===norm(p.name)).sort((a,b)=>a.date.localeCompare(b.date));
         if(!logs.length)throw new Error('No completed game logs returned for this player.');
-        const avgStat=k=>logs.reduce((sum,g)=>sum+Number(g[k]||0),0)/logs.length;
+        const avgStat=k=>Number((logs.reduce((sum,g)=>sum+Number(g[k]||0),0)/logs.length).toFixed(1));
         ['pts','reb','ast','stl','blk'].forEach((k,i)=>document.getElementById(['profile-ppg','profile-rpg','profile-apg','profile-spg','profile-bpg'][i]).textContent=avgStat(k).toFixed(1));
         const lastFive=logs.slice(-5);document.getElementById('profile-last5').textContent=(lastFive.reduce((sum,g)=>sum+g.ss,0)/lastFive.length).toFixed(2)+' SS';
         const wts=SEASONS[activeSeason].weights;document.getElementById('profile-contributions').textContent='SS adds: PTS +'+(avgStat('pts')*wts.ppg).toFixed(2)+' · REB +'+(avgStat('reb')*wts.rpg).toFixed(2)+' · AST +'+(avgStat('ast')*wts.apg).toFixed(2)+' · STL +'+(avgStat('stl')*wts.spg).toFixed(2)+' · BLK +'+(avgStat('blk')*wts.bpg).toFixed(2)+' · GP +'+(logs.length*wts.gp).toFixed(2);
