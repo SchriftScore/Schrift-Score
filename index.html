@@ -2353,7 +2353,7 @@
         // The 2026-27 leaderboard and game logs are both calculated from ESPN box scores.
         // No API key, paid provider, spreadsheet, or stale fallback is required.
         try {
-          const response = await fetch('/api/nba-analytics?window=season', { cache: 'no-store' });
+          const response = await fetch('/api/nba-analytics?window=season', { cache: 'no-store', signal: AbortSignal.timeout(55000) });
           const payload = await response.json();
           if (!response.ok) throw new Error(payload.error || 'NBA season data unavailable');
           if (payload.source !== 'ESPN' || !Array.isArray(payload.players) || !payload.players.length || !Array.isArray(payload.games)) {
