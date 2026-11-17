@@ -201,7 +201,12 @@ export default async function handler(req, res) {
     const weights = {};
     for (const [category, field] of Object.entries(STAT_KEYS)) {
       const topValues = [];
-      const valueFor = player => category === "gp" ? player.gp : (player.gp > 0 ? player[field] / player.gp : 0);
+      const valueFor = player => {
+        if (category === "gp") return player.gp;
+        // PTS/TRB/AST use per-game baselines; STL/BLK use season-total baselines.
+        if (category === "stl" || category === "blk") return player[field];
+        return player.gp > 0 ? player[field] / player.gp : 0;
+      };
       for (const season of historicalSeasons) {
         const topTen = [...season.players]
           .sort((a, b) => valueFor(b) - valueFor(a))
@@ -250,7 +255,7 @@ export default async function handler(req, res) {
         endYear:rawYear - 1,
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
-      method:"For PPG, RPG, APG, SPG, and BPG, the top 10 qualified players by per-game average from each of the 10 prior seasons are averaged (100 values per category). For GP, the top 10 qualified players by games played from each prior season are averaged. Each of the six coefficients equals 10 divided by its corresponding rolling baseline. Target-season per-game averages are multiplied by their category coefficients; games played is multiplied by the GP coefficient.",
+      method:"For PPG, RPG, and APG, the top 10 qualified players by per-game average from each of the 10 prior seasons are averaged (100 values per category). For SPG and BPG, the top 10 qualified players by season total steals and blocks from each prior season are averaged. For GP, the top 10 qualified players by games played are averaged. Each coefficient equals 10 divided by its category's rolling baseline. Target-season PPG, RPG, APG, SPG, and BPG are scored using per-game rates; GP is scored using games played.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows, teamLogos,
       playerCount:rows.length,
