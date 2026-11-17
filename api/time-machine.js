@@ -203,27 +203,35 @@ async function getSeasonFromNBAStats(year) {
   return parseNBAStatsSeason(await response.json(), year);
 }
 
-async function getSeason(year) {
+async function getSeasonFromBasketballReference(year) {
   const url = "https://www.basketball-reference.com/leagues/NBA_" + year + "_totals.html";
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9"
-      },
-      signal: AbortSignal.timeout(8000)
-    });
-    if (!response.ok) throw new Error("Basketball-Reference returned HTTP " + response.status + ".");
-    return parseSeasonTable(await response.text(), year);
-  } catch (primaryError) {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)",
+      "Accept": "text/html,application/xhtml+xml",
+      "Accept-Language": "en-US,en;q=0.9"
+    },
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error("Basketball-Reference returned HTTP " + response.status + ".");
+  return parseSeasonTable(await response.text(), year);
+}
+
+async function getSeason(year) {
+  // NBA Stats has broad season coverage from 2009-10 onward. Use it first
+  // for modern seasons to avoid repeatedly scraping Basketball-Reference.
+  const sources = year >= 2010
+    ? [getSeasonFromNBAStats, getSeasonFromBasketballReference]
+    : [getSeasonFromBasketballReference, getSeasonFromNBAStats];
+  const errors = [];
+  for (const source of sources) {
     try {
-      return await getSeasonFromNBAStats(year);
-    } catch (fallbackError) {
-      throw new Error("Both historical data sources failed for season ending " + year + ". Basketball-Reference: " +
-        (primaryError?.message || "request failed") + " NBA Stats: " + (fallbackError?.message || "request failed"));
+      return await source(year);
+    } catch (error) {
+      errors.push(error?.message || "request failed");
     }
   }
+  throw new Error("Both historical data sources failed for season ending " + year + ". " + errors.join(" "));
 }
 
 const TEAM_NAMES = {
