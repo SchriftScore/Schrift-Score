@@ -26,6 +26,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <section class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
 <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-lg">1. Choose your player and stat</h2><span id="loadStatus" class="text-[10px] mono text-amber-300">Loading data…</span></div>
 <div id="loadError" class="hidden mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300"></div>
+<div id="dataQualityNotice" class="hidden mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200" role="status"></div>
 <div class="space-y-4">
 <label class="block"><span class="text-xs font-semibold text-slate-400">PLAYER</span><input id="player" list="players" placeholder="Search NBA player…" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"><datalist id="players"></datalist></label>
 <label class="block"><span class="text-xs font-semibold text-slate-400">STAT TO PROVE</span><select id="metric" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="pts">Points per game</option><option value="reb">Rebounds per game</option><option value="ast">Assists per game</option><option value="stl">Steals per game</option><option value="blk">Blocks per game</option><option value="ss">Schrift Score per game</option></select></label>
@@ -44,6 +45,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 </section>
 <section>
 <div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h2 class="font-bold text-lg">2. Your graphic</h2><button id="download" disabled class="rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-bold text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-40">↓ Export PNG</button></div>
+<p id="receiptStale" class="hidden mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200" role="status">Your selections changed. Create the receipt again before exporting so the graphic matches your current choices.</p>
 <div id="empty" class="rounded-2xl border border-dashed border-slate-700 bg-[#0c111d] p-10 text-center text-slate-500"><div class="text-4xl mb-3">🧾</div><p class="font-semibold text-slate-300">Your receipt will appear here.</p><p class="text-sm mt-1">Choose a player and stat, then select “Create my receipt.”</p></div>
 <div id="receiptWrap" class="hidden">
 <article id="receipt" class="rounded-2xl p-6 sm:p-8 overflow-hidden">
@@ -79,6 +81,12 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <script>
 const API='/api/nba-analytics?window=season';
 const state={games:[],players:[]};
+let receiptBuilt=false;
+function markReceiptStale(){
+ if(!receiptBuilt)return;
+ $('receiptStale').classList.remove('hidden');
+ $('download').disabled=true;
+}
 const $=id=>document.getElementById(id);
 const labels={pts:'Points per game',reb:'Rebounds per game',ast:'Assists per game',stl:'Steals per game',blk:'Blocks per game',ss:'Schrift Score per game'};
 const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98+0.04):Number(g[k]||0);
@@ -125,6 +133,7 @@ function applyPreset(preset){
  if(preset==='road-wins'){$('venue').value='away';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
  if(preset==='close'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='5'}
  if(preset==='reset'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='';$('minutesMin').value='';$('minutesMax').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
+ markReceiptStale();
  updateMeter();
 }
 
@@ -174,6 +183,16 @@ async function load(){
   state.games=data.games;state.players=[...new Set(data.games.map(g=>g.name))].sort((a,b)=>a.localeCompare(b));
   $('players').innerHTML=state.players.map(n=>'<option value="'+escapeHtml(n)+'"></option>').join('');
   [...new Set(data.games.map(g=>g.opponent).filter(Boolean))].sort().forEach(team=>{const o=document.createElement('option');o.value=team;o.textContent=team;$('opponent').append(o)});
+  const quality=data.dataQuality||{};
+  if(quality.partial){
+   const messages=[];
+   if(quality.scoreboardFailureCount)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
+   if(quality.boxScoreFailureCount)messages.push(quality.boxScoreFailureCount+' game box score(s) could not be loaded');
+   $('dataQualityNotice').textContent='Partial NBA data: '+messages.join('; ')+'. Some games may be missing, so player averages and samples could be incomplete. Try refreshing later.';
+   $('dataQualityNotice').classList.remove('hidden');
+  }else{
+   $('dataQualityNotice').classList.add('hidden');
+  }
   setStatus(state.games.length.toLocaleString()+' player-game lines',true);updateMeter();
  }catch(e){setStatus('Data unavailable');$('loadError').textContent=e.message;$('loadError').classList.remove('hidden')}
 }
@@ -187,7 +206,8 @@ function build(){
  if(sample.length<minimum){alert('Your sample has '+sample.length+' games, but your minimum is set to '+minimum+'. Remove a filter or lower the minimum.');return}
  const base=average(all,metric),avg=average(sample,metric),delta=avg-base,pct=base?delta/base*100:0;
  const sorted=[...sample].sort((a,b)=>b.date.localeCompare(a.date));
- $('empty').classList.add('hidden');$('receiptWrap').classList.remove('hidden');$('download').disabled=false;
+ $('empty').classList.add('hidden');$('receiptWrap').classList.remove('hidden');
+ receiptBuilt=true;$('receiptStale').classList.add('hidden');$('download').disabled=false;
  $('cardHeadline').textContent=$('headline').value.trim()||'THE NUMBERS DON’T LIE.';
  $('cardPlayer').textContent=name.toUpperCase();
  const parts=[];if($('dateFrom').value||$('dateTo').value)parts.push(($('dateFrom').value?displayDate($('dateFrom').value):'Season start')+' – '+($('dateTo').value?displayDate($('dateTo').value):'Latest game'));if($('opponent').value)parts.push('vs '+$('opponent').value);if($('venue').value)parts.push($('venue').value==='home'?'Home games':'Road games');if($('result').value)parts.push($('result').value==='W'?'Wins only':'Losses only');if($('marginMin').value||$('marginMax').value)parts.push('Final margin '+($('marginMin').value||'0')+'–'+($('marginMax').value||'any')+' pts');if($('minutesMin').value||$('minutesMax').value)parts.push('Minutes '+($('minutesMin').value||'0')+'–'+($('minutesMax').value||'any'));
@@ -212,8 +232,9 @@ function build(){
 }
 $('generate').addEventListener('click',build);
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>applyPreset(button.dataset.preset)));
-['player','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('input',updateMeter));
-['dateFrom','dateTo','opponent','venue','result','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('change',updateMeter));
+['player','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('input',()=>{markReceiptStale();updateMeter()}));
+['dateFrom','dateTo','opponent','venue','result','metric'].forEach(id=>$(id).addEventListener('change',()=>{markReceiptStale();updateMeter()}));
+$('headline').addEventListener('input',markReceiptStale);
 $('download').addEventListener('click',async()=>{if(!window.html2canvas)return alert('Image export library did not load.');const btn=$('download');btn.disabled=true;btn.textContent='Rendering…';try{const canvas=await html2canvas($('receipt'),{backgroundColor:'#080d16',scale:2,useCORS:true});const a=document.createElement('a');a.download='schrift-score-'+$('player').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-receipt.png';a.href=canvas.toDataURL('image/png');a.click()}catch(e){alert('Could not export this receipt: '+e.message)}finally{btn.disabled=false;btn.textContent='↓ Export PNG'}});
 load();
 </script>
