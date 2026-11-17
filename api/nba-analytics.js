@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     const descriptors = [...gamesById.values()];
     const games = [];
     const seen = new Set();
-    await scoreWorkers(descriptors, 6, async game => {
+    await scoreWorkers(descriptors, 10, async game => {
       const summary = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + encodeURIComponent(game.eventId));
       const teamBlocks = summary.boxscore?.players || [];
       if (!teamBlocks.length) throw new Error('ESPN returned no player box score for game ' + game.eventId);
