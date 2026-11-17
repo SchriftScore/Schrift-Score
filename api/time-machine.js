@@ -211,7 +211,7 @@ export default async function handler(req, res) {
       const baseline = aggregate / 100;
       if (!(baseline > 0)) throw new Error("Could not calculate a valid " + category + " baseline.");
       baselines[category] = baseline;
-      weights[category] = 10 / baseline;
+      weights[category] = category === "stl" ? 1.80 : category === "blk" ? 1.98 : 10 / baseline;
     }
 
     const teamLogos = await getSportsLogosForSeason(rawYear);
@@ -224,8 +224,8 @@ export default async function handler(req, res) {
       const ssTrb = trb * weights.trb;
       const ssAst = ast * weights.ast;
       // Steals and blocks use the specified per-game coefficients for 2026–27.
-      const ssStl = gp > 0 ? (stl / gp) * 1.80 : 0;
-      const ssBlk = gp > 0 ? (blk / gp) * 1.98 : 0;
+      const ssStl = gp > 0 ? (stl / gp) * weights.stl : 0;
+      const ssBlk = gp > 0 ? (blk / gp) * weights.blk : 0;
       const ssGp = gp * 0.04;
       return {
         name:player.name, team:player.team, gp,
@@ -245,7 +245,7 @@ export default async function handler(req, res) {
         endYear:rawYear - 1,
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
-      method:"For PTS, TRB, AST, STL, and BLK, the top 10 qualified players by season total from each of the 10 prior seasons are averaged (100 values per category), and the baseline/weight is 10 divided by that average. For 2026–27 scoring, steals per game are multiplied by 1.80 and blocks per game by 1.98. Games played uses a fixed 0.04 coefficient.",
+      method:"For PTS, TRB, AST, STL, and BLK, the top 10 qualified players by season total from each of the 10 prior seasons are averaged (100 values per category), and PTS, TRB, and AST use 10 divided by their baseline as the weight. For 2026–27 scoring, steals per game are multiplied by 1.80 and blocks per game by 1.98. Games played uses a fixed 0.04 coefficient.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows, teamLogos,
       playerCount:rows.length,
