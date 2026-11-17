@@ -66,7 +66,7 @@ const API='/api/nba-analytics?window=season';
 const state={games:[],players:[]};
 const $=id=>document.getElementById(id);
 const labels={pts:'Points per game',reb:'Rebounds per game',ast:'Assists per game',stl:'Steals per game',blk:'Blocks per game',ss:'Schrift Score per game'};
-const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98):Number(g[k]||0);
+const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98+0.04):Number(g[k]||0);
 const average=(arr,k)=>arr.length?arr.reduce((s,g)=>s+valueOf(g,k),0)/arr.length:0;
 function fmt(n){return Number(n).toFixed(1)}
 function setStatus(t,ok=false){$('loadStatus').textContent=t;$('loadStatus').className='text-[10px] mono '+(ok?'text-emerald-300':'text-amber-300')}
