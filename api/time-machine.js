@@ -120,7 +120,7 @@ async function getSeason(year) {
       "Accept": "text/html,application/xhtml+xml",
       "Accept-Language": "en-US,en;q=0.9"
     },
-    signal: AbortSignal.timeout(12000)
+    signal: AbortSignal.timeout(8000)
   });
   if (!response.ok) throw new Error("Basketball-Reference returned HTTP " + response.status + " for season ending " + year + ".");
   const html = await response.text();
@@ -164,10 +164,6 @@ async function getSportsLogosForSeason(year) {
     return {};
   }
 }
-async function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");
   const rawYear = Number(req.query?.season || 2016);
@@ -177,11 +173,18 @@ export default async function handler(req, res) {
 
   try {
     const seasons = new Map();
-    // Keep requests sequential to respect Basketball-Reference's published scraping limits.
-    for (let year = rawYear - 10; year <= rawYear; year++) {
-      seasons.set(year, await getSeason(year));
-      if (year < rawYear) await wait(3000);
-    }
+    // Fetch only two seasons at a time: this keeps the request rate conservative
+    // while avoiding the 60-second timeout caused by fully sequential requests.
+    const yearsToLoad = Array.from({ length: 11 }, (_, index) => rawYear - 10 + index);
+    let nextYearIndex = 0;
+    const seasonWorkers = Array.from({ length: 2 }, async () => {
+      while (nextYearIndex < yearsToLoad.length) {
+        const year = yearsToLoad[nextYearIndex++];
+        const players = await getSeason(year);
+        seasons.set(year, players);
+      }
+    });
+    await Promise.all(seasonWorkers);
 
     const historicalSeasons = [];
     for (let year = rawYear - 10; year < rawYear; year++) {
