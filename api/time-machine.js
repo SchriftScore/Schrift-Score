@@ -214,7 +214,9 @@ export default async function handler(req, res) {
       weights[category] = ["stl", "blk"].includes(category) ? baseline : 10 / baseline;
     }
 
-    const teamLogos = await getSportsLogosForSeason(rawYear);\n\n    const targetPlayers = seasons.get(rawYear);
+    const teamLogos = await getSportsLogosForSeason(rawYear);
+
+    const targetPlayers = seasons.get(rawYear);
     const rows = targetPlayers.map(player => {
       const pts = player.pts, trb = player.trb, ast = player.ast, stl = player.stl, blk = player.blk;
       const gp = player.gp;
