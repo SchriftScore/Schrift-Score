@@ -58,6 +58,19 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <div class="mt-7 pt-4 border-t border-slate-700/70 flex items-end justify-between gap-3"><div class="text-[9px] text-slate-500 leading-relaxed max-w-xs">Source: ESPN completed-game box scores. Sample average is compared with this player’s full-season average, which includes the sample games. This is descriptive context, not a controlled comparison or proof of cause.</div><div class="mono text-[9px] text-slate-500 text-right">NBASCHRIFTSCORE.COM<br>MAKE THE CASE.</div></div>
 </article>
 <p id="warning" class="hidden text-xs text-amber-300 mt-3"></p>
+<div id="verdictStudio" class="hidden mt-5 space-y-4">
+ <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
+  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">THE ARGUMENT, THREE WAYS</div><h3 class="text-xl font-black mt-1">Debate Verdict</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Box-score evidence only</span></div>
+  <p id="verdictSummary" class="text-sm text-slate-300 mt-3"></p>
+  <div id="verdictLayers" class="grid md:grid-cols-3 gap-3 mt-4"></div>
+ </div>
+ <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
+  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">FIND THE SPLIT</div><h3 class="text-xl font-black mt-1">Cherry-Pick Finder</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Exploratory · not proof</span></div>
+  <p class="text-xs text-slate-400 mt-2">Scans home vs. away, wins vs. losses, and opponent splits. Both the strongest positive and negative gaps are shown, with sample sizes and the full-season baseline.</p>
+  <div id="finderResults" class="grid md:grid-cols-2 gap-3 mt-4"></div>
+  <p class="text-[10px] text-slate-500 mt-3">This finder searches many possible splits, which increases the chance of finding an extreme result by chance. Treat discoveries as leads to investigate—not evidence of causation. Opponent splits are especially sensitive to small samples.</p>
+ </div>
+</div>
 </div>
 </section>
 </div>
@@ -94,6 +107,44 @@ function applyPreset(preset){
  updateMeter();
 }
 
+function statLabel(metric){return labels[metric]||metric}
+function makeSplit(label,subset,base){
+ if(subset.length<minimumForScan)return null;
+ const avg=average(subset,currentMetric),diff=avg-base;
+ return {label,n:subset.length,avg,diff,pct:base?diff/base*100:null};
+}
+let currentMetric='pts',minimumForScan=8;
+function scanSplits(all,metric){
+ currentMetric=metric;
+ const base=average(all,metric),candidates=[];
+ const add=(label,subset)=>{if(subset.length>=minimumForScan)candidates.push({label,n:subset.length,avg:average(subset,metric),diff:average(subset,metric)-base,pct:base?(average(subset,metric)-base)/base*100:null})};
+ add('Home games',all.filter(g=>g.homeAway==='home'));
+ add('Road games',all.filter(g=>g.homeAway==='away'));
+ add('Wins',all.filter(g=>g.result==='W'));
+ add('Losses',all.filter(g=>g.result==='L'));
+ const opponents=[...new Set(all.map(g=>g.opponent).filter(Boolean))];
+ opponents.forEach(team=>add('vs. '+team,all.filter(g=>g.opponent===team)));
+ return {base,candidates:candidates.sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff))};
+}
+function renderAnalysis(all,sample,metric,minimum){
+ minimumForScan=minimum;
+ const base=average(all,metric),avg=average(sample,metric),delta=avg-base;
+ const home=all.filter(g=>g.homeAway==='home'),away=all.filter(g=>g.homeAway==='away');
+ const wins=all.filter(g=>g.result==='W'),losses=all.filter(g=>g.result==='L');
+ const layers=[
+  {title:'YOUR FILTERED SAMPLE',n:sample.length,avg,detail:'Compared with '+all.length+' full-season games.'},
+  {title:'HOME vs. ROAD',n:home.length+away.length,avg:average(home,metric)-average(away,metric),detail:home.length+' home games · '+away.length+' road games. Difference: home minus road.' ,comparison:true},
+  {title:'WINS vs. LOSSES',n:wins.length+losses.length,avg:average(wins,metric)-average(losses,metric),detail:wins.length+' wins · '+losses.length+' losses. Difference: wins minus losses.',comparison:true}
+ ];
+ $('verdictSummary').textContent=sample.length<minimum?'This sample is below your minimum. The verdict is withheld as a strong claim; use it only as an exploratory lead.':(delta>0?'The selected split is above':delta<0?'The selected split is below':'The selected split matches')+' the player’s full-season average by '+fmt(Math.abs(delta))+' '+labels[metric].toLowerCase()+'. The baseline includes the selected games, so this is descriptive—not an independent control.';
+ $('verdictLayers').innerHTML=layers.map((x,i)=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+x.title+'</div><div class="text-2xl font-black mt-3 '+(i===0?(sample.length<minimum?'text-amber-200':'text-emerald-300'):'text-white')+'">'+(x.comparison?(x.avg>0?'+':'')+fmt(x.avg):fmt(x.avg))+'</div><div class="text-[10px] text-slate-400 mt-1">'+(x.comparison?'Difference · '+labels[metric].toLowerCase():'Average · '+labels[metric].toLowerCase())+'</div><p class="text-[10px] text-slate-500 mt-3">'+x.detail+'</p></div>').join('');
+ const {candidates}=scanSplits(all,metric);
+ const positive=candidates.filter(x=>x.diff>0).sort((a,b)=>b.diff-a.diff)[0];
+ const negative=candidates.filter(x=>x.diff<0).sort((a,b)=>a.diff-b.diff)[0];
+ const cards=[{title:'BIGGEST POSITIVE SPLIT',x:positive},{title:'BIGGEST NEGATIVE SPLIT',x:negative}];
+ $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' games · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
+ $('verdictStudio').classList.remove('hidden');
+}
 function setStatus(t,ok=false){$('loadStatus').textContent=t;$('loadStatus').className='text-[10px] mono '+(ok?'text-emerald-300':'text-amber-300')}
 async function load(){
  try{
@@ -135,6 +186,7 @@ function build(){
  $('gameList').innerHTML=sorted.slice(0,5).map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(g.opponent)+' · '+g.result+' · '+(g.homeAway==='home'?g.teamScore+'-'+g.opponentScore:g.opponentScore+'-'+g.teamScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('')+(sorted.length>5?'<div class="text-[10px] text-slate-500">+'+(sorted.length-5)+' more games included in this sample</div>':'');
  const warnings=[];if(sample.length<minimum)warnings.push('This sample has '+sample.length+' game(s), below your minimum setting of '+minimum+'.');if(sample.length<5)warnings.push('Very small samples can exaggerate performance. Treat this as context, not proof.');if(sample.length>=minimum)warnings.push('The minimum sample requirement is met, but this comparison is descriptive and does not establish statistical significance or causation.');
  $('warning').textContent=warnings.join(' ');$('warning').classList.toggle('hidden',!warnings.length);
+ renderAnalysis(all,sample,metric,minimum);
 }
 $('generate').addEventListener('click',build);
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>applyPreset(button.dataset.preset)));
