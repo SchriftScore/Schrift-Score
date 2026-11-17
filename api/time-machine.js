@@ -113,7 +113,7 @@ function parseSeasonTable(html, year) {
   return players;
 }
 async function getSeason(year) {
-  const url = "https://www.basketball-reference.com/leagues/NBA_" + year + "_per_game.html";
+  const url = "https://www.basketball-reference.com/leagues/NBA_" + year + "_totals.html";
   const response = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)",
@@ -142,7 +142,7 @@ async function getSportsLogosForSeason(year) {
     const url = "https://www.sportslogos.net/teams/list_by_year/62" + year + "/" + year + "-NBA-Logos-By-Year/";
     const response = await fetch(url, {
       headers: { "User-Agent":"Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)", "Accept":"text/html" },
-      signal: AbortSignal.timeout(8000)
+      signal: AbortSignal.timeout(2500)
     });
     if (!response.ok) return {};
     const html = await response.text();
