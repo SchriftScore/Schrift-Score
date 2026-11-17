@@ -38,7 +38,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <div><span class="text-xs font-semibold text-slate-400">PLAYER MINUTES · PER GAME</span><div class="grid grid-cols-2 gap-3 mt-1"><label><span class="text-[10px] text-slate-500">MINIMUM MINUTES</span><input id="minutesMin" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-[10px] text-slate-500">MAXIMUM MINUTES</span><input id="minutesMax" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><span class="block text-[11px] text-slate-500 mt-1">Narrow games by how many minutes the player played.</span></div>
 <label class="block"><span class="text-xs font-semibold text-slate-400">MINIMUM GAMES IN SAMPLE</span><input id="minimum" type="number" min="1" max="82" step="1" value="8" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><span class="block text-[11px] text-slate-500 mt-1">Set this as low as 1 game. Smaller samples are more volatile, so the receipt will clearly flag them.</span></label></div></details>
 <details class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Customize your graphic <span class="text-xs font-normal text-slate-500">· optional</span></summary><label class="block mt-4"><span class="text-xs font-semibold text-slate-400">HEADLINE</span><input id="headline" maxlength="90" value="THE NUMBERS DON'T LIE." class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"></label></details>
-<div id="sampleMeter" class="rounded-lg border border-slate-800 bg-slate-950 px-3 py-3"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold tracking-widest text-slate-400">GAMES FOUND</span><strong id="matchCount" class="mono text-sm text-slate-200">Choose a player</strong></div><div class="h-1.5 rounded-full bg-slate-800 mt-2 overflow-hidden"><div id="matchBar" class="h-full w-0 rounded-full bg-emerald-400 transition-all"></div></div><p id="matchHint" class="text-[10px] text-slate-500 mt-2">We’ll show how many games match your choices.</p></div><button id="generate" class="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>Create my receipt →</button>
+<p id="filterError" class="hidden rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300" role="alert"></p><div id="sampleMeter" class="rounded-lg border border-slate-800 bg-slate-950 px-3 py-3"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold tracking-widest text-slate-400">GAMES FOUND</span><strong id="matchCount" class="mono text-sm text-slate-200">Choose a player</strong></div><div class="h-1.5 rounded-full bg-slate-800 mt-2 overflow-hidden"><div id="matchBar" class="h-full w-0 rounded-full bg-emerald-400 transition-all"></div></div><p id="matchHint" class="text-[10px] text-slate-500 mt-2">We’ll show how many games match your choices.</p></div><button id="generate" class="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>Create my receipt →</button>
 </div>
 <div class="mt-5 border-t border-slate-800 pt-4 text-xs text-slate-500 leading-relaxed">Uses completed NBA box scores from the 2026–27 season. Optional filters only use information recorded in those box scores.</div>
 </section>
@@ -92,10 +92,28 @@ function getSample(name){
   const sample=all.filter(g=>(!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('marginMin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))>=Number($('marginMin').value))&&(!$('marginMax').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('marginMax').value))&&(!$('minutesMin').value||minutesValue(g)>=Number($('minutesMin').value))&&(!$('minutesMax').value||minutesValue(g)<=Number($('minutesMax').value)));
  return {all,sample};
 }
+function getFilterError(){
+ const from=$('dateFrom').value,to=$('dateTo').value;
+ if(from&&to&&from>to)return 'The start date must be on or before the end date.';
+ const checks=[['marginMin','Final score margin minimum',0,null],['marginMax','Final score margin maximum',0,null],['minutesMin','Minimum player minutes',0,60],['minutesMax','Maximum player minutes',0,60]];
+ for(const [id,label,min,max] of checks){
+  const raw=$(id).value;if(raw==='')continue;
+  const value=Number(raw);
+  if(!Number.isFinite(value)||value<min||(max!==null&&value>max))return label+' must be '+(max===null?'zero or higher':'between '+min+' and '+max)+'.';
+ }
+ const pairs=[['marginMin','marginMax','Minimum final score margin cannot exceed the maximum.'],['minutesMin','minutesMax','Minimum player minutes cannot exceed the maximum.']];
+ for(const [low,high,message] of pairs){if($(low).value!==''&&$(high).value!==''&&Number($(low).value)>Number($(high).value))return message;}
+ const minimumRaw=$('minimum').value,minimum=Number(minimumRaw);
+ if(minimumRaw===''||!Number.isInteger(minimum)||minimum<1||minimum>82)return 'Minimum games must be a whole number from 1 to 82.';
+ return '';
+}
 function updateMeter(){
+ const error=getFilterError();
+ $('filterError').textContent=error;$('filterError').classList.toggle('hidden',!error);
+ if(error){$('matchCount').textContent='Fix filters';$('matchHint').textContent='Correct the highlighted filter settings to continue.';$('matchBar').style.width='0%';$('generate').disabled=true;return}
  const name=$('player').value.trim();
  if(!state.players.includes(name)){$('matchCount').textContent='Choose a player';$('matchHint').textContent='Select a valid player to preview your sample.';$('matchBar').style.width='0%';$('generate').disabled=true;return}
- const {sample}=getSample(name);const minimum=Math.max(1,Math.min(82,Number($('minimum').value)||1));
+ const {sample}=getSample(name);const minimum=Number($('minimum').value);
  $('matchCount').textContent=sample.length+' games · '+minimum+' needed';
  $('matchHint').textContent=sample.length>=minimum?'You have enough games. Create your receipt.':(minimum-sample.length)+' more game(s) needed. Try removing an optional filter.';
  $('matchBar').style.width=Math.min(100,sample.length/minimum*100)+'%';
@@ -103,8 +121,8 @@ function updateMeter(){
  $('generate').disabled=sample.length<minimum;
 }
 function applyPreset(preset){
- if(preset==='home-wins'){$('venue').value='home';$('result').value='W';$('margin').value=''}
- if(preset==='road-wins'){$('venue').value='away';$('result').value='W';$('margin').value=''}
+ if(preset==='home-wins'){$('venue').value='home';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
+ if(preset==='road-wins'){$('venue').value='away';$('result').value='L';$('marginMin').value='';$('marginMax').value=''}
  if(preset==='close'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='5'}
  if(preset==='reset'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='';$('minutesMin').value='';$('minutesMax').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
  updateMeter();
@@ -163,6 +181,7 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function build(){
  const name=$('player').value.trim(), metric=$('metric').value;
  if(!state.players.includes(name)){alert('Choose a player from the suggestions.');return}
+ const filterError=getFilterError();if(filterError){$('filterError').textContent=filterError;$('filterError').classList.remove('hidden');return}
  const {all,sample}=getSample(name);
  const minimum=Math.max(1,Math.min(82,Number($('minimum').value)||1));
  if(sample.length<minimum){alert('Your sample has '+sample.length+' games, but your minimum is set to '+minimum+'. Remove a filter or lower the minimum.');return}
