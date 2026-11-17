@@ -113,19 +113,117 @@ function parseSeasonTable(html, year) {
   }
   return players;
 }
-async function getSeason(year) {
-  const url = "https://www.basketball-reference.com/leagues/NBA_" + year + "_totals.html";
+function parseNBAStatsSeason(payload, year) {
+  const result = payload?.resultSets?.find(set => Array.isArray(set.headers) && Array.isArray(set.rowSet))
+    || payload?.resultSet;
+  if (!result || !Array.isArray(result.headers) || !Array.isArray(result.rowSet)) {
+    throw new Error("NBA Stats API returned an unexpected response for season ending " + year + ".");
+  }
+  const index = Object.fromEntries(result.headers.map((header, i) => [String(header).toUpperCase(), i]));
+  const required = ["PLAYER_NAME", "TEAM_ABBREVIATION", "GP", "PTS", "REB", "AST", "STL", "BLK"];
+  const missing = required.filter(key => index[key] === undefined);
+  if (missing.length) throw new Error("NBA Stats API omitted fields for season ending " + year + ": " + missing.join(", ") + ".");
+  const rawRows = result.rowSet.map(row => ({
+    name:String(row[index.PLAYER_NAME] || "").trim(),
+    team:String(row[index.TEAM_ABBREVIATION] || "UNK").trim(),
+    gp:numeric(row[index.GP]),
+    pts:numeric(row[index.PTS]),
+    trb:numeric(row[index.REB]),
+    ast:numeric(row[index.AST]),
+    stl:numeric(row[index.STL]),
+    blk:numeric(row[index.BLK]),
+    qualified:false
+  })).filter(row => row.name && row.gp > 0);
+  if (!rawRows.length) throw new Error("NBA Stats API returned no player rows for season ending " + year + ".");
+
+  const teamGames = new Map();
+  for (const row of rawRows) {
+    if (/^(TOT|\d+TM)$/.test(row.team)) continue;
+    teamGames.set(row.team, Math.max(teamGames.get(row.team) || 0, row.gp));
+  }
+  const grouped = new Map();
+  for (const row of rawRows) {
+    const key = normalizeName(row.name);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(row);
+  }
+  const players = [];
+  for (const rows of grouped.values()) {
+    const combined = rows.find(r => /^(TOT|\d+TM)$/.test(r.team));
+    let player;
+    if (combined) {
+      player = { ...combined };
+    } else if (rows.length === 1) {
+      player = { ...rows[0] };
+    } else {
+      player = {
+        ...rows[rows.length - 1],
+        gp:rows.reduce((sum, r) => sum + r.gp, 0),
+        pts:rows.reduce((sum, r) => sum + r.pts, 0),
+        trb:rows.reduce((sum, r) => sum + r.trb, 0),
+        ast:rows.reduce((sum, r) => sum + r.ast, 0),
+        stl:rows.reduce((sum, r) => sum + r.stl, 0),
+        blk:rows.reduce((sum, r) => sum + r.blk, 0)
+      };
+    }
+    const stints = rows.filter(r => !/^(TOT|\d+TM)$/.test(r.team));
+    const teamRows = stints.length ? stints : [player];
+    const teamGamesPlayed = Math.max(...teamRows.map(r => teamGames.get(r.team) || r.gp));
+    player.qualified = player.gp >= Math.ceil(teamGamesPlayed * 0.70);
+    players.push(player);
+  }
+  return players;
+}
+
+async function getSeasonFromNBAStats(year) {
+  const params = new URLSearchParams({
+    College:"", Conference:"", Country:"", DateFrom:"", DateTo:"", Division:"",
+    DraftPick:"", DraftYear:"", GameScope:"", GameSegment:"", Height:"",
+    LastNGames:"0", LeagueID:"00", Location:"", MeasureType:"Base", Month:"0",
+    OpponentTeamID:"0", Outcome:"", PORound:"0", PaceAdjust:"N", PerMode:"Totals",
+    Period:"0", PlayerExperience:"", PlayerPosition:"", PlusMinus:"N", Rank:"N",
+    Season:(year - 1) + "-" + String(year).slice(-2), SeasonSegment:"",
+    SeasonType:"Regular Season", ShotClockRange:"", StarterBench:"", TeamID:"0",
+    TwoWay:"0", VsConference:"", VsDivision:"", Weight:""
+  });
+  const url = "https://stats.nba.com/stats/leaguedashplayerstats?" + params.toString();
   const response = await fetch(url, {
     headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)",
-      "Accept": "text/html,application/xhtml+xml",
-      "Accept-Language": "en-US,en;q=0.9"
+      "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+      "Accept":"application/json, text/plain, */*",
+      "Accept-Language":"en-US,en;q=0.9",
+      "Origin":"https://www.nba.com",
+      "Referer":"https://www.nba.com/",
+      "x-nba-stats-origin":"stats",
+      "x-nba-stats-token":"true"
     },
-    signal: AbortSignal.timeout(8000)
+    signal:AbortSignal.timeout(15000)
   });
-  if (!response.ok) throw new Error("Basketball-Reference returned HTTP " + response.status + " for season ending " + year + ".");
-  const html = await response.text();
-  return parseSeasonTable(html, year);
+  if (!response.ok) throw new Error("NBA Stats API returned HTTP " + response.status + " for season ending " + year + ".");
+  return parseNBAStatsSeason(await response.json(), year);
+}
+
+async function getSeason(year) {
+  const url = "https://www.basketball-reference.com/leagues/NBA_" + year + "_totals.html";
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; SchriftScore/1.0; +https://nbaschriftscore.com)",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error("Basketball-Reference returned HTTP " + response.status + ".");
+    return parseSeasonTable(await response.text(), year);
+  } catch (primaryError) {
+    try {
+      return await getSeasonFromNBAStats(year);
+    } catch (fallbackError) {
+      throw new Error("Both historical data sources failed for season ending " + year + ". Basketball-Reference: " +
+        (primaryError?.message || "request failed") + " NBA Stats: " + (fallbackError?.message || "request failed"));
+    }
+  }
 }
 
 const TEAM_NAMES = {
@@ -251,7 +349,7 @@ export default async function handler(req, res) {
       .map((player, index) => ({ ...player, rank:index + 1 }));
 
     return res.status(200).json({
-      source:"Basketball-Reference regular-season statistics",
+      source:"Basketball-Reference and NBA Stats regular-season statistics (automatic fallback)",
       seasonEndYear:rawYear,
       seasonLabel:(rawYear - 1) + "–" + String(rawYear).slice(-2),
       rollingWindow:{
@@ -269,7 +367,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Schrift Score Time Machine failed:", error);
     return res.status(502).json({
-      error:"Historical data could not be loaded from Basketball-Reference: " + (error?.message || "Unknown error")
+      error:"Historical data could not be loaded: " + (error?.message || "Unknown error")
     });
   }
 }
