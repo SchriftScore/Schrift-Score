@@ -1407,7 +1407,7 @@
             </table>
           </div>
         </section>
-        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season totals tables. Historical team-logo reference: SportsLogos.Net NBA logos by year. The rolling formula uses the top 10 qualified players by per-game average for PPG, RPG, APG, SPG, and BPG from each of the previous 10 seasons (100 values per category). PPG, RPG, and APG multipliers are 10 divided by their rolling baselines; SPG and BPG multipliers equal their rolling per-game baselines. GP always uses 0.04.</p>
+        <p class="text-[10px] text-slate-500 leading-relaxed">Player statistics: Basketball-Reference, with the NBA Stats API as an automatic fallback. Historical team-logo reference: SportsLogos.Net NBA logos by year. The rolling formula uses the top 10 qualified players by per-game average for PPG, RPG, APG, SPG, and BPG from each of the previous 10 seasons (100 values per category). PPG, RPG, and APG multipliers are 10 divided by their rolling baselines; SPG and BPG multipliers equal their rolling per-game baselines. GP always uses 0.04.</p>
       </main>
     </div>
   </div>
@@ -2456,7 +2456,7 @@
       timeMachineLoading = true;
       if (status) {
         status.classList.remove('hidden');
-        status.innerHTML = '<div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent mb-2"></div><div>Loading 11 Basketball-Reference seasons and calculating the rolling formula…</div><div class="text-[10px] text-slate-500 mt-1">The first load can take up to a minute.</div>';
+        status.innerHTML = '<div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent mb-2"></div><div>Loading 11 historical NBA seasons and calculating the rolling formula…</div><div class="text-[10px] text-slate-500 mt-1">The first load can take up to a minute.</div>';
       }
       if (table) table.classList.add('hidden');
       if (count) count.textContent = 'Calculating…';
@@ -2477,7 +2477,7 @@
       } catch (error) {
         if (status) {
           status.classList.remove('hidden');
-          status.innerHTML = '<div class="text-rose-400 font-bold mb-1">Historical data could not be loaded.</div><div class="text-xs">' + escapeDraftText(error.message) + '</div><div class="text-[10px] text-slate-500 mt-2">Basketball-Reference may temporarily block automated requests. Try again later.</div><button onclick="loadTimeMachineSeason(\'' + year + '\')" class="mt-3 px-3 py-2 rounded-lg bg-court-800 border border-court-border text-xs font-bold">Try Again</button>';
+          status.innerHTML = '<div class="text-rose-400 font-bold mb-1">Historical data could not be loaded.</div><div class="text-xs">' + escapeDraftText(error.message) + '</div><div class="text-[10px] text-slate-500 mt-2">The historical data providers may be temporarily unavailable. Try again in a moment.</div><button onclick="loadTimeMachineSeason(\'' + year + '\')" class="mt-3 px-3 py-2 rounded-lg bg-court-800 border border-court-border text-xs font-bold">Try Again</button>';
         }
         if (count) count.textContent = 'Unavailable';
       } finally {
@@ -2496,7 +2496,7 @@
       const logoYear = payload.seasonEndYear;
       const logoSourcePage = 'https://www.sportslogos.net/teams/list_by_year/62' + logoYear + '/' + logoYear + '-NBA-Logos-By-Year/';
       document.getElementById('tm-window-label').innerHTML = 'Formula window: ' + (start - 1) + '–' + String(start).slice(-2) + ' through ' + (end - 1) + '–' + String(end).slice(-2) + ' · <a href="' + logoSourcePage + '" target="_blank" rel="noopener" class="text-cyan-400 underline">Team logos: SportsLogos.Net</a>';
-      document.getElementById('tm-player-count').textContent = payload.playerCount + ' players · Basketball-Reference';
+      document.getElementById('tm-player-count').textContent = payload.playerCount + ' players · ' + (payload.source || 'Historical NBA data');
       document.getElementById('tm-formula-weights').innerHTML = [
         ['PTS',weights.pts,baselines.pts,'scoring'],['TRB',weights.trb,baselines.trb,'scoring'],
         ['AST',weights.ast,baselines.ast,'scoring'],['STL',weights.stl,baselines.stl,'defense'],
