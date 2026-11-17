@@ -4,8 +4,8 @@
 export const config = { maxDuration: 60 };
 
 // Parsed player rows use normalized property names; baseline ranking must use these keys.
-const STAT_KEYS = { pts: "pts", trb: "trb", ast: "ast", stl: "stl", blk: "blk" };
-const STAT_LABELS = { pts:"PTS", trb:"TRB", ast:"AST", stl:"STL", blk:"BLK" };
+const STAT_KEYS = { pts: "pts", trb: "trb", ast: "ast", stl: "stl", blk: "blk", gp: "gp" };
+const STAT_LABELS = { pts:"PPG", trb:"RPG", ast:"APG", stl:"SPG", blk:"BPG", gp:"GP" };
 
 function decodeHtml(value) {
   return String(value || "")
@@ -200,33 +200,37 @@ export default async function handler(req, res) {
     const weights = {};
     for (const [category, field] of Object.entries(STAT_KEYS)) {
       const topValues = [];
+      const valueFor = player => category === "gp" ? player.gp : (player.gp > 0 ? player[field] / player.gp : 0);
       for (const season of historicalSeasons) {
         const topTen = [...season.players]
-          .sort((a, b) => b[field] - a[field])
+          .sort((a, b) => valueFor(b) - valueFor(a))
           .slice(0, 10);
         if (topTen.length !== 10) throw new Error("Not enough qualified players for " + category + " in season ending " + season.year + ".");
-        topValues.push(...topTen.map(p => p[field]));
+        topValues.push(...topTen.map(valueFor));
       }
       const aggregate = topValues.reduce((sum, value) => sum + value, 0);
       const baseline = aggregate / 100;
       if (!(baseline > 0)) throw new Error("Could not calculate a valid " + category + " baseline.");
       baselines[category] = baseline;
-      weights[category] = category === "stl" ? 1.80 : category === "blk" ? 1.98 : 10 / baseline;
+      weights[category] = 10 / baseline;
     }
 
     const teamLogos = await getSportsLogosForSeason(rawYear);
 
     const targetPlayers = seasons.get(rawYear);
     const rows = targetPlayers.map(player => {
-      const pts = player.pts, trb = player.trb, ast = player.ast, stl = player.stl, blk = player.blk;
       const gp = player.gp;
+      const pts = gp > 0 ? player.pts / gp : 0;
+      const trb = gp > 0 ? player.trb / gp : 0;
+      const ast = gp > 0 ? player.ast / gp : 0;
+      const stl = gp > 0 ? player.stl / gp : 0;
+      const blk = gp > 0 ? player.blk / gp : 0;
       const ssPts = pts * weights.pts;
       const ssTrb = trb * weights.trb;
       const ssAst = ast * weights.ast;
-      // Steals and blocks use the specified per-game coefficients for 2026–27.
-      const ssStl = gp > 0 ? (stl / gp) * weights.stl : 0;
-      const ssBlk = gp > 0 ? (blk / gp) * weights.blk : 0;
-      const ssGp = gp * 0.04;
+      const ssStl = stl * weights.stl;
+      const ssBlk = blk * weights.blk;
+      const ssGp = gp * weights.gp;
       return {
         name:player.name, team:player.team, gp,
         pts,trb,ast,stl,blk,
@@ -237,7 +241,7 @@ export default async function handler(req, res) {
       .map((player, index) => ({ ...player, rank:index + 1 }));
 
     return res.status(200).json({
-      source:"Basketball-Reference totals",
+      source:"Basketball-Reference regular-season statistics",
       seasonEndYear:rawYear,
       seasonLabel:(rawYear - 1) + "–" + String(rawYear).slice(-2),
       rollingWindow:{
@@ -245,7 +249,7 @@ export default async function handler(req, res) {
         endYear:rawYear - 1,
         seasons:Array.from({length:10}, (_, i) => rawYear - 10 + i)
       },
-      method:"For PTS, TRB, AST, STL, and BLK, the top 10 qualified players by season total from each of the 10 prior seasons are averaged (100 values per category), and PTS, TRB, and AST use 10 divided by their baseline as the weight. For 2026–27 scoring, steals per game are multiplied by 1.80 and blocks per game by 1.98. Games played uses a fixed 0.04 coefficient.",
+      method:"For PPG, RPG, APG, SPG, and BPG, the top 10 qualified players by per-game average from each of the 10 prior seasons are averaged (100 values per category). For GP, the top 10 qualified players by games played from each prior season are averaged. Each of the six coefficients equals 10 divided by its corresponding rolling baseline. Target-season per-game averages are multiplied by their category coefficients; games played is multiplied by the GP coefficient.",
       qualification:"At least 70% of team games. Team schedules are estimated from the highest games-played total among players on that team; rows without a team value use the league-high GP estimate.",
       baselines, weights, rows, teamLogos,
       playerCount:rows.length,
