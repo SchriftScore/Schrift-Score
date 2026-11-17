@@ -13,12 +13,21 @@ export default async function handler(req, res) {
     dayKeys.push(day.toISOString().slice(0, 10));
   }
   const getJson = async url => {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'SchriftScore/1.0', Accept: 'application/json' },
-      signal: AbortSignal.timeout(20000)
-    });
-    if (!response.ok) throw new Error('ESPN returned HTTP ' + response.status);
-    return response.json();
+    let lastError;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'SchriftScore/1.0', Accept: 'application/json' },
+          signal: AbortSignal.timeout(20000)
+        });
+        if (!response.ok) throw new Error('ESPN returned HTTP ' + response.status);
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 350 * attempt));
+      }
+    }
+    throw lastError;
   };
   const num = value => {
     if (value === null || value === undefined || value === '' || value === '-') return 0;
@@ -26,6 +35,7 @@ export default async function handler(req, res) {
     return Number.isFinite(parsed) ? parsed : 0;
   };
   const normalizeName = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const dataQuality = { scoreboardFailures: [], boxScoreFailures: [], invalidBoxScores: [] };
   const scoreWorkers = async (items, count, fn) => {
     const workers = Array.from({length: Math.min(count, items.length)}, async (_, worker) => {
       for (let i = worker; i < items.length; i += Math.min(count, items.length)) await fn(items[i], i);
@@ -37,7 +47,11 @@ export default async function handler(req, res) {
     const dailyPayloads = new Array(dayKeys.length);
     await scoreWorkers(dayKeys, 4, async (date, index) => {
       const compactDate = date.replace(/-/g, '');
-      dailyPayloads[index] = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + compactDate + '&limit=100');
+      try {
+        dailyPayloads[index] = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + compactDate + '&limit=100');
+      } catch (error) {
+        dataQuality.scoreboardFailures.push({ date, error: error?.message || 'Unknown ESPN error' });
+      }
     });
 
     const gamesById = new Map();
@@ -62,9 +76,15 @@ export default async function handler(req, res) {
     const games = [];
     const seen = new Set();
     await scoreWorkers(descriptors, 10, async game => {
+      try {
       const summary = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + encodeURIComponent(game.eventId));
       const teamBlocks = summary.boxscore?.players || [];
       if (!teamBlocks.length) throw new Error('ESPN returned no player box score for game ' + game.eventId);
+      const requiredStats = ['MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK'];
+      const validGroups = teamBlocks.flatMap(block => block.statistics || []).filter(group =>
+        requiredStats.every(key => (group.labels || []).some(label => String(label).toUpperCase() === key))
+      );
+      if (!validGroups.length) throw new Error('ESPN box score is missing required player statistics for game ' + game.eventId);
       for (const teamBlock of teamBlocks) {
         const team = teamBlock.team?.abbreviation || '';
         if (!team) continue;
@@ -74,6 +94,7 @@ export default async function handler(req, res) {
         const opponentScore = isHome ? game.awayScore : game.homeScore;
         for (const group of teamBlock.statistics || []) {
           const labels = group.labels || [];
+          if (!requiredStats.every(key => labels.some(label => String(label).toUpperCase() === key))) continue;
           const indexOf = key => labels.findIndex(label => String(label).toUpperCase() === key);
           for (const row of group.athletes || []) {
             const athlete = row.athlete;
@@ -85,7 +106,10 @@ export default async function handler(req, res) {
             };
             const minutes = get('MIN');
             const minuteText = String(minutes ?? '').trim();
-            if (!minuteText || minuteText === '0' || minuteText === '0:00' || minuteText === '--') continue;
+            if (!/^\d+(?::[0-5]\d)?(?:\.\d+)?$/.test(minuteText)) continue;
+            const minuteParts = minuteText.split(':').map(Number);
+            const playedMinutes = minuteParts.length === 2 ? minuteParts[0] + minuteParts[1] / 60 : Number(minuteText);
+            if (!Number.isFinite(playedMinutes) || playedMinutes <= 0 || playedMinutes > 65) continue;
             const name = athlete.displayName || athlete.fullName || athlete.shortName;
             if (!name) continue;
             const key = game.eventId + '|' + team + '|' + normalizeName(name);
@@ -105,8 +129,14 @@ export default async function handler(req, res) {
           }
         }
       }
+      } catch (error) {
+        dataQuality.boxScoreFailures.push({ eventId: game.eventId, date: game.date, error: error?.message || 'Unknown ESPN error' });
+      }
     });
 
+    if (!dailyPayloads.some(Boolean) && dataQuality.scoreboardFailures.length) {
+      throw new Error('ESPN scoreboard requests failed for every date in the requested season window.');
+    }
     if (descriptors.length && !games.length) throw new Error('ESPN returned no valid player game lines.');
     games.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
 
@@ -187,6 +217,14 @@ export default async function handler(req, res) {
       window: 'season', startDate: seasonStart, endDate: today,
       games, players, count: players.length,
       gameCount: descriptors.length, playerGameLineCount: games.length,
+      dataQuality: {
+        partial: dataQuality.scoreboardFailures.length > 0 || dataQuality.boxScoreFailures.length > 0,
+        requestedDates: dayKeys.length,
+        scoreboardFailureCount: dataQuality.scoreboardFailures.length,
+        boxScoreFailureCount: dataQuality.boxScoreFailures.length,
+        scoreboardFailures: dataQuality.scoreboardFailures,
+        boxScoreFailures: dataQuality.boxScoreFailures
+      },
       generatedAt: new Date().toISOString()
     });
   } catch (error) {
