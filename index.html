@@ -532,7 +532,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3 my-3 font-mono text-xs">
           <div class="bg-slate-50 dark:bg-court-850 p-3.5 rounded-xl border border-slate-200 dark:border-court-border">
             <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Step 1: 10-Year Aggregation</span>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed block">Sum the top 10 qualified player totals for each category over the last 10 seasons.</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed block">Average the top 10 qualified players’ per-game averages for PPG, RPG, APG, SPG, and BPG, plus games played for GP, across the last 10 seasons.</span>
           </div>
           <div class="bg-slate-50 dark:bg-court-850 p-3.5 rounded-xl border border-slate-200 dark:border-court-border">
             <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Step 2: Baseline Division</span>
@@ -1395,11 +1395,11 @@
                   <th class="sticky-col-player py-3 px-3 sm:px-4 whitespace-nowrap">Player</th>
                   <th class="py-3 px-2">Team</th>
                   <th class="py-3 px-3 sm:px-4 font-black text-right whitespace-nowrap text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20">SS Total</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">PTS</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">TRB</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">AST</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">STL</th>
-                  <th class="py-3 px-2.5 sm:px-3 text-right">BLK</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">PPG</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">RPG</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">APG</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">SPG</th>
+                  <th class="py-3 px-2.5 sm:px-3 text-right">BPG</th>
                   <th class="py-3 px-2.5 sm:px-3 text-right">GP</th>
                 </tr>
               </thead>
@@ -1407,7 +1407,7 @@
             </table>
           </div>
         </section>
-        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season totals tables. Historical team-logo reference: SportsLogos.Net NBA logos by year. The rolling formula uses the top 10 qualified players in each category from each of the previous 10 seasons (100 values per category). Historical player rows include all players with a regular-season entry. Older seasons are calculated with their own rolling multipliers, not today's weights.</p>
+        <p class="text-[10px] text-slate-500 leading-relaxed">Source: Basketball-Reference regular-season totals tables. Historical team-logo reference: SportsLogos.Net NBA logos by year. The rolling formula uses the top 10 qualified players by per-game average for PPG, RPG, APG, SPG, and BPG, plus games played for GP, from each of the previous 10 seasons (100 values per category). Historical player rows include all players with a regular-season entry. Every season is calculated with its own six rolling coefficients.</p>
       </main>
     </div>
   </div>
@@ -2500,9 +2500,9 @@
       document.getElementById('tm-formula-weights').innerHTML = [
         ['PTS',weights.pts,baselines.pts,'scoring'],['TRB',weights.trb,baselines.trb,'scoring'],
         ['AST',weights.ast,baselines.ast,'scoring'],['STL',weights.stl,baselines.stl,'defense'],
-        ['BLK',weights.blk,baselines.blk,'defense'],['GP',0.04,null,'games']
-      ].map(([label,weight,baseline,kind]) => '<div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center min-w-0"><div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">' + label + '</div><div class="font-bold ' + (kind==='defense'?'text-teal-600 dark:text-teal-300':kind==='games'?'text-amber-600 dark:text-amber-300':'text-emerald-600 dark:text-emerald-400') + '">× ' + Number(weight).toFixed(4) + '</div><div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + (baseline===null?'—':Number(baseline).toFixed(1)) + '</div></div>').join('');
-      document.getElementById('tm-formula-details').textContent = payload.method + ' GP remains fixed at 0.04 per game.';
+        ['BLK',weights.blk,baselines.blk,'defense'],['GP',weights.gp,baselines.gp,'games']
+      ].map(([label,weight,baseline,kind]) => '<div class="bg-slate-100 dark:bg-court-800 border border-slate-200 dark:border-court-border rounded-lg px-2 py-1 sm:p-2 text-center min-w-0"><div class="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px]">' + label + '</div><div class="font-bold ' + (kind==='defense'?'text-teal-600 dark:text-teal-300':kind==='games'?'text-amber-600 dark:text-amber-300':'text-emerald-600 dark:text-emerald-400') + '">× ' + Number(weight).toFixed(4) + '</div><div class="text-[8px] text-slate-500 mt-0.5">Baseline ' + Number(baseline).toFixed(1) + '</div></div>').join('');
+      document.getElementById('tm-formula-details').textContent = payload.method;
       if (status) status.classList.add('hidden');
       if (table) table.classList.remove('hidden');
       renderTimeMachineRows();
@@ -2520,9 +2520,9 @@
         const imageUrl = historicalUrl || teamLogoUrl(team);
         return imageUrl ? '<a href="' + logoSourcePage + '" target="_blank" rel="noopener" title="Historical team logos: SportsLogos.Net"><img src="' + imageUrl + '" alt="' + escapeDraftText(team) + ' logo" loading="lazy" class="inline-block object-contain flex-shrink-0" style="width:' + size + 'px;height:' + size + 'px" onerror="this.style.display=\'none\'"></a>' : '';
       };
-      const statCell = (value, contribution, color='text-emerald-600 dark:text-emerald-400') =>
+      const statCell = (value, contribution, color='text-emerald-600 dark:text-emerald-400', isGamesPlayed=false) =>
         '<td class="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right">' +
-          '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + Number(value).toLocaleString('en-US',{maximumFractionDigits:0}) + '</div>' +
+          '<div class="font-bold text-slate-900 dark:text-white text-xs sm:text-[13px] leading-tight">' + Number(value).toLocaleString('en-US',{minimumFractionDigits:isGamesPlayed?0:1,maximumFractionDigits:isGamesPlayed?0:1}) + '</div>' +
           '<div class="text-[9px] sm:text-[10px] ' + color + ' font-mono leading-tight mt-0.5">+' + Number(contribution).toFixed(2) + '</div>' +
         '</td>';
       tbody.innerHTML = rows.map(p => {
@@ -2536,7 +2536,7 @@
           '<td class="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-black whitespace-nowrap bg-emerald-500/10 dark:bg-emerald-500/20 border-x border-emerald-500/20 text-emerald-600 dark:text-emerald-400"><span class="text-xs sm:text-sm font-black">' + Number(p.total).toFixed(2) + '</span></td>' +
           statCell(p.pts,p.ssPts) + statCell(p.trb,p.ssTrb) + statCell(p.ast,p.ssAst) +
           statCell(p.stl,p.ssStl,'text-teal-600 dark:text-teal-300') + statCell(p.blk,p.ssBlk,'text-teal-600 dark:text-teal-300') +
-          statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300') + '</tr>';
+          statCell(p.gp,p.ssGp,'text-amber-600 dark:text-amber-300',true) + '</tr>';
       }).join('');
       const count = document.getElementById('tm-player-count');
       if (count) count.textContent = rows.length + ' of ' + timeMachineData.playerCount + ' players';
