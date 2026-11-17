@@ -122,7 +122,7 @@ function updateMeter(){
 }
 function applyPreset(preset){
  if(preset==='home-wins'){$('venue').value='home';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
- if(preset==='road-wins'){$('venue').value='away';$('result').value='L';$('marginMin').value='';$('marginMax').value=''}
+ if(preset==='road-wins'){$('venue').value='away';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
  if(preset==='close'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='5'}
  if(preset==='reset'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='';$('minutesMin').value='';$('minutesMax').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
  updateMeter();
