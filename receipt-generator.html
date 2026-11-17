@@ -34,8 +34,9 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <label><span class="text-xs font-semibold text-slate-400">VENUE</span><select id="venue" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="">Home + away</option><option value="home">Home only</option><option value="away">Away only</option></select></label>
 <label><span class="text-xs font-semibold text-slate-400">GAME RESULT</span><select id="result" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="">Wins + losses</option><option value="W">Wins only</option><option value="L">Losses only</option></select></label>
 </div>
-<label class="block"><span class="text-xs font-semibold text-slate-400">FINAL SCORE MARGIN</span><input id="margin" type="number" min="0" step="1" inputmode="numeric" placeholder="Any final margin" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><span class="block text-[11px] text-slate-500 mt-1">Enter any maximum margin in points (for example, 7). Leave blank for any margin. Uses final score—not clutch-time possessions.</span></label>
-<label class="block"><span class="text-xs font-semibold text-slate-400">MINIMUM GAMES</span><input id="minimum" type="number" min="8" max="82" value="8" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div></details>
+<div><span class="text-xs font-semibold text-slate-400">FINAL SCORE MARGIN · POINTS</span><div class="grid grid-cols-2 gap-3 mt-1"><label><span class="text-[10px] text-slate-500">MINIMUM</span><input id="marginMin" type="number" min="0" step="1" inputmode="numeric" placeholder="No minimum" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-[10px] text-slate-500">MAXIMUM</span><input id="marginMax" type="number" min="0" step="1" inputmode="numeric" placeholder="No maximum" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><span class="block text-[11px] text-slate-500 mt-1">Example: 1–5 includes games decided by 1 to 5 points. Margin is based on the final score, not clutch-time possessions.</span></div>
+<div><span class="text-xs font-semibold text-slate-400">PLAYER MINUTES · PER GAME</span><div class="grid grid-cols-2 gap-3 mt-1"><label><span class="text-[10px] text-slate-500">MINIMUM MINUTES</span><input id="minutesMin" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-[10px] text-slate-500">MAXIMUM MINUTES</span><input id="minutesMax" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><span class="block text-[11px] text-slate-500 mt-1">Narrow games by how many minutes the player played.</span></div>
+<label class="block"><span class="text-xs font-semibold text-slate-400">MINIMUM GAMES IN SAMPLE</span><input id="minimum" type="number" min="1" max="82" step="1" value="8" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><span class="block text-[11px] text-slate-500 mt-1">Set this as low as 1 game. Smaller samples are more volatile, so the receipt will clearly flag them.</span></label></div></details>
 <details class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Customize your graphic <span class="text-xs font-normal text-slate-500">· optional</span></summary><label class="block mt-4"><span class="text-xs font-semibold text-slate-400">HEADLINE</span><input id="headline" maxlength="90" value="THE NUMBERS DON'T LIE." class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"></label></details>
 <div id="sampleMeter" class="rounded-lg border border-slate-800 bg-slate-950 px-3 py-3"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold tracking-widest text-slate-400">GAMES FOUND</span><strong id="matchCount" class="mono text-sm text-slate-200">Choose a player</strong></div><div class="h-1.5 rounded-full bg-slate-800 mt-2 overflow-hidden"><div id="matchBar" class="h-full w-0 rounded-full bg-emerald-400 transition-all"></div></div><p id="matchHint" class="text-[10px] text-slate-500 mt-2">We’ll show how many games match your choices.</p></div><button id="generate" class="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>Create my receipt →</button>
 </div>
@@ -82,29 +83,30 @@ const $=id=>document.getElementById(id);
 const labels={pts:'Points per game',reb:'Rebounds per game',ast:'Assists per game',stl:'Steals per game',blk:'Blocks per game',ss:'Schrift Score per game'};
 const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98+0.04):Number(g[k]||0);
 const average=(arr,k)=>arr.length?arr.reduce((s,g)=>s+valueOf(g,k),0)/arr.length:0;
+const minutesValue=g=>{const v=String(g.minutes||'0');if(v.includes(':')){const [m,s]=v.split(':').map(Number);return m+(s||0)/60}return Number(v)||0};
 function fmt(n){return Number(n).toFixed(1)}
 function displayDate(value){const p=String(value||'').split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:String(value||'')}
 function getSample(name){
  const all=state.games.filter(g=>g.name===name);
  const from=$('dateFrom').value,to=$('dateTo').value;
-  const sample=all.filter(g=>(!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('margin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('margin').value)));
+  const sample=all.filter(g=>(!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('marginMin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))>=Number($('marginMin').value))&&(!$('marginMax').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('marginMax').value))&&(!$('minutesMin').value||minutesValue(g)>=Number($('minutesMin').value))&&(!$('minutesMax').value||minutesValue(g)<=Number($('minutesMax').value)));
  return {all,sample};
 }
 function updateMeter(){
  const name=$('player').value.trim();
  if(!state.players.includes(name)){$('matchCount').textContent='Choose a player';$('matchHint').textContent='Select a valid player to preview your sample.';$('matchBar').style.width='0%';$('generate').disabled=true;return}
- const {sample}=getSample(name);const minimum=Math.max(8,Math.min(82,Number($('minimum').value)||8));
+ const {sample}=getSample(name);const minimum=Math.max(1,Math.min(82,Number($('minimum').value)||1));
  $('matchCount').textContent=sample.length+' games · '+minimum+' needed';
  $('matchHint').textContent=sample.length>=minimum?'You have enough games. Create your receipt.':(minimum-sample.length)+' more game(s) needed. Try removing an optional filter.';
  $('matchBar').style.width=Math.min(100,sample.length/minimum*100)+'%';
  $('matchBar').className='h-full rounded-full transition-all '+(sample.length>=minimum?'bg-emerald-400':'bg-amber-400');
- $('generate').disabled=sample.length<8;
+ $('generate').disabled=sample.length<minimum;
 }
 function applyPreset(preset){
  if(preset==='home-wins'){$('venue').value='home';$('result').value='W';$('margin').value=''}
  if(preset==='road-wins'){$('venue').value='away';$('result').value='W';$('margin').value=''}
- if(preset==='close'){$('venue').value='';$('result').value='';$('margin').value='5'}
- if(preset==='reset'){$('venue').value='';$('result').value='';$('margin').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
+ if(preset==='close'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='5'}
+ if(preset==='reset'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='';$('minutesMin').value='';$('minutesMax').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
  updateMeter();
 }
 
@@ -162,37 +164,37 @@ function build(){
  const name=$('player').value.trim(), metric=$('metric').value;
  if(!state.players.includes(name)){alert('Choose a player from the suggestions.');return}
  const {all,sample}=getSample(name);
- const minimum=Math.max(8,Math.min(82,Number($('minimum').value)||8));
- if(sample.length<8){alert('At least 8 games are required. Remove an optional filter to find more games.');return}
+ const minimum=Math.max(1,Math.min(82,Number($('minimum').value)||1));
+ if(sample.length<minimum){alert('Your sample has '+sample.length+' games, but your minimum is set to '+minimum+'. Remove a filter or lower the minimum.');return}
  const base=average(all,metric),avg=average(sample,metric),delta=avg-base,pct=base?delta/base*100:0;
  const sorted=[...sample].sort((a,b)=>b.date.localeCompare(a.date));
  $('empty').classList.add('hidden');$('receiptWrap').classList.remove('hidden');$('download').disabled=false;
  $('cardHeadline').textContent=$('headline').value.trim()||'THE NUMBERS DON’T LIE.';
  $('cardPlayer').textContent=name.toUpperCase();
- const parts=[];if($('dateFrom').value||$('dateTo').value)parts.push(($('dateFrom').value?displayDate($('dateFrom').value):'Season start')+' – '+($('dateTo').value?displayDate($('dateTo').value):'Latest game'));if($('opponent').value)parts.push('vs '+$('opponent').value);if($('venue').value)parts.push($('venue').value==='home'?'Home games':'Road games');if($('result').value)parts.push($('result').value==='W'?'Wins only':'Losses only');if($('margin').value)parts.push('Final margin ≤ '+$('margin').value);
+ const parts=[];if($('dateFrom').value||$('dateTo').value)parts.push(($('dateFrom').value?displayDate($('dateFrom').value):'Season start')+' – '+($('dateTo').value?displayDate($('dateTo').value):'Latest game'));if($('opponent').value)parts.push('vs '+$('opponent').value);if($('venue').value)parts.push($('venue').value==='home'?'Home games':'Road games');if($('result').value)parts.push($('result').value==='W'?'Wins only':'Losses only');if($('marginMin').value||$('marginMax').value)parts.push('Final margin '+($('marginMin').value||'0')+'–'+($('marginMax').value||'any')+' pts');if($('minutesMin').value||$('minutesMax').value)parts.push('Minutes '+($('minutesMin').value||'0')+'–'+($('minutesMax').value||'any'));
  $('cardContext').textContent=parts.length?parts.join(' · '):'All completed games this season';
  const direction=delta>0?'above':delta<0?'below':'equal to';
  const difference=Math.abs(delta).toFixed(1);
  $('insightText').textContent=name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across '+sample.length+' selected games, '+difference+' '+labels[metric].toLowerCase()+' '+direction+' the full-season average of '+fmt(base)+'. This is a descriptive split, not proof that the filter caused the difference.';
  $('sampleValue').textContent=fmt(avg);$('baselineValue').textContent=fmt(base);$('baselineMeta').textContent='Full season · '+all.length+' games';$('sampleStat').textContent=labels[metric];$('sampleCount').textContent=sample.length+' games';
- const belowMinimum=sample.length<minimum;
+ const belowMinimum=sample.length<5;
  $('sampleQuality').className='mt-5 rounded-xl border px-4 py-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/40 bg-emerald-500/10');
  $('sampleQualityTitle').className='mono text-[10px] font-bold tracking-widest '+(belowMinimum?'text-amber-200':'text-emerald-200');
  $('sampleQualityText').className='text-xs mt-1 '+(belowMinimum?'text-amber-100':'text-emerald-100');
- $('sampleQualityTitle').textContent=belowMinimum?'NOT ENOUGH GAMES':'SAMPLE SIZE CHECK';
- $('sampleQualityText').textContent=belowMinimum?'Only '+sample.length+' games match. At least '+minimum+' are needed, so this result should not be shared as a strong argument.':'This receipt includes '+sample.length+' games. A larger sample is more informative, but it does not prove why performance changed.';
+ $('sampleQualityTitle').textContent=sample.length<5?'VERY SMALL SAMPLE':sample.length<10?'SMALL SAMPLE':'SAMPLE SIZE CHECK';
+ $('sampleQualityText').textContent=sample.length<5?'Only '+sample.length+' games match. This is a tiny sample and should be treated as an anecdote, not a reliable trend.':sample.length<10?'This receipt includes '+sample.length+' games. The result can swing significantly from game to game.':'This receipt includes '+sample.length+' games. A larger sample is more informative, but it does not prove why performance changed.';
  $('differencePanel').className='mt-4 rounded-xl border p-4 flex items-center justify-between gap-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/30 bg-emerald-500/10');
  $('deltaValue').textContent=(delta>0?'+':'')+fmt(delta);$('deltaText').textContent=(delta>0?'+':'')+fmt(delta)+' '+labels[metric].toLowerCase()+(base?' ('+(pct>0?'+':'')+fmt(pct)+'%)':' (percentage change unavailable: zero season baseline)');
  $('deltaValue').className='text-3xl sm:text-4xl font-black '+(belowMinimum?'text-amber-200':delta>=0?'text-emerald-300':'text-rose-300');
  $('gameList').innerHTML=sorted.slice(0,5).map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(g.opponent)+' · '+g.result+' · '+(g.homeAway==='home'?g.teamScore+'-'+g.opponentScore:g.opponentScore+'-'+g.teamScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('')+(sorted.length>5?'<div class="text-[10px] text-slate-500">+'+(sorted.length-5)+' more games included in this sample</div>':'');
- const warnings=[];if(sample.length<minimum)warnings.push('This sample has '+sample.length+' games; '+minimum+' are required.');
+ const warnings=[];if(sample.length<5)warnings.push('Very small sample: only '+sample.length+' games. Treat this as an anecdote, not a reliable trend.');else if(sample.length<10)warnings.push('Small sample: '+sample.length+' games. Results can swing significantly from game to game.');
  $('warning').textContent=warnings.join(' ');$('warning').classList.toggle('hidden',!warnings.length);
  renderAnalysis(all,sample,metric,minimum);
 }
 $('generate').addEventListener('click',build);
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>applyPreset(button.dataset.preset)));
-['player','margin'].forEach(id=>$(id).addEventListener('input',updateMeter));
-['dateFrom','dateTo','opponent','venue','result','minimum'].forEach(id=>$(id).addEventListener('change',updateMeter));
+['player','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('input',updateMeter));
+['dateFrom','dateTo','opponent','venue','result','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('change',updateMeter));
 $('download').addEventListener('click',async()=>{if(!window.html2canvas)return alert('Image export library did not load.');const btn=$('download');btn.disabled=true;btn.textContent='Rendering…';try{const canvas=await html2canvas($('receipt'),{backgroundColor:'#080d16',scale:2,useCORS:true});const a=document.createElement('a');a.download='schrift-score-'+$('player').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-receipt.png';a.href=canvas.toDataURL('image/png');a.click()}catch(e){alert('Could not export this receipt: '+e.message)}finally{btn.disabled=false;btn.textContent='↓ Export PNG'}});
 load();
 </script>
