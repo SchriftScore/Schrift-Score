@@ -96,11 +96,12 @@ function parseSeasonTable(html, year) {
       player = { ...rows[0] };
     } else {
       const gp = rows.reduce((sum, r) => sum + r.gp, 0);
-      const weighted = key => rows.reduce((sum, r) => sum + r[key] * r.gp, 0) / gp;
+      // Basketball-Reference totals rows are season totals, so combine stints by summing totals.
+      const combinedTotal = key => rows.reduce((sum, r) => sum + r[key], 0);
       player = {
         ...rows[rows.length - 1], gp,
-        pts:weighted("pts"), trb:weighted("trb"), ast:weighted("ast"),
-        stl:weighted("stl"), blk:weighted("blk"),
+        pts:combinedTotal("pts"), trb:combinedTotal("trb"), ast:combinedTotal("ast"),
+        stl:combinedTotal("stl"), blk:combinedTotal("blk"),
         qualified:rows.some(r => r.qualified)
       };
     }
