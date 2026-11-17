@@ -2147,7 +2147,9 @@
       checkPlusMembershipStatus();
       updateLastUpdatedTimestamp();
       renderYesterdayGames();
-      await loadYesterdayGames();
+      // Load yesterday's game cards independently so a slow box-score request
+      // cannot block the live player leaderboard from starting.
+      loadYesterdayGames();
       await loadSeasonData('2026/27');
 
       window.addEventListener('scroll', handleScroll);
