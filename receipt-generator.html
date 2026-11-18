@@ -95,12 +95,13 @@ function markReceiptStale(){
 }
 const $=id=>document.getElementById(id);
 const labels={pts:'Points per game',reb:'Rebounds per game',ast:'Assists per game',stl:'Steals per game',blk:'Blocks per game',ss:'Schrift Score per game'};
-const TEAM_NAMES={ATL:'Atlanta Hawks',BOS:'Boston Celtics',BKN:'Brooklyn Nets',CHA:'Charlotte Hornets',CHI:'Chicago Bulls',CLE:'Cleveland Cavaliers',DAL:'Dallas Mavericks',DEN:'Denver Nuggets',DET:'Detroit Pistons',GS:'Golden State Warriors',GSW:'Golden State Warriors',HOU:'Houston Rockets',IND:'Indiana Pacers',LAC:'LA Clippers',LAL:'Los Angeles Lakers',MEM:'Memphis Grizzlies',MIA:'Miami Heat',MIL:'Milwaukee Bucks',MIN:'Minnesota Timberwolves',NOP:'New Orleans Pelicans',NY:'New York Knicks',NYK:'New York Knicks',OKC:'Oklahoma City Thunder',ORL:'Orlando Magic',PHI:'Philadelphia 76ers',PHX:'Phoenix Suns',POR:'Portland Trail Blazers',SAC:'Sacramento Kings',SA:'San Antonio Spurs',SAS:'San Antonio Spurs',TOR:'Toronto Raptors',UTA:'Utah Jazz',WAS:'Washington Wizards'};
+const TEAM_NAMES={ATL:'Atlanta Hawks',BOS:'Boston Celtics',BKN:'Brooklyn Nets',CHA:'Charlotte Hornets',CHI:'Chicago Bulls',CLE:'Cleveland Cavaliers',DAL:'Dallas Mavericks',DEN:'Denver Nuggets',DET:'Detroit Pistons',GS:'Golden State Warriors',GSW:'Golden State Warriors',HOU:'Houston Rockets',IND:'Indiana Pacers',LAC:'LA Clippers',LAL:'Los Angeles Lakers',MEM:'Memphis Grizzlies',MIA:'Miami Heat',MIL:'Milwaukee Bucks',MIN:'Minnesota Timberwolves',NOP:'New Orleans Pelicans',NY:'New York Knicks',NYK:'New York Knicks',OKC:'Oklahoma City Thunder',ORL:'Orlando Magic',PHI:'Philadelphia 76ers',PHX:'Phoenix Suns',POR:'Portland Trail Blazers',SAC:'Sacramento Kings',SA:'San Antonio Spurs',SAS:'San Antonio Spurs',TOR:'Toronto Raptors',UTA:'Utah Jazz',WAS:'Washington Wizards',WSH:'Washington Wizards',UTAH:'Utah Jazz'};
 const teamName=code=>TEAM_NAMES[String(code||'').toUpperCase()]||String(code||'Unknown team');
 const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98+0.04):Number(g[k]||0);
 const average=(arr,k)=>arr.length?arr.reduce((s,g)=>s+valueOf(g,k),0)/arr.length:0;
 const minutesValue=g=>{const v=String(g.minutes||'0');if(v.includes(':')){const [m,s]=v.split(':').map(Number);return m+(s||0)/60}return Number(v)||0};
 function fmt(n){return Number(n).toFixed(1)}
+function ordinal(n){const v=Math.abs(Number(n))%100;const suffix=v>=11&&v<=13?'th':({1:'st',2:'nd',3:'rd'}[v%10]||'th');return Number(n)+suffix}
 function displayDate(value){const p=String(value||'').split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:String(value||'')}
 function matchesCurrentFilters(g){
  const from=$('dateFrom').value,to=$('dateTo').value;
@@ -203,8 +204,8 @@ function renderAnalysis(all,sample,metric,minimum){
   const lower=cohort.filter(x=>x.avg<selected.avg-1e-9).length;
   const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
   const percentile=Math.round(((lower+equal/2)/cohort.length)*100);
-  $('leaguePercentileValue').textContent=percentile+'th percentile';
-  $('leaguePercentileText').textContent='Out of '+cohort.length+' qualified players, this sample ranks at the '+percentile+'th percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
+  $('leaguePercentileValue').textContent=ordinal(percentile)+' percentile';
+  $('leaguePercentileText').textContent='Out of '+cohort.length+' qualified players, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
   $('leaguePercentileMethod').textContent='Player sample: '+selected.n+' games · Minimum: '+minimum+' · Midrank percentile; ties share rank';
  }
  $('verdictDetails').classList.remove('hidden');
@@ -263,7 +264,7 @@ function build(){
  $('differencePanel').className='mt-4 rounded-xl border p-4 flex items-center justify-between gap-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/30 bg-emerald-500/10');
  $('deltaValue').textContent=(delta>0?'+':'')+fmt(delta);$('deltaText').textContent=(delta>0?'+':'')+fmt(delta)+' '+labels[metric].toLowerCase()+(base?' ('+(pct>0?'+':'')+fmt(pct)+'%)':' (percentage change unavailable: zero season baseline)');
  $('deltaValue').className='text-3xl sm:text-4xl font-black '+(belowMinimum?'text-amber-200':delta>=0?'text-emerald-300':'text-rose-300');
- $('gameList').innerHTML=sorted.map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(teamName(g.opponent))+' · '+g.result+' · '+(g.homeAway==='home'?g.teamScore+'-'+g.opponentScore:g.opponentScore+'-'+g.teamScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('');
+ $('gameList').innerHTML=sorted.map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(teamName(g.opponent))+' · '+g.result+' · '+(g.teamScore+'-'+g.opponentScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('');
  const warnings=[];if(sample.length<5)warnings.push('Very small sample: only '+sample.length+' games. Treat this as an anecdote, not a reliable trend.');else if(sample.length<10)warnings.push('Small sample: '+sample.length+' games. Results can swing significantly from game to game.');
  $('warning').textContent=warnings.join(' ');$('warning').classList.toggle('hidden',!warnings.length);
  renderAnalysis(all,sample,metric,minimum);
