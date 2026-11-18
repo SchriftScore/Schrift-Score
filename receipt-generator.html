@@ -69,13 +69,13 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <p id="warning" class="hidden text-xs text-amber-300 mt-3"></p>
 <details id="verdictDetails" class="hidden mt-5 rounded-2xl border border-slate-800 bg-[#0c111d] p-5"><summary class="cursor-pointer font-bold text-sm text-slate-200">Explore additional game splits <span class="text-xs font-normal text-slate-500">· optional</span></summary><div id="verdictStudio" class="mt-4 space-y-4">
  <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
-  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">ADDITIONAL COMPARISONS</div><h3 class="text-xl font-black mt-1">How do other game situations compare?</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Box-score evidence only</span></div>
+  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">ADDITIONAL COMPARISONS</div><h3 class="text-xl font-black mt-1">How do other game situations compare?</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Box-score evidence only</span></div><p class="text-xs text-slate-400 mt-3">Your filtered sample is shown separately. The home/road, wins/losses, and interesting-split comparisons below use all available season games, regardless of the filters above.</p>
   <p id="verdictSummary" class="text-sm text-slate-300 mt-3"></p>
   <div id="verdictLayers" class="grid md:grid-cols-3 gap-3 mt-4"></div>
  </div>
  <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
   <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">INTERESTING GAME SPLITS</div><h3 class="text-xl font-black mt-1">Where are the biggest differences?</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Exploratory · not proof</span></div>
-  <p class="text-xs text-slate-400 mt-2">See which game situations have the highest and lowest averages. Each result shows how many games are included.</p>
+  <p class="text-xs text-slate-400 mt-2">See which game situations have the highest and lowest averages. These discovery results scan all of the player’s season games, regardless of the filters above. Each result shows its sample size.</p>
   <div id="finderResults" class="grid md:grid-cols-2 gap-3 mt-4"></div>
   <p class="text-[10px] text-slate-500 mt-3">These are patterns in past box scores, not proof that a situation caused a player to perform differently.</p>
  </div>
@@ -183,7 +183,7 @@ function renderAnalysis(all,sample,metric,minimum){
  const positive=candidates.filter(x=>x.diff>0).sort((a,b)=>b.diff-a.diff)[0];
  const negative=candidates.filter(x=>x.diff<0).sort((a,b)=>a.diff-b.diff)[0];
  const cards=[{title:'BIGGEST POSITIVE SPLIT',x:positive},{title:'BIGGEST NEGATIVE SPLIT',x:negative}];
- $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' '+(x.n===1?'game':'games')+' · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
+ $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' '+(x.n===1?'game':'games')+(x.n<5?' · very small sample':'')+' · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
  // Compare the player's filtered average with every player who meets the same filters
  // and minimum-game requirement. The selected player is included in the cohort.
  const byPlayer=new Map();
@@ -204,9 +204,9 @@ function renderAnalysis(all,sample,metric,minimum){
   const lower=cohort.filter(x=>x.avg<selected.avg-1e-9).length;
   const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
   const percentile=Math.round(((lower+equal/2)/cohort.length)*100);
-  $('leaguePercentileValue').textContent=ordinal(percentile)+' percentile';
-  $('leaguePercentileText').textContent='Out of '+cohort.length+' qualified players, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
-  $('leaguePercentileMethod').textContent='Player sample: '+selected.n+' games · Minimum: '+minimum+' · Midrank percentile; ties share rank';
+  $('leaguePercentileValue').textContent=ordinal(percentile)+' percentile'+(selected.n<5?' · '+selected.n+'-game sample':'');
+  $('leaguePercentileText').textContent='Out of '+cohort.length+' qualified players, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.'+(selected.n<5?' This ranking is based on only '+selected.n+' '+(selected.n===1?'game':'games')+' and is highly volatile.':'');
+  $('leaguePercentileMethod').textContent='Player sample: '+selected.n+' '+(selected.n===1?'game':'games')+' · Minimum: '+minimum+' · Midrank percentile; ties share rank';
  }
  $('verdictDetails').classList.remove('hidden');
 }
@@ -253,19 +253,19 @@ function build(){
  $('cardContext').textContent=parts.length?parts.join(' · '):'All completed games this season';
  const direction=delta>0?'above':delta<0?'below':'equal to';
  const difference=Math.abs(delta).toFixed(1);
- $('insightText').textContent=sample.length===all.length?'With no narrowing filter applied, '+name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across all '+all.length+' available games. The sample and season baseline are the same, so there is no split to compare yet. Add an optional filter to make a case about a specific situation.':name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across '+sample.length+' selected games, '+difference+' '+labels[metric].toLowerCase()+' '+direction+' the full-season average of '+fmt(base)+'. This is a descriptive split, not proof that the filter caused the difference.';
+ $('insightText').textContent=sample.length===all.length?'With no narrowing filter applied, '+name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across all '+all.length+' available games. The sample and season baseline are the same, so there is no split to compare yet. Add an optional filter to make a case about a specific situation.':name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across '+sample.length+' '+(sample.length===1?'selected game':'selected games')+', '+difference+' '+labels[metric].toLowerCase()+' '+direction+' the full-season average of '+fmt(base)+'. This is a descriptive split, not proof that the filter caused the difference.';
  $('sampleValue').textContent=fmt(avg);$('baselineValue').textContent=fmt(base);$('baselineMeta').textContent='All '+all.length+' completed games · includes selected games';$('sampleStat').textContent=labels[metric]+' · '+sample.length+' '+(sample.length===1?'game':'games');$('sampleCount').textContent=sample.length+' '+(sample.length===1?'game':'games');
  const belowMinimum=sample.length<5;
  $('sampleQuality').className='mt-5 rounded-xl border px-4 py-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/40 bg-emerald-500/10');
  $('sampleQualityTitle').className='mono text-[10px] font-bold tracking-widest '+(belowMinimum?'text-amber-200':'text-emerald-200');
  $('sampleQualityText').className='text-xs mt-1 '+(belowMinimum?'text-amber-100':'text-emerald-100');
  $('sampleQualityTitle').textContent=sample.length<5?'VERY SMALL SAMPLE':sample.length<10?'SMALL SAMPLE':'SAMPLE SIZE CHECK';
- $('sampleQualityText').textContent=sample.length<5?'Only '+sample.length+' games match. This is a tiny sample and should be treated as an anecdote, not a reliable trend.':sample.length<10?'This receipt includes '+sample.length+' games. The result can swing significantly from game to game.':'This receipt includes '+sample.length+' games. A larger sample is more informative, but it does not prove why performance changed.';
+ $('sampleQualityText').textContent=sample.length<5?'Only '+sample.length+' '+(sample.length===1?'game matches':'games match')+'. This is a tiny sample and should be treated as an anecdote, not a reliable trend.':sample.length<10?'This receipt includes '+sample.length+' '+(sample.length===1?'game':'games')+'. The result can swing significantly from game to game.':'This receipt includes '+sample.length+' '+(sample.length===1?'game':'games')+'. A larger sample is more informative, but it does not prove why performance changed.';
  $('differencePanel').className='mt-4 rounded-xl border p-4 flex items-center justify-between gap-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/30 bg-emerald-500/10');
  $('deltaValue').textContent=(delta>0?'+':'')+fmt(delta);$('deltaText').textContent=(delta>0?'+':'')+fmt(delta)+' '+labels[metric].toLowerCase()+(base?' ('+(pct>0?'+':'')+fmt(pct)+'%)':' (percentage change unavailable: zero season baseline)');
  $('deltaValue').className='text-3xl sm:text-4xl font-black '+(belowMinimum?'text-amber-200':delta>=0?'text-emerald-300':'text-rose-300');
  $('gameList').innerHTML=sorted.map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(teamName(g.opponent))+' · '+g.result+' · '+(g.teamScore+'-'+g.opponentScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('');
- const warnings=[];if(sample.length<5)warnings.push('Very small sample: only '+sample.length+' games. Treat this as an anecdote, not a reliable trend.');else if(sample.length<10)warnings.push('Small sample: '+sample.length+' games. Results can swing significantly from game to game.');
+ const warnings=[];if(sample.length<5)warnings.push('Very small sample: only '+sample.length+' '+(sample.length===1?'game':'games')+'. Treat this as an anecdote, not a reliable trend.');else if(sample.length<10)warnings.push('Small sample: '+sample.length+' games. Results can swing significantly from game to game.');
  $('warning').textContent=warnings.join(' ');$('warning').classList.toggle('hidden',!warnings.length);
  renderAnalysis(all,sample,metric,minimum);
 }
