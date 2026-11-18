@@ -62,7 +62,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <div class="rounded-xl bg-slate-950/70 border border-slate-700 p-4"><div class="text-[10px] mono uppercase tracking-widest text-slate-400">SEASON BASELINE</div><div id="baselineValue" class="text-4xl sm:text-5xl font-black mt-2">—</div><div id="baselineMeta" class="text-xs text-slate-400 mt-1">All completed games</div></div>
 </div>
 <div id="differencePanel" class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center justify-between gap-3"><div><div class="text-[10px] mono uppercase tracking-widest text-emerald-200">DEBATE VERDICT · LAYER 2 · VS. SEASON</div><div id="deltaText" class="text-sm text-slate-200 mt-1">—</div></div><div id="deltaValue" class="text-3xl sm:text-4xl font-black text-emerald-300">—</div></div>
-<div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div class="mono text-[10px] uppercase tracking-widest text-slate-400">DEBATE VERDICT · LAYER 3 · LEAGUE PERCENTILE</div><div class="text-lg font-black text-slate-300 mt-2">Not available yet</div><p class="text-xs text-slate-500 mt-1">A fair percentile needs a verified league-wide comparison group using the same stat, situation, and qualification rules. We won’t guess or invent a ranking.</p></div>
+<div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div class="mono text-[10px] uppercase tracking-widest text-slate-400">DEBATE VERDICT · LAYER 3 · LEAGUE PERCENTILE</div><div id="leaguePercentileValue" class="text-3xl font-black text-slate-300 mt-2">—</div><p id="leaguePercentileText" class="text-xs text-slate-400 mt-1">Build a receipt to compare this sample with qualified players in the same situation.</p><p id="leaguePercentileMethod" class="text-[10px] text-slate-500 mt-2">Same stat · same filters · current-season game logs</p></div>
 <div class="mt-6"><div class="flex justify-between items-center text-xs text-slate-400 mb-2"><span class="mono uppercase tracking-widest">Sample details</span><span id="sampleCount" class="font-bold text-white">0 games</span></div><div id="gameList" class="space-y-2"></div></div>
 <div class="mt-7 pt-4 border-t border-slate-700/70 flex items-end justify-between gap-3"><div class="text-[9px] text-slate-500 leading-relaxed max-w-xs">Source: ESPN completed-game box scores. Sample average is compared with this player’s full-season average, which includes the sample games. This is descriptive context, not a controlled comparison or proof of cause.</div><div class="mono text-[9px] text-slate-500 text-right">NBASCHRIFTSCORE.COM<br>MAKE THE CASE.</div></div>
 </article>
@@ -102,11 +102,13 @@ const average=(arr,k)=>arr.length?arr.reduce((s,g)=>s+valueOf(g,k),0)/arr.length
 const minutesValue=g=>{const v=String(g.minutes||'0');if(v.includes(':')){const [m,s]=v.split(':').map(Number);return m+(s||0)/60}return Number(v)||0};
 function fmt(n){return Number(n).toFixed(1)}
 function displayDate(value){const p=String(value||'').split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:String(value||'')}
+function matchesCurrentFilters(g){
+ const from=$('dateFrom').value,to=$('dateTo').value;
+ return (!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('marginMin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))>=Number($('marginMin').value))&&(!$('marginMax').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('marginMax').value))&&(!$('minutesMin').value||minutesValue(g)>=Number($('minutesMin').value))&&(!$('minutesMax').value||minutesValue(g)<=Number($('minutesMax').value));
+}
 function getSample(name){
  const all=state.games.filter(g=>g.name===name);
- const from=$('dateFrom').value,to=$('dateTo').value;
-  const sample=all.filter(g=>(!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('marginMin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))>=Number($('marginMin').value))&&(!$('marginMax').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('marginMax').value))&&(!$('minutesMin').value||minutesValue(g)>=Number($('minutesMin').value))&&(!$('minutesMax').value||minutesValue(g)<=Number($('minutesMax').value)));
- return {all,sample};
+ return {all,sample:all.filter(matchesCurrentFilters)};
 }
 function getFilterError(){
  const from=$('dateFrom').value,to=$('dateTo').value;
@@ -181,6 +183,30 @@ function renderAnalysis(all,sample,metric,minimum){
  const negative=candidates.filter(x=>x.diff<0).sort((a,b)=>a.diff-b.diff)[0];
  const cards=[{title:'BIGGEST POSITIVE SPLIT',x:positive},{title:'BIGGEST NEGATIVE SPLIT',x:negative}];
  $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' '+(x.n===1?'game':'games')+' · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
+ // Compare the player's filtered average with every player who meets the same filters
+ // and minimum-game requirement. The selected player is included in the cohort.
+ const byPlayer=new Map();
+ for(const game of state.games){
+  if(!matchesCurrentFilters(game))continue;
+  if(!byPlayer.has(game.name))byPlayer.set(game.name,[]);
+  byPlayer.get(game.name).push(game);
+ }
+ const cohort=[...byPlayer.entries()]
+  .filter(([,games])=>games.length>=minimum)
+  .map(([playerName,games])=>({playerName,n:games.length,avg:average(games,metric)}));
+ const selected=cohort.find(x=>x.playerName===state.games.find(g=>g.name===all[0]?.name)?.name);
+ if(!selected||!cohort.length){
+  $('leaguePercentileValue').textContent='Not enough data';
+  $('leaguePercentileText').textContent='No players met the '+minimum+'-game minimum for this exact set of filters.';
+  $('leaguePercentileMethod').textContent='Same stat · same filters · current-season game logs';
+ }else{
+  const lower=cohort.filter(x=>x.avg<selected.avg-1e-9).length;
+  const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
+  const percentile=Math.round(((lower+equal/2)/cohort.length)*100);
+  $('leaguePercentileValue').textContent=percentile+'th percentile';
+  $('leaguePercentileText').textContent='Out of '+cohort.length+' qualified players, this sample ranks at the '+percentile+'th percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
+  $('leaguePercentileMethod').textContent='Player sample: '+selected.n+' games · Minimum: '+minimum+' · Midrank percentile; ties share rank';
+ }
  $('verdictDetails').classList.remove('hidden');
 }
 const TEAM_THEMES={ATL:{name:'Atlanta Hawks',accent:'#e03a3e',glow:'rgba(200,16,46,.20)'},BOS:{name:'Boston Celtics',accent:'#00a650',glow:'rgba(0,122,51,.20)'},BKN:{name:'Brooklyn Nets',accent:'#ffffff',glow:'rgba(255,255,255,.12)'},CHA:{name:'Charlotte Hornets',accent:'#1d1160',glow:'rgba(0,120,140,.22)'},CHI:{name:'Chicago Bulls',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},CLE:{name:'Cleveland Cavaliers',accent:'#fdbb30',glow:'rgba(134,0,56,.25)'},DAL:{name:'Dallas Mavericks',accent:'#00538c',glow:'rgba(0,83,140,.24)'},DEN:{name:'Denver Nuggets',accent:'#fdb927',glow:'rgba(13,34,64,.28)'},DET:{name:'Detroit Pistons',accent:'#c8102e',glow:'rgba(29,66,138,.24)'},GS:{name:'Golden State Warriors',accent:'#ffc72c',glow:'rgba(29,66,138,.24)'},GSW:{name:'Golden State Warriors',accent:'#ffc72c',glow:'rgba(29,66,138,.24)'},HOU:{name:'Houston Rockets',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},IND:{name:'Indiana Pacers',accent:'#fdbb30',glow:'rgba(0,45,98,.25)'},LAC:{name:'LA Clippers',accent:'#c8102e',glow:'rgba(29,66,138,.24)'},LAL:{name:'Los Angeles Lakers',accent:'#fdb927',glow:'rgba(85,37,131,.24)'},MEM:{name:'Memphis Grizzlies',accent:'#5d76a9',glow:'rgba(93,118,169,.22)'},MIA:{name:'Miami Heat',accent:'#98002e',glow:'rgba(249,160,27,.18)'},MIL:{name:'Milwaukee Bucks',accent:'#00471b',glow:'rgba(0,71,27,.24)'},MIN:{name:'Minnesota Timberwolves',accent:'#78be20',glow:'rgba(35,97,146,.25)'},NOP:{name:'New Orleans Pelicans',accent:'#b4975a',glow:'rgba(0,22,65,.25)'},NY:{name:'New York Knicks',accent:'#f58426',glow:'rgba(0,107,182,.22)'},NYK:{name:'New York Knicks',accent:'#f58426',glow:'rgba(0,107,182,.22)'},OKC:{name:'Oklahoma City Thunder',accent:'#007ac1',glow:'rgba(0,122,193,.24)'},ORL:{name:'Orlando Magic',accent:'#0077c0',glow:'rgba(0,119,192,.22)'},PHI:{name:'Philadelphia 76ers',accent:'#ed174c',glow:'rgba(0,107,182,.22)'},PHX:{name:'Phoenix Suns',accent:'#e56020',glow:'rgba(29,17,96,.24)'},POR:{name:'Portland Trail Blazers',accent:'#e03a3e',glow:'rgba(6,25,34,.25)'},SAC:{name:'Sacramento Kings',accent:'#5a2d81',glow:'rgba(91,43,130,.24)'},SA:{name:'San Antonio Spurs',accent:'#c4ced4',glow:'rgba(196,206,212,.18)'},SAS:{name:'San Antonio Spurs',accent:'#c4ced4',glow:'rgba(196,206,212,.18)'},TOR:{name:'Toronto Raptors',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},UTA:{name:'Utah Jazz',accent:'#00a9e0',glow:'rgba(0,169,224,.22)'},WAS:{name:'Washington Wizards',accent:'#e31837',glow:'rgba(0,43,92,.25)'}};
