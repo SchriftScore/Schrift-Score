@@ -120,7 +120,7 @@ function startGame(){
  if(mode==='daily'){
   sequence=makeDaily();
   const saved=loadSaved().daily||{};
-  if(saved.date===dailyDate){round=Math.min(10,Number(saved.round)||0);streak=Number(saved.streak)||0}
+  if(saved.date===dailyDate){round=Math.min(10,Number(saved.round)||0);streak=Number(saved.finalStreak??saved.streak)||0;if(saved.done){$('mode-label').textContent='DAILY CHALLENGE · '+dailyDate;finish(round>=10);return;}}
   $('mode-label').textContent='DAILY CHALLENGE · '+dailyDate;
  }else{
   sequence=makeEndless();$('mode-label').textContent='ENDLESS SURVIVAL';
@@ -155,14 +155,14 @@ function reveal(choice){
  else{$('feedback-title').textContent='NOT QUITE';$('feedback-title').className='font-black text-lg text-rose-400';$('feedback-detail').textContent='Missed by '+Math.abs(b-a).toFixed(2)+' SS. '+currentB.name+' has '+fmt(currentB)+' SS.'}
  $('streak-label').textContent='🔥 STREAK: '+streak;$('best-label').textContent='BEST: '+best;
  $('feedback').classList.remove('hidden');$('continue').textContent=won?(mode==='daily'&&round===9?'SEE RESULTS →':'NEXT MATCHUP →'):'SEE RESULTS →';
- if(mode==='daily'){state.daily={date:dailyDate,round:round+(won?1:0),streak:won?streak:0,best:Math.max(Number((state.daily||{}).best)||0,best),done:!won||round===9}}
+ if(mode==='daily'){state.daily={date:dailyDate,round:round+(won?1:0),streak:won?streak:0,best:Math.max(Number((state.daily||{}).best)||0,best),done:!won||round===9,finalStreak:streak}}
  else state.endlessBest=Math.max(Number(state.endlessBest)||0,best);
  save();
 }
 function next(){
  $('score-b').classList.remove('reveal');
  if(mode==='daily'){
-  if(round>=9){if(streak===10){round=10;state.daily={date:dailyDate,round:10,streak:10,best:Math.max(Number((state.daily||{}).best)||0,10)};save();finish(true)}else finish(false);return}
+  if(round>=9){if(streak===10){round=10;state.daily={date:dailyDate,round:10,streak:10,finalStreak:10,done:true,best:Math.max(Number((state.daily||{}).best)||0,10)};save();finish(true)}else finish(false);return}
   if(streak===0||!$('feedback-title').textContent.startsWith('CORRECT')&&!$('feedback-title').textContent.startsWith('EXACT')){finish(false);return}
   round++;currentA=currentB;currentB=sequence[round+1];
  }else{
