@@ -82,11 +82,21 @@ export default async function handler(req, res) {
       const teamBlocks = summary.boxscore?.players || [];
       if (!teamBlocks.length) throw new Error('ESPN returned no player box score for game ' + game.eventId);
       const requiredStats = ['MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK'];
-      const validGroups = teamBlocks.flatMap(block => block.statistics || []).filter(group =>
-        requiredStats.every(key => (group.labels || []).some(label => String(label).toUpperCase() === key))
+      const hasRequiredStats = group =>
+        requiredStats.every(key => (group.labels || []).some(label => String(label).toUpperCase() === key));
+      const expectedTeams = new Set([game.homeTeam, game.awayTeam].map(team => String(team || '').toUpperCase()));
+      const validTeamBlocks = teamBlocks.filter(block =>
+        expectedTeams.has(String(block.team?.abbreviation || '').toUpperCase())
       );
-      if (!validGroups.length) throw new Error('ESPN box score is missing required player statistics for game ' + game.eventId);
-      for (const teamBlock of teamBlocks) {
+      for (const expectedTeam of expectedTeams) {
+        const teamBlock = validTeamBlocks.find(block =>
+          String(block.team?.abbreviation || '').toUpperCase() === expectedTeam
+        );
+        if (!teamBlock || !(teamBlock.statistics || []).some(hasRequiredStats)) {
+          throw new Error('ESPN box score is missing required player statistics for ' + expectedTeam + ' in game ' + game.eventId);
+        }
+      }
+      for (const teamBlock of validTeamBlocks) {
         const team = teamBlock.team?.abbreviation || '';
         if (!team) continue;
         const isHome = team === game.homeTeam;
