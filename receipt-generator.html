@@ -263,18 +263,29 @@ async function load(){
   $('players').innerHTML=state.playerOptions.map(player=>'<option value="'+escapeHtml(player.value)+'"></option>').join('');
   updateTeamThemeLabel();
   [...new Set(data.games.map(g=>g.opponent).filter(Boolean))].sort((a,b)=>teamName(a).localeCompare(teamName(b))).forEach(team=>{const o=document.createElement('option');o.value=team;o.textContent=teamName(team);$('opponent').append(o)});
-  const quality=data.dataQuality||{};state.dataQuality=quality;
-  if(quality.partial){
+  const quality=data.dataQuality&&typeof data.dataQuality==='object'?data.dataQuality:null;
+  const coverageFields=['requestedDates','scoreboardSuccessCount','completedGameCount','boxScoreSuccessCount','scoreboardFailureCount','boxScoreFailureCount'];
+  const hasValidCoverage=!!quality&&coverageFields.every(key=>Number.isFinite(Number(quality[key]))&&Number(quality[key])>=0);
+  const coverageMismatch=!hasValidCoverage
+   ||Number(quality.scoreboardSuccessCount)<Number(quality.requestedDates)
+   ||Number(quality.boxScoreSuccessCount)<Number(quality.completedGameCount)
+   ||Number(quality.scoreboardFailureCount)>0
+   ||Number(quality.boxScoreFailureCount)>0;
+  state.dataQuality={...(quality||{}),partial:!quality||quality.partial!==false||coverageMismatch};
+  if(state.dataQuality.partial){
    const messages=[];
-   if(quality.scoreboardFailureCount)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
-   if(quality.boxScoreFailureCount)messages.push(quality.boxScoreFailureCount+' game box score(s) could not be loaded');
-   if(Number.isFinite(quality.boxScoreSuccessCount)&&Number.isFinite(quality.completedGameCount))messages.push(quality.boxScoreSuccessCount+' of '+quality.completedGameCount+' completed game box scores loaded');
-   $('dataQualityNotice').textContent='Partial NBA data: '+messages.join('; ')+'. Some games may be missing, so player averages and samples could be incomplete. Try refreshing later.';
+   if(!hasValidCoverage)messages.push('ESPN coverage metadata is missing or invalid');
+   if(quality&&Number(quality.scoreboardFailureCount)>0)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
+   if(quality&&Number(quality.scoreboardSuccessCount)<Number(quality.requestedDates))messages.push(quality.scoreboardSuccessCount+' of '+quality.requestedDates+' requested dates checked');
+   if(quality&&Number(quality.boxScoreFailureCount)>0)messages.push(quality.boxScoreFailureCount+' game box score(s) could not be loaded');
+   if(quality&&Number.isFinite(Number(quality.boxScoreSuccessCount))&&Number.isFinite(Number(quality.completedGameCount)))messages.push(quality.boxScoreSuccessCount+' of '+quality.completedGameCount+' completed game box scores loaded');
+   if(quality&&quality.partial&&!messages.length)messages.push('ESPN reported an incomplete feed');
+   $('dataQualityNotice').textContent='PARTIAL / UNVERIFIED NBA DATA: '+messages.join('; ')+'. Player averages and percentiles may be incomplete. Results are marked provisional until full coverage is confirmed. Try refreshing later.';
    $('dataQualityNotice').classList.remove('hidden');
   }else{
    $('dataQualityNotice').classList.add('hidden');
   }
-  setStatus(state.games.length.toLocaleString()+' player-game lines',true);updateTeamThemeLabel();updateMeter();
+  setStatus((state.dataQuality.partial?'Partial data · ':'')+state.games.length.toLocaleString()+' player-game lines',!state.dataQuality.partial);updateTeamThemeLabel();updateMeter();
  }catch(e){setStatus('Data unavailable');$('loadError').textContent=e.message;$('loadError').classList.remove('hidden')}
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
