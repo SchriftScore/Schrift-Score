@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Schrift Score Card Studio | Debate Receipt</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-family:"JetBrains Mono",monospace}
+:root{color-scheme:dark}select,input{color-scheme:dark}
+#receipt{background:radial-gradient(circle at 90% 0%,rgba(16,185,129,.16),transparent 35%),linear-gradient(145deg,#101827,#080d16);border:1px solid #26364d}
+#receipt.team-themed .text-emerald-300,#receipt.team-themed .text-emerald-400,#receipt.team-themed .text-emerald-200{color:var(--team-accent)!important}
+#receipt.team-themed .bg-emerald-500{background-color:var(--team-accent)!important}
+#receipt.team-themed [class~="bg-emerald-500/10"]{background-color:var(--team-tint)!important}
+#receipt.team-themed [class~="border-emerald-500/30"],#receipt.team-themed [class~="border-emerald-500/40"]{border-color:var(--team-border)!important}
+#receipt.team-themed{background:radial-gradient(circle at 90% 0%,var(--team-glow),transparent 38%),linear-gradient(145deg,#101827,#080d16)!important;border-color:var(--team-border)!important}
+@media(max-width:640px){#receipt{min-height:360px}}
+
+/* Schrift Score visual system refresh — shared across the full site */
+:root{--ss-bg:#080b12;--ss-panel:#101722;--ss-panel-2:#141e2b;--ss-line:#263447;--ss-muted:#91a0b4;--ss-accent:#35d39a;--ss-accent-2:#16a879;--ss-glow:rgba(53,211,154,.14)}
+html{scroll-behavior:smooth}body{background-color:var(--ss-bg);background-image:radial-gradient(ellipse at 12% -10%,rgba(16,185,129,.13),transparent 38%),radial-gradient(ellipse at 100% 8%,rgba(20,184,166,.08),transparent 32%);color:#edf4f8}
+header{background:rgba(10,15,23,.88)!important;border-color:rgba(91,113,139,.24)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+header a,header button{white-space:nowrap}header .rounded-xl{box-shadow:0 5px 22px rgba(0,0,0,.2)}
+main{position:relative}main h1,main h2,main h3{letter-spacing:-.035em}main h1{line-height:1.06}
+main .rounded-xl,main .rounded-2xl{border-color:rgba(105,129,155,.25)}
+main [class*="bg-court-900"],main [class*="bg-\[#0c111d\]"],main [class*="bg-slate-950"]{background-color:rgba(15,23,34,.88)}
+main .shadow-xl,main .shadow-2xl{box-shadow:0 18px 55px rgba(0,0,0,.22)}
+button,a{transition:transform .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease}
+button:hover:not(:disabled){filter:brightness(1.08)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--ss-accent);outline-offset:3px}
+input,select,textarea{border-color:rgba(117,139,163,.34)!important;border-radius:12px!important;background-color:#0a111b!important;color:#f1f5f9!important}input::placeholder{color:#718096!important}input:focus,select:focus,textarea:focus{border-color:var(--ss-accent)!important;box-shadow:0 0 0 3px var(--ss-glow)}
+main .bg-emerald-500:not(#matchBar){box-shadow:0 7px 22px rgba(16,185,129,.16)}
+main .border-slate-800,main .border-slate-700{border-color:rgba(105,129,155,.25)!important}
+main .text-slate-500{color:#8b9bb0!important}main .text-slate-400{color:#a9b7c8!important}
+main table{border-collapse:separate;border-spacing:0}main table thead th{letter-spacing:.08em;text-transform:uppercase;font-size:.68rem}main tbody tr{transition:background .15s ease}main tbody tr:hover{background:rgba(53,211,154,.055)}
+summary{transition:color .15s ease}summary:hover{color:#e8fff5}
+@media(max-width:768px){header .max-w-7xl{min-height:64px;height:auto;padding-top:10px;padding-bottom:10px}main{padding-top:16px}main .rounded-2xl{border-radius:16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body class="min-h-screen bg-[#070a11] text-slate-100">
+<header class="border-b border-slate-800 bg-[#0c111d]">
+<div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+<a href="/" class="flex items-center gap-3 no-underline"><span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 grid place-items-center font-black">SS</span><span class="font-black tracking-tight">SCHRIFT <span class="text-emerald-400">SCORE</span><small class="block text-[10px] text-slate-500 font-mono tracking-widest">CARD STUDIO</small></span></a>
+<a href="/" class="text-xs text-slate-400 hover:text-white">← Back to Schrift Score</a>
+</div></header>
+<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="mb-7"><div class="text-emerald-400 mono text-xs tracking-[.22em] uppercase mb-2">Make your point</div><h1 class="text-3xl sm:text-4xl font-black tracking-tight">Build an NBA <span class="text-emerald-400">receipt.</span></h1><p class="text-slate-400 mt-2 max-w-2xl">Choose a player and a stat. We’ll find the games, do the math, and make a shareable graphic.</p></div>
+<div class="grid lg:grid-cols-[minmax(300px,420px)_1fr] gap-6 items-start">
+<section class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
+<div class="flex items-center justify-between mb-4"><h2 class="font-bold text-lg">1. Choose your player and stat</h2><span id="loadStatus" class="text-[10px] mono text-amber-300">Loading data…</span></div>
+<div id="loadError" class="hidden mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300"></div>
+<div id="dataQualityNotice" class="hidden mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200" role="status"></div>
+<div class="space-y-4">
+<label class="block"><span class="text-xs font-semibold text-slate-400">PLAYER</span><input id="player" list="players" placeholder="Search NBA player…" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"><datalist id="players"></datalist></label>
+<label class="block"><span class="text-xs font-semibold text-slate-400">STAT TO PROVE</span><select id="metric" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="pts">Points per game</option><option value="reb">Rebounds per game</option><option value="ast">Assists per game</option><option value="stl">Steals per game</option><option value="blk">Blocks per game</option><option value="ss">Schrift Score per game</option></select></label>
+<details class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Optional filters <span class="text-xs font-normal text-slate-500">· narrow the games</span></summary><div class="space-y-4 mt-4"><div class="flex justify-end"><button id="clearFilters" type="button" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-emerald-500/60 hover:text-emerald-300">Clear all filters</button></div><div class="grid grid-cols-2 gap-3"><label><span class="text-xs font-semibold text-slate-400">FROM DATE</span><input id="dateFrom" type="date" class="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-xs font-semibold text-slate-400">THROUGH DATE</span><input id="dateTo" type="date" class="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><p class="text-[11px] text-slate-500 -mt-2">Choose any time period, such as the All-Star break through today. Leave both blank to include the full season.</p><label class="block"><span class="text-xs font-semibold text-slate-400">OPPONENT</span><select id="opponent" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="">Any opponent</option></select></label>
+<div class="grid grid-cols-2 gap-3">
+<label><span class="text-xs font-semibold text-slate-400">VENUE</span><select id="venue" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="">Home + away</option><option value="home">Home only</option><option value="away">Away only</option></select></label>
+<label><span class="text-xs font-semibold text-slate-400">GAME RESULT</span><select id="result" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="">Wins + losses</option><option value="W">Wins only</option><option value="L">Losses only</option></select></label>
+</div>
+<div><span class="text-xs font-semibold text-slate-400">FINAL SCORE MARGIN · POINTS</span><div class="grid grid-cols-2 gap-3 mt-1"><label><span class="text-[10px] text-slate-500">MINIMUM</span><input id="marginMin" type="number" min="0" step="1" inputmode="numeric" placeholder="No minimum" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-[10px] text-slate-500">MAXIMUM</span><input id="marginMax" type="number" min="0" step="1" inputmode="numeric" placeholder="No maximum" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><span class="block text-[11px] text-slate-500 mt-1">Example: 1–5 includes games decided by 1 to 5 points. Margin is based on the final score, not clutch-time possessions.</span></div>
+<div><span class="text-xs font-semibold text-slate-400">PLAYER MINUTES · PER GAME</span><div class="grid grid-cols-2 gap-3 mt-1"><label><span class="text-[10px] text-slate-500">MINIMUM MINUTES</span><input id="minutesMin" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label><label><span class="text-[10px] text-slate-500">MAXIMUM MINUTES</span><input id="minutesMax" type="number" min="0" max="60" step="1" placeholder="Any" class="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"></label></div><span class="block text-[11px] text-slate-500 mt-1">Narrow games by how many minutes the player played.</span></div>
+<label class="block"><span class="text-xs font-semibold text-slate-400">MINIMUM GAMES IN SAMPLE</span><input id="minimum" type="number" min="1" max="82" step="1" value="8" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><span class="block text-[11px] text-slate-500 mt-1">Set this as low as 1 game. Smaller samples are more volatile, so the receipt will clearly flag them.</span></label></div></details>
+<details class="rounded-xl border border-slate-800 bg-slate-950/60 p-3"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Customize your graphic <span class="text-xs font-normal text-slate-500">· optional</span></summary><label class="block mt-4"><span class="text-xs font-semibold text-slate-400">HEADLINE</span><input id="headline" maxlength="90" value="THE NUMBERS DON'T LIE." class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"></label><label class="block mt-4"><span class="text-xs font-semibold text-slate-400">EXPORT FORMAT</span><select id="exportFormat" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"><option value="landscape">16:9 · X / Twitter</option><option value="square">1:1 · Square post</option><option value="story">9:16 · Stories / TikTok</option></select><span class="block text-[11px] text-slate-500 mt-1">Choose the shape that fits where you want to share your receipt.</span></label><label class="block mt-4"><span class="text-xs font-semibold text-slate-400">CREATOR HANDLE · OPTIONAL</span><input id="creatorHandle" maxlength="30" placeholder="@yourhandle" class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 outline-none focus:border-emerald-500"><span class="block text-[11px] text-slate-500 mt-1">Your handle will appear on the exported graphic.</span></label><div class="mt-4 rounded-lg border border-slate-800 bg-slate-950 px-3 py-3"><div class="text-xs font-semibold text-slate-400">TEAM COLORS · AUTOMATIC</div><div id="teamThemeLabel" class="mt-1 text-sm font-semibold text-slate-200">Choose a player to detect their team</div><p class="text-[11px] text-slate-500 mt-1">Uses the player’s most recent team in the current-season game data.</p></div></details>
+<p id="filterError" class="hidden rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300" role="alert"></p><div id="sampleMeter" class="rounded-lg border border-slate-800 bg-slate-950 px-3 py-3"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold tracking-widest text-slate-400">GAMES FOUND</span><strong id="matchCount" class="mono text-sm text-slate-200">Choose a player</strong></div><div class="h-1.5 rounded-full bg-slate-800 mt-2 overflow-hidden"><div id="matchBar" class="h-full w-0 rounded-full bg-emerald-400 transition-all"></div></div><p id="matchHint" class="text-[10px] text-slate-500 mt-2">We’ll show how many games match your choices.</p></div><button id="generate" class="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>Create my receipt →</button>
+</div>
+<div class="mt-5 border-t border-slate-800 pt-4 text-xs text-slate-500 leading-relaxed">Uses completed NBA box scores from the 2026–27 season. Optional filters only use information recorded in those box scores.</div>
+</section>
+<section>
+<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h2 class="font-bold text-lg">2. Your graphic</h2><button id="download" disabled class="rounded-lg border border-emerald-500/40 px-4 py-2 text-sm font-bold text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-40">↓ Export PNG</button></div>
+<p id="receiptStale" class="hidden mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200" role="status">Your selections changed. Create the receipt again before exporting so the graphic matches your current choices.</p>
+<div id="empty" class="rounded-2xl border border-dashed border-slate-700 bg-[#0c111d] p-10 text-center text-slate-500"><div class="text-4xl mb-3">🧾</div><p class="font-semibold text-slate-300">Your receipt will appear here.</p><p class="text-sm mt-1">Choose a player and stat, then select “Create my receipt.”</p></div>
+<div id="receiptWrap" class="hidden">
+<article id="receipt" class="rounded-2xl p-6 sm:p-8 overflow-hidden">
+<div class="flex items-center justify-between gap-3 border-b border-slate-700/70 pb-4"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 grid place-items-center font-black text-sm">SS</span><span class="font-black tracking-tight">SCHRIFT SCORE</span></div><span class="mono text-[9px] tracking-[.2em] text-emerald-300">DEBATE RECEIPT / 2026–27</span></div>
+<div class="pt-6"><div id="cardHeadline" class="mono text-xs sm:text-sm font-bold tracking-[.15em] text-emerald-300 mb-3">THE NUMBERS DON'T LIE.</div><h3 id="cardPlayer" class="text-3xl sm:text-5xl font-black tracking-tight">PLAYER NAME</h3><p id="cardContext" class="text-sm text-slate-400 mt-2">Selected game sample</p></div>
+<div id="sampleQuality" class="mt-5 rounded-xl border border-amber-400/50 bg-amber-400/10 px-4 py-3"><div id="sampleQualityTitle" class="mono text-[10px] font-bold tracking-widest text-amber-200">SAMPLE CHECK</div><div id="sampleQualityText" class="text-xs text-amber-100 mt-1">Sample size will be evaluated against your minimum.</div></div>
+<div id="receiptInsight" class="rounded-xl border border-slate-700 bg-slate-950/70 p-4 mt-5"><div class="mono text-[10px] tracking-widest text-emerald-300">DEBATE VERDICT · LAYER 1</div><p id="insightText" class="text-sm text-slate-200 mt-2">Your statistical argument will appear here after you build a sample.</p></div><div class="grid grid-cols-2 gap-3 mt-5">
+<div class="rounded-xl bg-slate-950/70 border border-slate-700 p-4"><div id="sampleLabel" class="text-[10px] mono uppercase tracking-widest text-slate-400">SITUATION AVERAGE</div><div id="sampleValue" class="text-4xl sm:text-5xl font-black text-emerald-300 mt-2">—</div><div id="sampleStat" class="text-xs text-slate-400 mt-1">Points per game</div></div>
+<div class="rounded-xl bg-slate-950/70 border border-slate-700 p-4"><div class="text-[10px] mono uppercase tracking-widest text-slate-400">SEASON BASELINE</div><div id="baselineValue" class="text-4xl sm:text-5xl font-black mt-2">—</div><div id="baselineMeta" class="text-xs text-slate-400 mt-1">All completed games</div></div>
+</div>
+<div id="differencePanel" class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center justify-between gap-3"><div><div class="text-[10px] mono uppercase tracking-widest text-emerald-200">DEBATE VERDICT · LAYER 2 · VS. SEASON</div><div id="deltaText" class="text-sm text-slate-200 mt-1">—</div></div><div id="deltaValue" class="text-3xl sm:text-4xl font-black text-emerald-300">—</div></div>
+<div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div id="leaguePercentileLabel" class="mono text-[10px] uppercase tracking-widest text-slate-400">LEAGUE PERCENTILE</div><div id="leaguePercentileValue" class="text-3xl font-black text-slate-300 mt-2">—</div><p id="leaguePercentileText" class="text-xs text-slate-400 mt-1">Build a receipt to compare this sample with qualified players in the same situation.</p><p id="leaguePercentileMethod" class="text-[10px] text-slate-500 mt-2">Same stat · same filters · equal-sized samples · current-season game logs</p></div>
+<div class="mt-6"><div class="flex justify-between items-center text-xs text-slate-400 mb-2"><span class="mono uppercase tracking-widest">Sample details</span><span id="sampleCount" class="font-bold text-white">0 games</span></div><div id="gameList" class="space-y-2"></div></div>
+<div class="mt-7 pt-4 border-t border-slate-700/70 flex items-end justify-between gap-3"><div class="text-[9px] text-slate-500 leading-relaxed max-w-xs">Source: ESPN completed-game box scores. Sample average is compared with this player’s full-season average, which includes the sample games. This is descriptive context, not a controlled comparison or proof of cause.</div><div class="mono text-[9px] text-slate-500 text-right">NBASCHRIFTSCORE.COM<br>MAKE THE CASE.</div></div>
+</article>
+<p id="warning" class="hidden text-xs text-amber-300 mt-3"></p>
+<details id="verdictDetails" class="hidden mt-5 rounded-2xl border border-slate-800 bg-[#0c111d] p-5"><summary class="cursor-pointer font-bold text-sm text-slate-200">Explore additional game splits <span class="text-xs font-normal text-slate-500">· optional</span></summary><div id="verdictStudio" class="mt-4 space-y-4">
+ <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
+  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">ADDITIONAL COMPARISONS</div><h3 class="text-xl font-black mt-1">How do other game situations compare?</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Box-score evidence only</span></div><p class="text-xs text-slate-400 mt-3">Your filtered sample is shown separately. The home/road, wins/losses, and interesting-split comparisons below use all available season games, regardless of the filters above.</p>
+  <p id="verdictSummary" class="text-sm text-slate-300 mt-3"></p>
+  <div id="verdictLayers" class="grid md:grid-cols-3 gap-3 mt-4"></div>
+ </div>
+ <div class="rounded-2xl border border-slate-800 bg-[#0c111d] p-5">
+  <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="mono text-[10px] tracking-[.2em] text-emerald-300">INTERESTING GAME SPLITS</div><h3 class="text-xl font-black mt-1">Where are the biggest differences?</h3></div><span class="rounded-full border border-slate-700 px-3 py-1 text-[10px] text-slate-400">Exploratory · not proof</span></div>
+  <p class="text-xs text-slate-400 mt-2">See which game situations have the highest and lowest averages. These discovery results scan all of the player’s season games, regardless of the filters above. Each result shows its sample size.</p>
+  <div id="finderResults" class="grid md:grid-cols-2 gap-3 mt-4"></div>
+  <p class="text-[10px] text-slate-500 mt-3">These are patterns in past box scores, not proof that a situation caused a player to perform differently.</p>
+ </div>
+</div></details>
+</div>
+</section>
+</div>
+</main>
+<script>
+const API='/api/nba-analytics?window=season';
+const state={games:[],players:[],playerOptions:[],dataQuality:{partial:false}};
+let receiptBuilt=false;
+function markReceiptStale(){
+ if(!receiptBuilt)return;
+ $('receiptStale').classList.remove('hidden');
+ $('download').disabled=true;
+}
+const $=id=>document.getElementById(id);
+const labels={pts:'Points per game',reb:'Rebounds per game',ast:'Assists per game',stl:'Steals per game',blk:'Blocks per game',ss:'Schrift Score per game'};
+const TEAM_NAMES={ATL:'Atlanta Hawks',BOS:'Boston Celtics',BKN:'Brooklyn Nets',CHA:'Charlotte Hornets',CHI:'Chicago Bulls',CLE:'Cleveland Cavaliers',DAL:'Dallas Mavericks',DEN:'Denver Nuggets',DET:'Detroit Pistons',GS:'Golden State Warriors',GSW:'Golden State Warriors',HOU:'Houston Rockets',IND:'Indiana Pacers',LAC:'LA Clippers',LAL:'Los Angeles Lakers',MEM:'Memphis Grizzlies',MIA:'Miami Heat',MIL:'Milwaukee Bucks',MIN:'Minnesota Timberwolves',NO:'New Orleans Pelicans',NOP:'New Orleans Pelicans',NY:'New York Knicks',NYK:'New York Knicks',OKC:'Oklahoma City Thunder',ORL:'Orlando Magic',PHI:'Philadelphia 76ers',PHX:'Phoenix Suns',POR:'Portland Trail Blazers',SAC:'Sacramento Kings',SA:'San Antonio Spurs',SAS:'San Antonio Spurs',TOR:'Toronto Raptors',UTA:'Utah Jazz',WAS:'Washington Wizards',WSH:'Washington Wizards',UTAH:'Utah Jazz'};
+const teamName=code=>TEAM_NAMES[String(code||'').toUpperCase()]||String(code||'Unknown team');
+const valueOf=(g,k)=>k==='ss'?(Number(g.pts)*.35+Number(g.reb)*.83+Number(g.ast)*1.14+Number(g.stl)*1.8+Number(g.blk)*1.98+0.04):Number(g[k]||0);
+const average=(arr,k)=>arr.length?arr.reduce((s,g)=>s+valueOf(g,k),0)/arr.length:0;
+const minutesValue=g=>{const v=String(g.minutes||'0');if(v.includes(':')){const [m,s]=v.split(':').map(Number);return m+(s||0)/60}return Number(v)||0};
+function fmt(n){return Number(n).toFixed(1)}
+function ordinal(n){const v=Math.abs(Number(n))%100;const suffix=v>=11&&v<=13?'th':({1:'st',2:'nd',3:'rd'}[v%10]||'th');return Number(n)+suffix}
+function displayDate(value){const p=String(value||'').split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:String(value||'')}
+function matchesCurrentFilters(g){
+ const from=$('dateFrom').value,to=$('dateTo').value;
+ return (!from||g.date>=from)&&(!to||g.date<=to)&&(!$('opponent').value||g.opponent===$('opponent').value)&&(!$('venue').value||g.homeAway===$('venue').value)&&(!$('result').value||g.result===$('result').value)&&(!$('marginMin').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))>=Number($('marginMin').value))&&(!$('marginMax').value||Math.abs(Number(g.teamScore)-Number(g.opponentScore))<=Number($('marginMax').value))&&(!$('minutesMin').value||minutesValue(g)>=Number($('minutesMin').value))&&(!$('minutesMax').value||minutesValue(g)<=Number($('minutesMax').value));
+}
+function getSelectedPlayer(){return state.playerOptions.find(player=>player.value===$('player').value.trim())||null}
+function getPlayerGames(player){if(!player)return [];return state.games.filter(g=>player.playerId?String(g.playerId)===String(player.playerId):g.name===player.name)}
+function getSample(player){
+ const all=getPlayerGames(player);
+ return {all,sample:all.filter(matchesCurrentFilters)};
+}
+function getFilterError(){
+ const from=$('dateFrom').value,to=$('dateTo').value;
+ if(from&&to&&from>to)return 'The start date must be on or before the end date.';
+ const checks=[['marginMin','Final score margin minimum',0,null],['marginMax','Final score margin maximum',0,null],['minutesMin','Minimum player minutes',0,60],['minutesMax','Maximum player minutes',0,60]];
+ for(const [id,label,min,max] of checks){
+  const raw=$(id).value;if(raw==='')continue;
+  const value=Number(raw);
+  if(!Number.isFinite(value)||value<min||(max!==null&&value>max))return label+' must be '+(max===null?'zero or higher':'between '+min+' and '+max)+'.';
+ }
+ const pairs=[['marginMin','marginMax','Minimum final score margin cannot exceed the maximum.'],['minutesMin','minutesMax','Minimum player minutes cannot exceed the maximum.']];
+ for(const [low,high,message] of pairs){if($(low).value!==''&&$(high).value!==''&&Number($(low).value)>Number($(high).value))return message;}
+ const minimumRaw=$('minimum').value,minimum=Number(minimumRaw);
+ if(minimumRaw===''||!Number.isInteger(minimum)||minimum<1||minimum>82)return 'Minimum games must be a whole number from 1 to 82.';
+ return '';
+}
+function updateMeter(){
+ const error=getFilterError();
+ $('filterError').textContent=error;$('filterError').classList.toggle('hidden',!error);
+ if(error){$('matchCount').textContent='Fix filters';$('matchHint').textContent='Correct the highlighted filter settings to continue.';$('matchBar').style.width='0%';$('generate').disabled=true;return}
+ const player=getSelectedPlayer();
+ if(!player){$('matchCount').textContent='Choose a player';$('matchHint').textContent='Select a valid player from the suggestions.';$('matchBar').style.width='0%';$('generate').disabled=true;return}
+ const {sample}=getSample(player);const minimum=Number($('minimum').value);
+ $('matchCount').textContent=sample.length+' games · '+minimum+' needed';
+ $('matchHint').textContent=sample.length>=minimum?'You have enough games. Create your receipt.':(minimum-sample.length)+' more game(s) needed. Try removing an optional filter.';
+ $('matchBar').style.width=Math.min(100,sample.length/minimum*100)+'%';
+ $('matchBar').className='h-full rounded-full transition-all '+(sample.length>=minimum?'bg-emerald-400':'bg-amber-400');
+ $('generate').disabled=sample.length<minimum;
+}
+function applyPreset(preset){
+ if(preset==='home-wins'){$('venue').value='home';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
+ if(preset==='road-wins'){$('venue').value='away';$('result').value='W';$('marginMin').value='';$('marginMax').value=''}
+ if(preset==='close'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='5'}
+ if(preset==='reset'){$('venue').value='';$('result').value='';$('marginMin').value='';$('marginMax').value='';$('minutesMin').value='';$('minutesMax').value='';$('opponent').value='';$('dateFrom').value='';$('dateTo').value=''}
+ markReceiptStale();
+ updateMeter();
+}
+
+function statLabel(metric){return labels[metric]||metric}
+function makeSplit(label,subset,base){
+ if(subset.length<minimumForScan)return null;
+ const avg=average(subset,currentMetric),diff=avg-base;
+ return {label,n:subset.length,avg,diff,pct:base?diff/base*100:null};
+}
+let currentMetric='pts',minimumForScan=8;
+function scanSplits(all,metric){
+ currentMetric=metric;
+ const base=average(all,metric),candidates=[];
+ const add=(label,subset)=>{if(subset.length>=minimumForScan)candidates.push({label,n:subset.length,avg:average(subset,metric),diff:average(subset,metric)-base,pct:base?(average(subset,metric)-base)/base*100:null})};
+ add('Home games',all.filter(g=>g.homeAway==='home'));
+ add('Road games',all.filter(g=>g.homeAway==='away'));
+ add('Wins',all.filter(g=>g.result==='W'));
+ add('Losses',all.filter(g=>g.result==='L'));
+ const opponents=[...new Set(all.map(g=>g.opponent).filter(Boolean))];
+ opponents.forEach(team=>add('vs. '+team,all.filter(g=>g.opponent===team)));
+ return {base,candidates:candidates.sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff))};
+}
+function renderAnalysis(all,sample,metric,minimum){
+ minimumForScan=minimum;
+ const base=average(all,metric),avg=average(sample,metric),delta=avg-base;
+ const home=all.filter(g=>g.homeAway==='home'),away=all.filter(g=>g.homeAway==='away');
+ const wins=all.filter(g=>g.result==='W'),losses=all.filter(g=>g.result==='L');
+ const layers=[
+  {title:'YOUR FILTERED SAMPLE',n:sample.length,avg,detail:'Compared with '+all.length+' full-season games.'},
+  {title:'HOME vs. ROAD',n:home.length+away.length,avg:average(home,metric)-average(away,metric),detail:home.length+' home games · '+away.length+' road games. Difference: home minus road.' ,comparison:true},
+  {title:'WINS vs. LOSSES',n:wins.length+losses.length,avg:average(wins,metric)-average(losses,metric),detail:wins.length+' wins · '+losses.length+' losses. Difference: wins minus losses.',comparison:true}
+ ];
+ $('verdictSummary').textContent=sample.length<minimum?'Fewer than '+minimum+' games match these filters. Try widening your search.':sample.length===all.length?'You selected all '+all.length+' available games, so this sample matches the full-season average. Add a filter such as home games, road games, wins, losses, or a specific opponent to see a meaningful split.':(delta>0?'In these selected games, the player averaged '+fmt(Math.abs(delta))+' more '+labels[metric].toLowerCase():delta<0?'In these selected games, the player averaged '+fmt(Math.abs(delta))+' fewer '+labels[metric].toLowerCase():'In these selected games, the player matched the full-season average')+'. The full-season average includes these games.';
+ $('verdictLayers').innerHTML=layers.map((x,i)=>{const parts=x.comparison?x.detail.match(/(\\d+) home games · (\\d+) road games|([\\d]+) wins · ([\\d]+) losses/):null;const eligible=!x.comparison|| (i===1?home.length>=minimum&&away.length>=minimum:wins.length>=minimum&&losses.length>=minimum);return '<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+x.title+'</div><div class="text-2xl font-black mt-3 '+(i===0?(sample.length<minimum?'text-amber-200':'text-emerald-300'):'text-white')+'">'+(eligible?(x.comparison?(x.avg>0?'+':'')+fmt(x.avg):fmt(x.avg)):'—')+'</div><div class="text-[10px] text-slate-400 mt-1">'+(x.comparison?(i===1?'Home average minus road average':'Wins average minus losses average')+' · '+labels[metric].toLowerCase():'Average · '+labels[metric].toLowerCase())+'</div><p class="text-[10px] text-slate-500 mt-3">'+(eligible?x.detail:'Not enough games in both groups (minimum '+minimum+' each).')+'</p></div>'}).join('');
+ const {candidates}=scanSplits(all,metric);
+ const positive=candidates.filter(x=>x.diff>0).sort((a,b)=>b.diff-a.diff)[0];
+ const negative=candidates.filter(x=>x.diff<0).sort((a,b)=>a.diff-b.diff)[0];
+ const cards=[{title:'BIGGEST POSITIVE SPLIT',x:positive},{title:'BIGGEST NEGATIVE SPLIT',x:negative}];
+ $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' '+(x.n===1?'game':'games')+(x.n<5?' · very small sample':'')+' · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
+ // Compare equal-sized samples: no player can qualify with fewer games than the selected player.
+ // For players with more qualifying games, use their most recent selected.n games.
+ const byPlayer=new Map();
+ const playerKey=game=>game.playerId?'id:'+game.playerId:'name:'+game.name;
+ for(const game of state.games){
+  if(!matchesCurrentFilters(game))continue;
+  const key=playerKey(game);
+  if(!byPlayer.has(key))byPlayer.set(key,{playerName:game.name,games:[]});
+  byPlayer.get(key).games.push(game);
+ }
+ const selectedKey=all[0]?playerKey(all[0]):null;
+ const cohort=[...byPlayer.entries()]
+  .filter(([,entry])=>entry.games.length>=minimum&&entry.games.length>=sample.length)
+  .map(([key,entry])=>{
+   const comparableGames=entry.games.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,sample.length);
+   return {key,playerName:entry.playerName,n:comparableGames.length,avg:average(comparableGames,metric)};
+  });
+ const selected=cohort.find(x=>x.key===selectedKey);
+ if(!selected||!cohort.length){
+  $('leaguePercentileValue').textContent='Not enough data';
+  $('leaguePercentileText').textContent='No players met the '+minimum+'-game minimum for this exact set of filters.';
+  $('leaguePercentileMethod').textContent='Same stat · same filters · equal-sized samples · current-season game logs';
+ }else{
+  const lower=cohort.filter(x=>x.avg<selected.avg-1e-9).length;
+  const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
+  const percentile=Math.round(((lower+equal/2)/cohort.length)*100);
+  const sampleTier=selected.n<5?'exploratory':selected.n<8?'limited':'standard';
+  $('leaguePercentileLabel').textContent=state.dataQuality.partial?'PROVISIONAL PERCENTILE · PARTIAL DATA':sampleTier==='exploratory'?'EXPLORATORY PERCENTILE · NOT A FULL DEBATE VERDICT':sampleTier==='limited'?'LIMITED-SAMPLE PERCENTILE':'DEBATE VERDICT · LAYER 3 · LEAGUE PERCENTILE';
+  $('leaguePercentileValue').textContent=ordinal(percentile)+' percentile · '+selected.n+' '+(selected.n===1?'game':'games');
+  $('leaguePercentileText').textContent=sampleTier==='exploratory'
+   ?'Exploratory only: this is a descriptive comparison across '+cohort.length+' qualified players for '+labels[metric].toLowerCase()+'. With '+selected.n+' '+(selected.n===1?'game':'games')+', the percentile is highly volatile and should not be used as a full debate verdict.'
+   :sampleTier==='limited'
+    ?'Limited sample: out of '+cohort.length+' qualified players, this sample is at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Only '+selected.n+' games are included, so the ranking may shift substantially with more games.'
+    :'Out of '+cohort.length+' qualified players, each measured over '+selected.n+' qualifying games, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
+  if(state.dataQuality.partial){$('leaguePercentileText').textContent+=' The ESPN feed was incomplete when this receipt was built, so missing games may change the comparison.';}
+  $('leaguePercentileMethod').textContent='Equal sample size: '+selected.n+' '+(selected.n===1?'game':'games')+' per player · Minimum: '+minimum+' · Most recent qualifying games · Midrank percentile; ties share rank'+(state.dataQuality.partial?' · INCOMPLETE ESPN FEED':'');
+ }
+ $('verdictDetails').classList.remove('hidden');
+}
+const TEAM_THEMES={ATL:{name:'Atlanta Hawks',accent:'#e03a3e',glow:'rgba(200,16,46,.20)'},BOS:{name:'Boston Celtics',accent:'#00a650',glow:'rgba(0,122,51,.20)'},BKN:{name:'Brooklyn Nets',accent:'#ffffff',glow:'rgba(255,255,255,.12)'},CHA:{name:'Charlotte Hornets',accent:'#1d1160',glow:'rgba(0,120,140,.22)'},CHI:{name:'Chicago Bulls',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},CLE:{name:'Cleveland Cavaliers',accent:'#fdbb30',glow:'rgba(134,0,56,.25)'},DAL:{name:'Dallas Mavericks',accent:'#00538c',glow:'rgba(0,83,140,.24)'},DEN:{name:'Denver Nuggets',accent:'#fdb927',glow:'rgba(13,34,64,.28)'},DET:{name:'Detroit Pistons',accent:'#c8102e',glow:'rgba(29,66,138,.24)'},GS:{name:'Golden State Warriors',accent:'#ffc72c',glow:'rgba(29,66,138,.24)'},GSW:{name:'Golden State Warriors',accent:'#ffc72c',glow:'rgba(29,66,138,.24)'},HOU:{name:'Houston Rockets',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},IND:{name:'Indiana Pacers',accent:'#fdbb30',glow:'rgba(0,45,98,.25)'},LAC:{name:'LA Clippers',accent:'#c8102e',glow:'rgba(29,66,138,.24)'},LAL:{name:'Los Angeles Lakers',accent:'#fdb927',glow:'rgba(85,37,131,.24)'},MEM:{name:'Memphis Grizzlies',accent:'#5d76a9',glow:'rgba(93,118,169,.22)'},MIA:{name:'Miami Heat',accent:'#98002e',glow:'rgba(249,160,27,.18)'},MIL:{name:'Milwaukee Bucks',accent:'#00471b',glow:'rgba(0,71,27,.24)'},MIN:{name:'Minnesota Timberwolves',accent:'#78be20',glow:'rgba(35,97,146,.25)'},NO:{name:'New Orleans Pelicans',accent:'#b4975a',glow:'rgba(0,22,65,.25)'},NOP:{name:'New Orleans Pelicans',accent:'#b4975a',glow:'rgba(0,22,65,.25)'},NY:{name:'New York Knicks',accent:'#f58426',glow:'rgba(0,107,182,.22)'},NYK:{name:'New York Knicks',accent:'#f58426',glow:'rgba(0,107,182,.22)'},OKC:{name:'Oklahoma City Thunder',accent:'#007ac1',glow:'rgba(0,122,193,.24)'},ORL:{name:'Orlando Magic',accent:'#0077c0',glow:'rgba(0,119,192,.22)'},PHI:{name:'Philadelphia 76ers',accent:'#ed174c',glow:'rgba(0,107,182,.22)'},PHX:{name:'Phoenix Suns',accent:'#e56020',glow:'rgba(29,17,96,.24)'},POR:{name:'Portland Trail Blazers',accent:'#e03a3e',glow:'rgba(6,25,34,.25)'},SAC:{name:'Sacramento Kings',accent:'#5a2d81',glow:'rgba(91,43,130,.24)'},SA:{name:'San Antonio Spurs',accent:'#c4ced4',glow:'rgba(196,206,212,.18)'},SAS:{name:'San Antonio Spurs',accent:'#c4ced4',glow:'rgba(196,206,212,.18)'},TOR:{name:'Toronto Raptors',accent:'#ce1141',glow:'rgba(206,17,65,.20)'},UTA:{name:'Utah Jazz',accent:'#00a9e0',glow:'rgba(0,169,224,.22)'},WAS:{name:'Washington Wizards',accent:'#e31837',glow:'rgba(0,43,92,.25)'}};
+function applyTeamTheme(theme){const receipt=$('receipt');receipt.classList.add('team-themed');receipt.style.setProperty('--team-accent',theme.accent);receipt.style.setProperty('--team-glow',theme.glow);receipt.style.setProperty('--team-tint',theme.glow.slice(0,theme.glow.lastIndexOf(','))+',.12)');receipt.style.setProperty('--team-border',theme.accent+'99')}
+function updateTeamThemeLabel(){const player=getSelectedPlayer();const latest=getPlayerGames(player).filter(g=>g.team).sort((a,b)=>b.date.localeCompare(a.date))[0];$('teamThemeLabel').textContent=latest?teamName(latest.team):'Choose a player to detect their team'}
+function setStatus(t,ok=false){$('loadStatus').textContent=t;$('loadStatus').className='text-[10px] mono '+(ok?'text-emerald-300':'text-amber-300')}
+async function load(){
+ try{
+  const res=await fetch(API,{cache:'no-store'});if(!res.ok)throw new Error('The NBA analytics feed returned HTTP '+res.status);
+  const data=await res.json();if(data.source!=='ESPN'||!Array.isArray(data.games))throw new Error('The analytics feed did not return the expected ESPN game data.');
+  state.games=data.games;
+  const uniquePlayers=new Map();
+  for(const game of state.games){const key=game.playerId?'id:'+game.playerId:'name:'+game.name;if(!uniquePlayers.has(key))uniquePlayers.set(key,{name:game.name,playerId:game.playerId||'',team:game.team||''});}
+  const entries=[...uniquePlayers.values()].sort((a,b)=>a.name.localeCompare(b.name)||a.team.localeCompare(b.team));
+  const nameCounts=new Map();for(const player of entries)nameCounts.set(player.name,(nameCounts.get(player.name)||0)+1);
+  state.playerOptions=entries.map(player=>{const value=nameCounts.get(player.name)>1?player.name+' — '+teamName(player.team)+' ('+(player.playerId?'ID '+player.playerId:'separate player')+')':player.name;return {...player,value};});
+  state.players=state.playerOptions.map(player=>player.value);
+  $('players').innerHTML=state.playerOptions.map(player=>'<option value="'+escapeHtml(player.value)+'"></option>').join('');
+  updateTeamThemeLabel();
+  [...new Set(data.games.map(g=>g.opponent).filter(Boolean))].sort((a,b)=>teamName(a).localeCompare(teamName(b))).forEach(team=>{const o=document.createElement('option');o.value=team;o.textContent=teamName(team);$('opponent').append(o)});
+  const quality=data.dataQuality||{};state.dataQuality=quality;
+  if(quality.partial){
+   const messages=[];
+   if(quality.scoreboardFailureCount)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
+   if(quality.boxScoreFailureCount)messages.push(quality.boxScoreFailureCount+' game box score(s) could not be loaded');
+   if(Number.isFinite(quality.boxScoreSuccessCount)&&Number.isFinite(quality.completedGameCount))messages.push(quality.boxScoreSuccessCount+' of '+quality.completedGameCount+' completed game box scores loaded');
+   $('dataQualityNotice').textContent='Partial NBA data: '+messages.join('; ')+'. Some games may be missing, so player averages and samples could be incomplete. Try refreshing later.';
+   $('dataQualityNotice').classList.remove('hidden');
+  }else{
+   $('dataQualityNotice').classList.add('hidden');
+  }
+  setStatus(state.games.length.toLocaleString()+' player-game lines',true);updateTeamThemeLabel();updateMeter();
+ }catch(e){setStatus('Data unavailable');$('loadError').textContent=e.message;$('loadError').classList.remove('hidden')}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function build(){
+ const player=getSelectedPlayer(), metric=$('metric').value;
+ if(!player){alert('Choose a player from the suggestions.');return}
+ const name=player.name;
+ const filterError=getFilterError();if(filterError){$('filterError').textContent=filterError;$('filterError').classList.remove('hidden');return}
+ const {all,sample}=getSample(player);
+ const minimum=Math.max(1,Math.min(82,Number($('minimum').value)||1));
+ if(sample.length<minimum){alert('Your sample has '+sample.length+' games, but your minimum is set to '+minimum+'. Remove a filter or lower the minimum.');return}
+ const base=average(all,metric),avg=average(sample,metric),delta=avg-base,pct=base?delta/base*100:0;
+ const sorted=[...sample].sort((a,b)=>b.date.localeCompare(a.date));
+ const playerGames=all.filter(g=>g.team).sort((a,b)=>b.date.localeCompare(a.date));const latestTeam=playerGames[0]?.team||'';applyTeamTheme(TEAM_THEMES[latestTeam]||{accent:'#34d399',glow:'rgba(16,185,129,.10)'});
+ $('empty').classList.add('hidden');$('receiptWrap').classList.remove('hidden');
+ receiptBuilt=true;$('receiptStale').classList.add('hidden');$('download').disabled=false;
+ $('cardHeadline').textContent=$('headline').value.trim()||'THE NUMBERS DON’T LIE.';
+ $('cardPlayer').textContent=name.toUpperCase();
+ const parts=[];if($('dateFrom').value||$('dateTo').value)parts.push(($('dateFrom').value?displayDate($('dateFrom').value):'Season start')+' – '+($('dateTo').value?displayDate($('dateTo').value):'Latest game'));if($('opponent').value)parts.push('vs '+teamName($('opponent').value));if($('venue').value)parts.push($('venue').value==='home'?'Home games':'Road games');if($('result').value)parts.push($('result').value==='W'?'Wins only':'Losses only');if($('marginMin').value||$('marginMax').value)parts.push('Final margin '+($('marginMin').value||'0')+'–'+($('marginMax').value||'any')+' pts');if($('minutesMin').value||$('minutesMax').value)parts.push('Minutes '+($('minutesMin').value||'0')+'–'+($('minutesMax').value||'any'));
+ $('cardContext').textContent=parts.length?parts.join(' · '):'All completed games this season';
+ const direction=delta>0?'above':delta<0?'below':'equal to';
+ const difference=Math.abs(delta).toFixed(1);
+ $('insightText').textContent=sample.length===all.length?'With no narrowing filter applied, '+name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across all '+all.length+' available games. The sample and season baseline are the same, so there is no split to compare yet. Add an optional filter to make a case about a specific situation.':name+' averaged '+fmt(avg)+' '+labels[metric].toLowerCase()+' across '+sample.length+' '+(sample.length===1?'selected game':'selected games')+', '+difference+' '+labels[metric].toLowerCase()+' '+direction+' the full-season average of '+fmt(base)+'. This is a descriptive split, not proof that the filter caused the difference.';
+ $('sampleValue').textContent=fmt(avg);$('baselineValue').textContent=fmt(base);$('baselineMeta').textContent='All '+all.length+' completed games · includes selected games';$('sampleStat').textContent=labels[metric]+' · '+sample.length+' '+(sample.length===1?'game':'games');$('sampleCount').textContent=sample.length+' '+(sample.length===1?'game':'games');
+ const belowMinimum=sample.length<5;
+ $('sampleQuality').className='mt-5 rounded-xl border px-4 py-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/40 bg-emerald-500/10');
+ $('sampleQualityTitle').className='mono text-[10px] font-bold tracking-widest '+(belowMinimum?'text-amber-200':'text-emerald-200');
+ $('sampleQualityText').className='text-xs mt-1 '+(belowMinimum?'text-amber-100':'text-emerald-100');
+ $('sampleQualityTitle').textContent=sample.length<5?'VERY SMALL SAMPLE':sample.length<10?'SMALL SAMPLE':'SAMPLE SIZE CHECK';
+ $('sampleQualityText').textContent=sample.length<5?'Only '+sample.length+' '+(sample.length===1?'game matches':'games match')+'. This is a tiny sample and should be treated as an anecdote, not a reliable trend.':sample.length<10?'This receipt includes '+sample.length+' '+(sample.length===1?'game':'games')+'. The result can swing significantly from game to game.':'This receipt includes '+sample.length+' '+(sample.length===1?'game':'games')+'. A larger sample is more informative, but it does not prove why performance changed.';
+ $('differencePanel').className='mt-4 rounded-xl border p-4 flex items-center justify-between gap-3 '+(belowMinimum?'border-amber-400/50 bg-amber-400/10':'border-emerald-500/30 bg-emerald-500/10');
+ $('deltaValue').textContent=(delta>0?'+':'')+fmt(delta);$('deltaText').textContent=(delta>0?'+':'')+fmt(delta)+' '+labels[metric].toLowerCase()+(base?' ('+(pct>0?'+':'')+fmt(pct)+'%)':' (percentage change unavailable: zero season baseline)');
+ $('deltaValue').className='text-3xl sm:text-4xl font-black '+(belowMinimum?'text-amber-200':delta>=0?'text-emerald-300':'text-rose-300');
+ $('gameList').innerHTML=sorted.map(g=>'<div class="flex justify-between gap-3 text-xs border-b border-slate-700/50 pb-2"><span class="text-slate-400">'+escapeHtml(displayDate(g.date))+' · '+(g.homeAway==='home'?'vs':'@')+' '+escapeHtml(teamName(g.opponent))+' · '+g.result+' · '+(g.teamScore+'-'+g.opponentScore)+'</span><strong class="mono">'+fmt(valueOf(g,metric))+'</strong></div>').join('');
+ const warnings=[];if(sample.length<5)warnings.push('Very small sample: only '+sample.length+' '+(sample.length===1?'game':'games')+'. Treat this as an anecdote, not a reliable trend.');else if(sample.length<10)warnings.push('Small sample: '+sample.length+' games. Results can swing significantly from game to game.');
+ $('warning').textContent=warnings.join(' ');$('warning').classList.toggle('hidden',!warnings.length);
+ renderAnalysis(all,sample,metric,minimum);
+}
+$('generate').addEventListener('click',build);
+$('clearFilters').addEventListener('click',()=>applyPreset('reset'));
+document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>applyPreset(button.dataset.preset)));
+['player','marginMin','marginMax','minutesMin','minutesMax','minimum'].forEach(id=>$(id).addEventListener('input',()=>{markReceiptStale();updateMeter();if(id==='player')updateTeamThemeLabel()}));
+['dateFrom','dateTo','opponent','venue','result','metric'].forEach(id=>$(id).addEventListener('change',()=>{markReceiptStale();updateMeter()}));
+$('headline').addEventListener('input',markReceiptStale);
+$('download').addEventListener('click',async()=>{if(!window.html2canvas)return alert('Image export library did not load.');const btn=$('download');btn.disabled=true;btn.textContent='Rendering…';try{const format=$('exportFormat').value;const rawHandle=$('creatorHandle').value.trim();const handle=rawHandle?(rawHandle.startsWith('@')?rawHandle:'@'+rawHandle):'';const themes=TEAM_THEMES;const selectedPlayer=getSelectedPlayer();const playerGames=getPlayerGames(selectedPlayer).filter(g=>g.team);playerGames.sort((a,b)=>b.date.localeCompare(a.date));const latestTeam=playerGames[0]?.team||'';const theme=themes[latestTeam]||{name:latestTeam||'Team unavailable',accent:'#34d399',glow:'rgba(16,185,129,.10)'};applyTeamTheme(theme);const source=await html2canvas($('receipt'),{backgroundColor:'#080d16',scale:2,useCORS:true});const sizes={landscape:[1920,1080],square:[1080,1080],story:[1080,1920]};const [width,height]=sizes[format]||sizes.landscape;const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');const bg=ctx.createLinearGradient(0,0,width,height);bg.addColorStop(0,'#111d30');bg.addColorStop(1,'#070b13');ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);ctx.fillStyle=theme.glow;ctx.beginPath();ctx.arc(width*.88,height*.12,Math.min(width,height)*.34,0,Math.PI*2);ctx.fill();ctx.fillStyle=theme.accent;ctx.fillRect(0,0,width,12);const drawCard=(x,y,maxW,maxH)=>{const scale=Math.min(maxW/source.width,maxH/source.height);const w=source.width*scale,h=source.height*scale;ctx.save();ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=36;ctx.shadowOffsetY=16;ctx.fillStyle='#080d16';ctx.fillRect(x+(maxW-w)/2-5,y+(maxH-h)/2-5,w+10,h+10);ctx.restore();ctx.drawImage(source,x+(maxW-w)/2,y+(maxH-h)/2,w,h)};const brand=()=>{ctx.fillStyle=theme.accent;ctx.font='900 24px Arial';ctx.fillText('SS',0,0);ctx.fillStyle='#e2e8f0';ctx.font='800 24px Arial';ctx.fillText('SCHRIFT SCORE',42,0)};const drawHandle=(x,y,align='left')=>{if(!handle)return;ctx.save();ctx.fillStyle='#94a3b8';ctx.font='600 20px Arial';ctx.textAlign=align;ctx.fillText(handle,x,y,850);ctx.restore()};if(format==='landscape'){ctx.save();ctx.translate(100,112);brand();ctx.restore();drawHandle(100,155);ctx.fillStyle=theme.accent;ctx.font='800 22px Arial';ctx.fillText('NBA DEBATE RECEIPT',100,230);ctx.fillStyle='#f8fafc';ctx.font='900 76px Arial';ctx.fillText("THE NUMBERS",100,360);ctx.fillText("DON'T LIE.",100,450);ctx.fillStyle='#94a3b8';ctx.font='28px Arial';ctx.fillText('Build the argument with the numbers.',100,520);ctx.fillStyle='#334155';ctx.fillRect(100,575,560,3);ctx.fillStyle='#64748b';ctx.font='20px Arial';ctx.fillText('PLAYER DATA · GAME-BY-GAME CONTEXT',100,625);drawCard(760,90,1060,900);}else if(format==='square'){ctx.save();ctx.translate(64,88);brand();ctx.restore();drawCard(54,150,972,790);ctx.fillStyle='#64748b';ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.fillText('THE NUMBERS. THE CONTEXT. THE RECEIPT.',width/2,1028);drawHandle(width/2,1060,'center');ctx.textAlign='left';}else{ctx.save();ctx.translate(72,105);brand();ctx.restore();ctx.fillStyle=theme.accent;ctx.font='800 24px Arial';ctx.textAlign='center';ctx.fillText('THE NBA DEBATE STARTS HERE',width/2,220);drawCard(72,280,936,1300);ctx.fillStyle='#f8fafc';ctx.font='900 34px Arial';ctx.fillText('LET THE NUMBERS TALK.',width/2,1715);ctx.fillStyle='#64748b';ctx.font='20px Arial';ctx.fillText('SCHRIFT SCORE · NBA ANALYTICS',width/2,1760);drawHandle(width/2,1805,'center');ctx.textAlign='left';}const a=document.createElement('a');a.download='schrift-score-'+$('player').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+format+'-receipt.png';a.href=canvas.toDataURL('image/png');a.click()}catch(e){alert('Could not export this receipt: '+e.message)}finally{btn.disabled=false;btn.textContent='↓ Export PNG'}});
+load();
+</script>
+</body></html>
