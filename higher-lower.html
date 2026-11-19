@@ -110,9 +110,7 @@ async function loadPlayers(){
  }catch(e){$('loading').classList.add('hidden');$('error').classList.remove('hidden');$('error-detail').textContent=e.message||'Unknown error.'}
 }
 function makeDaily(){
- const sorted=seededShuffle(players,todayKey().split('-').join('')|0);
- const pairs=[];for(let i=0;i<10;i++){const a=sorted[(i*2)%sorted.length],b=sorted[(i*2+1)%sorted.length];if(a.name!==b.name)pairs.push([a,b])}
- return pairs;
+ return seededShuffle(players,todayKey().split('-').join('')|0).slice(0,11);
 }
 function makeEndless(){
  const pool=seededShuffle(players,Math.floor(Math.random()*4294967295));return pool.slice(0,Math.min(pool.length,100));
@@ -130,7 +128,7 @@ function startGame(){
  best=mode==='daily'?Number((loadSaved().daily||{}).best)||0:Number(state.endlessBest)||0;
  if(mode==='daily'&&round>=10){finish(true);return}
  if(!sequence.length){$('error-detail').textContent='No matchups could be created.';$('error').classList.remove('hidden');$('game').classList.add('hidden');return}
- currentA=sequence[0][0];currentB=sequence[0][1];round=mode==='daily'?round:0;renderRound();
+ if(mode==='daily'){currentA=sequence[round];currentB=sequence[round+1];}else{currentA=sequence[0];currentB=sequence[1];round=0;}renderRound();
 }
 function renderRound(){
  answered=false;$('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('choices').classList.remove('hidden');
@@ -157,7 +155,7 @@ function reveal(choice){
  else{$('feedback-title').textContent='NOT QUITE';$('feedback-title').className='font-black text-lg text-rose-400';$('feedback-detail').textContent='Missed by '+Math.abs(b-a).toFixed(2)+' SS. '+currentB.name+' has '+fmt(currentB)+' SS.'}
  $('streak-label').textContent='🔥 STREAK: '+streak;$('best-label').textContent='BEST: '+best;
  $('feedback').classList.remove('hidden');$('continue').textContent=won?(mode==='daily'&&round===9?'SEE RESULTS →':'NEXT MATCHUP →'):'SEE RESULTS →';
- if(mode==='daily'){state.daily={date:dailyDate,round:round+(won?1:0),streak:won?streak:0,best:Math.max(Number((state.daily||{}).best)||0,best)}}
+ if(mode==='daily'){state.daily={date:dailyDate,round:round+(won?1:0),streak:won?streak:0,best:Math.max(Number((state.daily||{}).best)||0,best),done:!won||round===9}}
  else state.endlessBest=Math.max(Number(state.endlessBest)||0,best);
  save();
 }
@@ -166,7 +164,7 @@ function next(){
  if(mode==='daily'){
   if(round>=9){if(streak===10){round=10;state.daily={date:dailyDate,round:10,streak:10,best:Math.max(Number((state.daily||{}).best)||0,10)};save();finish(true)}else finish(false);return}
   if(streak===0||!$('feedback-title').textContent.startsWith('CORRECT')&&!$('feedback-title').textContent.startsWith('EXACT')){finish(false);return}
-  round++;currentA=currentB;currentB=sequence[round][1];
+  round++;currentA=currentB;currentB=sequence[round+1];
  }else{
   if(!$('feedback-title').textContent.startsWith('CORRECT')&&!$('feedback-title').textContent.startsWith('EXACT')){finish(false);return}
   round++;currentA=currentB;currentB=sequence[(round+1)%sequence.length];
