@@ -86,7 +86,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 </main>
 <script>
 const API='/api/nba-analytics?window=season';
-const state={games:[],players:[]};
+const state={games:[],players:[],dataQuality:{partial:false}};
 let receiptBuilt=false;
 function markReceiptStale(){
  if(!receiptBuilt)return;
@@ -211,14 +211,15 @@ function renderAnalysis(all,sample,metric,minimum){
   const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
   const percentile=Math.round(((lower+equal/2)/cohort.length)*100);
   const sampleTier=selected.n<5?'exploratory':selected.n<8?'limited':'standard';
-  $('leaguePercentileLabel').textContent=sampleTier==='exploratory'?'EXPLORATORY PERCENTILE · NOT A FULL DEBATE VERDICT':sampleTier==='limited'?'LIMITED-SAMPLE PERCENTILE':'DEBATE VERDICT · LAYER 3 · LEAGUE PERCENTILE';
+  $('leaguePercentileLabel').textContent=state.dataQuality.partial?'PROVISIONAL PERCENTILE · PARTIAL DATA':sampleTier==='exploratory'?'EXPLORATORY PERCENTILE · NOT A FULL DEBATE VERDICT':sampleTier==='limited'?'LIMITED-SAMPLE PERCENTILE':'DEBATE VERDICT · LAYER 3 · LEAGUE PERCENTILE';
   $('leaguePercentileValue').textContent=ordinal(percentile)+' percentile · '+selected.n+' '+(selected.n===1?'game':'games');
   $('leaguePercentileText').textContent=sampleTier==='exploratory'
    ?'Exploratory only: this is a descriptive comparison across '+cohort.length+' qualified players for '+labels[metric].toLowerCase()+'. With '+selected.n+' '+(selected.n===1?'game':'games')+', the percentile is highly volatile and should not be used as a full debate verdict.'
    :sampleTier==='limited'
     ?'Limited sample: out of '+cohort.length+' qualified players, this sample is at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Only '+selected.n+' games are included, so the ranking may shift substantially with more games.'
     :'Out of '+cohort.length+' qualified players, each measured over '+selected.n+' qualifying games, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
-  $('leaguePercentileMethod').textContent='Equal sample size: '+selected.n+' '+(selected.n===1?'game':'games')+' per player · Minimum: '+minimum+' · Most recent qualifying games · Midrank percentile; ties share rank';
+  if(state.dataQuality.partial){$('leaguePercentileText').textContent+=' The ESPN feed was incomplete when this receipt was built, so missing games may change the comparison.';}
+  $('leaguePercentileMethod').textContent='Equal sample size: '+selected.n+' '+(selected.n===1?'game':'games')+' per player · Minimum: '+minimum+' · Most recent qualifying games · Midrank percentile; ties share rank'+(state.dataQuality.partial?' · INCOMPLETE ESPN FEED':'');
  }
  $('verdictDetails').classList.remove('hidden');
 }
@@ -233,7 +234,7 @@ async function load(){
   state.games=data.games;updateTeamThemeLabel();state.players=[...new Set(data.games.map(g=>g.name))].sort((a,b)=>a.localeCompare(b));
   $('players').innerHTML=state.players.map(n=>'<option value="'+escapeHtml(n)+'"></option>').join('');
   [...new Set(data.games.map(g=>g.opponent).filter(Boolean))].sort((a,b)=>teamName(a).localeCompare(teamName(b))).forEach(team=>{const o=document.createElement('option');o.value=team;o.textContent=teamName(team);$('opponent').append(o)});
-  const quality=data.dataQuality||{};
+  const quality=data.dataQuality||{};state.dataQuality=quality;
   if(quality.partial){
    const messages=[];
    if(quality.scoreboardFailureCount)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
