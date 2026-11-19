@@ -62,7 +62,7 @@ body{font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}.mono{font-fami
 <div class="rounded-xl bg-slate-950/70 border border-slate-700 p-4"><div class="text-[10px] mono uppercase tracking-widest text-slate-400">SEASON BASELINE</div><div id="baselineValue" class="text-4xl sm:text-5xl font-black mt-2">—</div><div id="baselineMeta" class="text-xs text-slate-400 mt-1">All completed games</div></div>
 </div>
 <div id="differencePanel" class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center justify-between gap-3"><div><div class="text-[10px] mono uppercase tracking-widest text-emerald-200">DEBATE VERDICT · LAYER 2 · VS. SEASON</div><div id="deltaText" class="text-sm text-slate-200 mt-1">—</div></div><div id="deltaValue" class="text-3xl sm:text-4xl font-black text-emerald-300">—</div></div>
-<div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div id="leaguePercentileLabel" class="mono text-[10px] uppercase tracking-widest text-slate-400">LEAGUE PERCENTILE</div><div id="leaguePercentileValue" class="text-3xl font-black text-slate-300 mt-2">—</div><p id="leaguePercentileText" class="text-xs text-slate-400 mt-1">Build a receipt to compare this sample with qualified players in the same situation.</p><p id="leaguePercentileMethod" class="text-[10px] text-slate-500 mt-2">Same stat · same filters · current-season game logs</p></div>
+<div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div id="leaguePercentileLabel" class="mono text-[10px] uppercase tracking-widest text-slate-400">LEAGUE PERCENTILE</div><div id="leaguePercentileValue" class="text-3xl font-black text-slate-300 mt-2">—</div><p id="leaguePercentileText" class="text-xs text-slate-400 mt-1">Build a receipt to compare this sample with qualified players in the same situation.</p><p id="leaguePercentileMethod" class="text-[10px] text-slate-500 mt-2">Same stat · same filters · equal-sized samples · current-season game logs</p></div>
 <div class="mt-6"><div class="flex justify-between items-center text-xs text-slate-400 mb-2"><span class="mono uppercase tracking-widest">Sample details</span><span id="sampleCount" class="font-bold text-white">0 games</span></div><div id="gameList" class="space-y-2"></div></div>
 <div class="mt-7 pt-4 border-t border-slate-700/70 flex items-end justify-between gap-3"><div class="text-[9px] text-slate-500 leading-relaxed max-w-xs">Source: ESPN completed-game box scores. Sample average is compared with this player’s full-season average, which includes the sample games. This is descriptive context, not a controlled comparison or proof of cause.</div><div class="mono text-[9px] text-slate-500 text-right">NBASCHRIFTSCORE.COM<br>MAKE THE CASE.</div></div>
 </article>
@@ -184,22 +184,28 @@ function renderAnalysis(all,sample,metric,minimum){
  const negative=candidates.filter(x=>x.diff<0).sort((a,b)=>a.diff-b.diff)[0];
  const cards=[{title:'BIGGEST POSITIVE SPLIT',x:positive},{title:'BIGGEST NEGATIVE SPLIT',x:negative}];
  $('finderResults').innerHTML=cards.map(({title,x})=>'<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4"><div class="mono text-[9px] tracking-widest text-slate-400">'+title+'</div>'+(x?'<div class="text-lg font-bold mt-3">'+escapeHtml(x.label)+'</div><div class="text-3xl font-black mt-2 '+(x.diff>0?'text-emerald-300':'text-rose-300')+'">'+(x.diff>0?'+':'')+fmt(x.diff)+'</div><div class="text-xs text-slate-300">'+labels[metric].toLowerCase()+' vs. full-season avg</div><div class="text-[10px] text-slate-500 mt-2">'+x.n+' '+(x.n===1?'game':'games')+(x.n<5?' · very small sample':'')+' · split avg '+fmt(x.avg)+' · season avg '+fmt(base)+(x.pct===null?'':' · '+(x.pct>0?'+':'')+fmt(x.pct)+'%')+'</div>':'<p class="text-sm text-slate-500 mt-3">No split met the '+minimum+'-game minimum.</p>')+'</div>').join('');
- // Compare the player's filtered average with every player who meets the same filters
- // and minimum-game requirement. The selected player is included in the cohort.
+ // Compare equal-sized samples: no player can qualify with fewer games than the selected player.
+ // For players with more qualifying games, use their most recent selected.n games.
  const byPlayer=new Map();
+ const playerKey=game=>game.playerId?'id:'+game.playerId:'name:'+game.name;
  for(const game of state.games){
   if(!matchesCurrentFilters(game))continue;
-  if(!byPlayer.has(game.name))byPlayer.set(game.name,[]);
-  byPlayer.get(game.name).push(game);
+  const key=playerKey(game);
+  if(!byPlayer.has(key))byPlayer.set(key,{playerName:game.name,games:[]});
+  byPlayer.get(key).games.push(game);
  }
+ const selectedKey=all[0]?playerKey(all[0]):null;
  const cohort=[...byPlayer.entries()]
-  .filter(([,games])=>games.length>=minimum)
-  .map(([playerName,games])=>({playerName,n:games.length,avg:average(games,metric)}));
- const selected=cohort.find(x=>x.playerName===all[0]?.name);
+  .filter(([,entry])=>entry.games.length>=minimum&&entry.games.length>=sample.length)
+  .map(([key,entry])=>{
+   const comparableGames=entry.games.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,sample.length);
+   return {key,playerName:entry.playerName,n:comparableGames.length,avg:average(comparableGames,metric)};
+  });
+ const selected=cohort.find(x=>x.key===selectedKey);
  if(!selected||!cohort.length){
   $('leaguePercentileValue').textContent='Not enough data';
   $('leaguePercentileText').textContent='No players met the '+minimum+'-game minimum for this exact set of filters.';
-  $('leaguePercentileMethod').textContent='Same stat · same filters · current-season game logs';
+  $('leaguePercentileMethod').textContent='Same stat · same filters · equal-sized samples · current-season game logs';
  }else{
   const lower=cohort.filter(x=>x.avg<selected.avg-1e-9).length;
   const equal=cohort.filter(x=>Math.abs(x.avg-selected.avg)<=1e-9).length;
@@ -211,8 +217,8 @@ function renderAnalysis(all,sample,metric,minimum){
    ?'Exploratory only: this is a descriptive comparison across '+cohort.length+' qualified players for '+labels[metric].toLowerCase()+'. With '+selected.n+' '+(selected.n===1?'game':'games')+', the percentile is highly volatile and should not be used as a full debate verdict.'
    :sampleTier==='limited'
     ?'Limited sample: out of '+cohort.length+' qualified players, this sample is at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Only '+selected.n+' games are included, so the ranking may shift substantially with more games.'
-    :'Out of '+cohort.length+' qualified players, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
-  $('leaguePercentileMethod').textContent='Player sample: '+selected.n+' '+(selected.n===1?'game':'games')+' · Minimum: '+minimum+' · Midrank percentile; ties share rank';
+    :'Out of '+cohort.length+' qualified players, each measured over '+selected.n+' qualifying games, this sample ranks at the '+ordinal(percentile)+' percentile for '+labels[metric].toLowerCase()+'. Higher is better.';
+  $('leaguePercentileMethod').textContent='Equal sample size: '+selected.n+' '+(selected.n===1?'game':'games')+' per player · Minimum: '+minimum+' · Most recent qualifying games · Midrank percentile; ties share rank';
  }
  $('verdictDetails').classList.remove('hidden');
 }
