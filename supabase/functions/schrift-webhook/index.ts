@@ -75,7 +75,10 @@ Deno.serve(async (req: Request) => {
         await saveSubscription(sub, object.metadata?.supabase_user_id || object.client_reference_id || null);
       }
     } else if (event.type?.startsWith("customer.subscription.")) {
-      await saveSubscription(object, object.metadata?.supabase_user_id || null);
+      let latest = object;
+      try { latest = await stripeGetSubscription(object.id); }
+      catch (error) { if (event.type !== "customer.subscription.deleted") throw error; }
+      await saveSubscription(latest, latest.metadata?.supabase_user_id || object.metadata?.supabase_user_id || null);
     } else if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
       const subscriptionId = object.subscription || object.parent?.subscription_details?.subscription;
       const id = typeof subscriptionId === "string" ? subscriptionId : subscriptionId?.id;
