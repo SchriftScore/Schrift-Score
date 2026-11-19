@@ -85,9 +85,15 @@ export default async function handler(req, res) {
       const hasRequiredStats = group =>
         requiredStats.every(key => (group.labels || []).some(label => String(label).toUpperCase() === key));
       const expectedTeams = new Set([game.homeTeam, game.awayTeam].map(team => String(team || '').toUpperCase()));
+      if (expectedTeams.size !== 2 || expectedTeams.has('') || expectedTeams.has('—')) {
+        throw new Error('Scoreboard did not provide two valid team abbreviations for game ' + game.eventId);
+      }
       const validTeamBlocks = teamBlocks.filter(block =>
         expectedTeams.has(String(block.team?.abbreviation || '').toUpperCase())
       );
+      const gameLines = [];
+      const gameSeen = new Set();
+      const teamLineCounts = new Map([...expectedTeams].map(team => [team, 0]));
       for (const expectedTeam of expectedTeams) {
         const teamBlock = validTeamBlocks.find(block =>
           String(block.team?.abbreviation || '').toUpperCase() === expectedTeam
@@ -99,7 +105,8 @@ export default async function handler(req, res) {
       for (const teamBlock of validTeamBlocks) {
         const team = teamBlock.team?.abbreviation || '';
         if (!team) continue;
-        const isHome = team === game.homeTeam;
+        const normalizedTeam = String(team).toUpperCase();
+        const isHome = normalizedTeam === String(game.homeTeam).toUpperCase();
         const opponent = isHome ? game.awayTeam : game.homeTeam;
         const ownScore = isHome ? game.homeScore : game.awayScore;
         const opponentScore = isHome ? game.awayScore : game.homeScore;
@@ -124,11 +131,12 @@ export default async function handler(req, res) {
             const name = athlete.displayName || athlete.fullName || athlete.shortName;
             if (!name) continue;
             const key = game.eventId + '|' + team + '|' + normalizeName(name);
-            if (seen.has(key)) continue;
-            seen.add(key);
+            if (seen.has(key) || gameSeen.has(key)) continue;
+            gameSeen.add(key);
+            teamLineCounts.set(normalizedTeam, (teamLineCounts.get(normalizedTeam) || 0) + 1);
             const pts = num(get('PTS')), reb = num(get('REB')), ast = num(get('AST'));
             const stl = num(get('STL')), blk = num(get('BLK'));
-            games.push({
+            gameLines.push({
               name, team, playerId: athlete.id ? String(athlete.id) : '', date: game.date, eventId: game.eventId,
               opponent, homeAway: isHome ? 'home' : 'away',
               result: ownScore > opponentScore ? 'W' : 'L',
@@ -140,7 +148,14 @@ export default async function handler(req, res) {
           }
         }
       }
-        dataQuality.boxScoreSuccessCount += 1;
+      for (const expectedTeam of expectedTeams) {
+        if (!(teamLineCounts.get(expectedTeam) > 0)) {
+          throw new Error('ESPN box score has no valid player-game lines for ' + expectedTeam + ' in game ' + game.eventId);
+        }
+      }
+      for (const key of gameSeen) seen.add(key);
+      games.push(...gameLines);
+      dataQuality.boxScoreSuccessCount += 1;
       } catch (error) {
         dataQuality.boxScoreFailures.push({ eventId: game.eventId, date: game.date, error: error?.message || 'Unknown ESPN error' });
       }
