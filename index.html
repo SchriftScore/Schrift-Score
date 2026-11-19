@@ -127,7 +127,27 @@
         border-right: 2px solid #e2e8f0;
       }
     }
-  </style>
+  
+/* Schrift Score visual system refresh — shared across the full site */
+:root{--ss-bg:#080b12;--ss-panel:#101722;--ss-panel-2:#141e2b;--ss-line:#263447;--ss-muted:#91a0b4;--ss-accent:#35d39a;--ss-accent-2:#16a879;--ss-glow:rgba(53,211,154,.14)}
+html{scroll-behavior:smooth}body{background-color:var(--ss-bg);background-image:radial-gradient(ellipse at 12% -10%,rgba(16,185,129,.13),transparent 38%),radial-gradient(ellipse at 100% 8%,rgba(20,184,166,.08),transparent 32%);color:#edf4f8}
+header{background:rgba(10,15,23,.88)!important;border-color:rgba(91,113,139,.24)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+header a,header button{white-space:nowrap}header .rounded-xl{box-shadow:0 5px 22px rgba(0,0,0,.2)}
+main{position:relative}main h1,main h2,main h3{letter-spacing:-.035em}main h1{line-height:1.06}
+main .rounded-xl,main .rounded-2xl{border-color:rgba(105,129,155,.25)}
+main [class*="bg-court-900"],main [class*="bg-\[#0c111d\]"],main [class*="bg-slate-950"]{background-color:rgba(15,23,34,.88)}
+main .shadow-xl,main .shadow-2xl{box-shadow:0 18px 55px rgba(0,0,0,.22)}
+button,a{transition:transform .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease}
+button:hover:not(:disabled){filter:brightness(1.08)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--ss-accent);outline-offset:3px}
+input,select,textarea{border-color:rgba(117,139,163,.34)!important;border-radius:12px!important;background-color:#0a111b!important;color:#f1f5f9!important}input::placeholder{color:#718096!important}input:focus,select:focus,textarea:focus{border-color:var(--ss-accent)!important;box-shadow:0 0 0 3px var(--ss-glow)}
+main .bg-emerald-500:not(#matchBar){box-shadow:0 7px 22px rgba(16,185,129,.16)}
+main .border-slate-800,main .border-slate-700{border-color:rgba(105,129,155,.25)!important}
+main .text-slate-500{color:#8b9bb0!important}main .text-slate-400{color:#a9b7c8!important}
+main table{border-collapse:separate;border-spacing:0}main table thead th{letter-spacing:.08em;text-transform:uppercase;font-size:.68rem}main tbody tr{transition:background .15s ease}main tbody tr:hover{background:rgba(53,211,154,.055)}
+summary{transition:color .15s ease}summary:hover{color:#e8fff5}
+@media(max-width:768px){header .max-w-7xl{min-height:64px;height:auto;padding-top:10px;padding-bottom:10px}main{padding-top:16px}main .rounded-2xl{border-radius:16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
 </head>
 <body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
 
