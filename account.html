@@ -107,6 +107,13 @@
       const result = await sb.auth.getUser();
       if(result.error || !result.data.user){ currentUser=null; $('auth-panel').classList.remove('hidden'); $('account-panel').classList.add('hidden'); return; }
       currentUser=result.data.user;
+      if(currentUser.is_anonymous){
+        $('account-panel').classList.add('hidden');
+        $('auth-panel').classList.remove('hidden');
+        setMode('signup');
+        notice('You are currently using a guest Draft Room session. Create an account to keep that progress connected to your email.','success');
+        return;
+      }
       $('auth-panel').classList.add('hidden');
       $('account-panel').classList.remove('hidden');
       $('account-email').textContent=currentUser.email || 'Email not confirmed';
