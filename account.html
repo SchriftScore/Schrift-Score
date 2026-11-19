@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schrift Score Account | Plus</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{color-scheme:dark}body{background:radial-gradient(ellipse at 15% 0%,rgba(16,185,129,.13),transparent 38%),#080b12;color:#edf4f8;font-family:Inter,system-ui,sans-serif}
+    input{background:#0b1220;border:1px solid #334155;border-radius:12px;padding:12px;width:100%;color:#fff}
+    button{transition:.18s ease}button:disabled{opacity:.55;cursor:not-allowed}
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-950/80">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+      <a href="/" class="font-black tracking-tight text-lg">SCHRIFT <span class="text-emerald-400">SCORE</span></a>
+      <a href="/" class="text-sm text-slate-400 hover:text-white">← Back to leaderboard</a>
+    </div>
+  </header>
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <div class="max-w-2xl mx-auto">
+      <div class="mb-7">
+        <div class="text-xs uppercase tracking-[.25em] text-emerald-300 font-bold">Your account</div>
+        <h1 class="text-4xl font-black tracking-tight mt-2">SCHRIFT SCORE <span class="text-amber-400">PLUS</span></h1>
+        <p class="text-slate-400 mt-2">Create an account to keep your subscription and Plus access connected across devices.</p>
+      </div>
+      <div id="notice" class="hidden rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm mb-5" role="status" aria-live="polite"></div>
+      <section id="auth-panel" class="rounded-2xl border border-slate-700 bg-slate-900/90 p-5 sm:p-7">
+        <div class="flex gap-2 mb-5">
+          <button id="show-signin" class="flex-1 rounded-xl bg-emerald-400 text-slate-950 font-bold py-2.5">Sign in</button>
+          <button id="show-signup" class="flex-1 rounded-xl border border-slate-700 text-slate-300 font-bold py-2.5">Create account</button>
+        </div>
+        <form id="auth-form" class="space-y-4">
+          <div><label for="email" class="block text-sm text-slate-300 mb-1.5">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+          <div><label for="password" class="block text-sm text-slate-300 mb-1.5">Password</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></div>
+          <div id="confirm-password-wrap" class="hidden"><label for="confirm-password" class="block text-sm text-slate-300 mb-1.5">Confirm password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your password"></div>
+          <button id="auth-submit" type="submit" class="w-full rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold py-3">Sign in</button>
+        </form>
+        <button id="forgot-password" class="text-sm text-slate-400 hover:text-white mt-4">Forgot password?</button>
+        <p class="text-xs leading-relaxed text-slate-500 mt-5">Your account uses secure email authentication. Your password is managed by Supabase and is never shared with Schrift Score.</p>
+      </section>
+      <section id="account-panel" class="hidden rounded-2xl border border-slate-700 bg-slate-900/90 p-5 sm:p-7">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div><div class="text-xs uppercase tracking-widest text-slate-500">Signed in as</div><div id="account-email" class="font-bold mt-1 break-all"></div></div>
+          <button id="signout" class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Sign out</button>
+        </div>
+        <div class="border-t border-slate-800 my-5"></div>
+        <div class="flex items-center justify-between gap-3">
+          <div><div class="font-black text-xl">Membership status</div><p id="membership-status" class="text-sm text-slate-400 mt-1">Checking your account…</p></div>
+          <span id="membership-badge" class="hidden rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 px-3 py-1 text-xs font-black tracking-widest">👑 PLUS</span>
+        </div>
+        <div id="manage-wrap" class="hidden mt-5"><button id="manage-subscription" class="rounded-xl border border-amber-400/40 bg-amber-400/10 text-amber-200 font-bold px-4 py-3 w-full">Manage subscription in Stripe</button></div>
+        <div id="upgrade-wrap" class="mt-6">
+          <h2 class="font-black text-lg">Choose your Plus plan</h2>
+          <div class="grid sm:grid-cols-2 gap-3 mt-3">
+            <button data-plan="monthly" class="plan-button rounded-xl border border-slate-700 p-4 text-left hover:border-amber-400/70"><span class="text-xs uppercase tracking-widest text-slate-400">Monthly</span><span class="block text-2xl font-black mt-1">$3.99<span class="text-xs text-slate-400 font-medium"> / month</span></span><span class="block text-xs text-slate-500 mt-1">Cancel anytime</span></button>
+            <button data-plan="annual" class="plan-button rounded-xl border-2 border-amber-400 bg-amber-400/10 p-4 text-left"><span class="text-xs uppercase tracking-widest text-amber-300">Annual</span><span class="block text-2xl font-black mt-1">$29.99<span class="text-xs text-slate-400 font-medium"> / year</span></span><span class="block text-xs text-slate-400 mt-1">$2.50 per month, billed yearly</span></button>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Checkout is handled securely by Stripe. Plus turns on only after Stripe confirms the subscription.</p>
+        </div>
+        <div id="email-confirmation" class="hidden mt-5 rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">Confirm your email using the link we sent before purchasing Plus.</div>
+      </section>
+      <div class="mt-7 rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+        <h2 class="font-bold">What Plus includes</h2>
+        <ul class="text-sm text-slate-400 mt-3 space-y-2">
+          <li>✓ Compare up to 10 NBA players at once</li>
+          <li>✓ High-resolution comparison exports</li>
+          <li>✓ Custom metric modeling</li>
+          <li>✓ Expanded historical comparisons</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/plus-auth.js"></script>
+  <script>
+  (function(){
+    const $ = id => document.getElementById(id);
+    let mode = 'signin';
+    let currentUser = null;
+    const params = new URLSearchParams(location.search);
+    const notice = (message, type) => {
+      $('notice').textContent = message;
+      $('notice').className = 'rounded-xl border px-4 py-3 text-sm mb-5 ' + (type === 'error' ? 'border-rose-500/40 bg-rose-500/10 text-rose-200' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100');
+    };
+    function setMode(next){
+      mode = next;
+      $('show-signin').className = 'flex-1 rounded-xl ' + (mode==='signin'?'bg-emerald-400 text-slate-950 font-bold py-2.5':'border border-slate-700 text-slate-300 font-bold py-2.5');
+      $('show-signup').className = 'flex-1 rounded-xl ' + (mode==='signup'?'bg-emerald-400 text-slate-950 font-bold py-2.5':'border border-slate-700 text-slate-300 font-bold py-2.5');
+      $('confirm-password-wrap').classList.toggle('hidden',mode!=='signup');
+      $('forgot-password').classList.toggle('hidden',mode!=='signin');
+      $('auth-submit').textContent = mode==='signup'?'Create account':'Sign in';
+      $('password').autocomplete = mode==='signup'?'new-password':'current-password';
+    }
+    async function showAccount(){
+      const sb = window.SchriftScoreAuth.getClient();
+      const result = await sb.auth.getUser();
+      if(result.error || !result.data.user){ currentUser=null; $('auth-panel').classList.remove('hidden'); $('account-panel').classList.add('hidden'); return; }
+      currentUser=result.data.user;
+      $('auth-panel').classList.add('hidden');
+      $('account-panel').classList.remove('hidden');
+      $('account-email').textContent=currentUser.email || 'Email not confirmed';
+      $('email-confirmation').classList.toggle('hidden',!currentUser.email || !currentUser.email_confirmed_at);
+      await refreshMembership();
+    }
+    async function refreshMembership(){
+      const data=await window.SchriftScoreAuth.refreshPlusStatus();
+      const active=!!data.hasPlus;
+      $('membership-badge').classList.toggle('hidden',!active);
+      $('upgrade-wrap').classList.toggle('hidden',active);
+      $('manage-wrap').classList.toggle('hidden',!active);
+      const statusText = active
+        ? (data.cancelAtPeriodEnd ? 'Plus is active and scheduled to end on ' : 'Plus is active. Next billing date: ')
+        : (data.status==='past_due'?'Payment needs attention. Open subscription management to update your payment method.':'You are on the free plan.');
+      $('membership-status').textContent = active && data.currentPeriodEnd
+        ? statusText + new Date(data.currentPeriodEnd).toLocaleDateString()
+        : statusText;
+      if(data.status==='past_due' || data.status==='unpaid') $('manage-wrap').classList.remove('hidden');
+    }
+    $('show-signin').addEventListener('click',()=>setMode('signin'));
+    $('show-signup').addEventListener('click',()=>setMode('signup'));
+    $('auth-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const email=$('email').value.trim().toLowerCase();
+      const password=$('password').value;
+      $('auth-submit').disabled=true;
+      try{
+        const sb=window.SchriftScoreAuth.getClient();
+        if(mode==='signup'){
+          if(password!==$('confirm-password').value) throw new Error('Your passwords do not match.');
+          const session=await sb.auth.getSession();
+          const existing=session.data.session && session.data.session.user;
+          let result;
+          if(existing && existing.is_anonymous){
+            result=await sb.auth.updateUser({email,password});
+          } else {
+            result=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/account.html'}});
+          }
+          if(result.error) throw result.error;
+          if(result.data.session || (result.data.user && result.data.user.email_confirmed_at)){
+            notice('Your account is ready.','success');
+            await showAccount();
+            if(params.get('next')==='checkout') await window.SchriftScoreAuth.startCheckout(params.get('plan')==='annual'?'annual':'monthly');
+          } else {
+            notice('Check your email and click the confirmation link to finish creating your account. Then return here to sign in.','success');
+          }
+        } else {
+          const result=await sb.auth.signInWithPassword({email,password});
+          if(result.error) throw result.error;
+          notice('You are signed in.','success');
+          await showAccount();
+          if(params.get('next')==='checkout') await window.SchriftScoreAuth.startCheckout(params.get('plan')==='annual'?'annual':'monthly');
+        }
+      }catch(error){notice(error.message||'Unable to complete account request.','error');}
+      finally{$('auth-submit').disabled=false;}
+    });
+    $('forgot-password').addEventListener('click',async()=>{
+      const email=$('email').value.trim().toLowerCase();
+      if(!email){notice('Enter your email address first.','error');return;}
+      const result=await window.SchriftScoreAuth.getClient().auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/account.html?reset=1'});
+      if(result.error) notice(result.error.message,'error');
+      else notice('Password reset email sent. Check your inbox.','success');
+    });
+    $('signout').addEventListener('click',async()=>{
+      const result=await window.SchriftScoreAuth.getClient().auth.signOut();
+      if(result.error) notice(result.error.message,'error');
+      else {notice('You are signed out.','success');await showAccount();}
+    });
+    $('manage-subscription').addEventListener('click',async()=>{
+      try{await window.SchriftScoreAuth.openPortal();}catch(error){notice(error.message,'error');}
+    });
+    document.querySelectorAll('[data-plan]').forEach(button=>button.addEventListener('click',async()=>{
+      try{await window.SchriftScoreAuth.startCheckout(button.dataset.plan);}catch(error){notice(error.message,'error');}
+    }));
+    async function init(){
+      try{
+        await window.SchriftScoreAuth.ready;
+        if(params.get('checkout')==='success') notice('Stripe returned you to Schrift Score. We are checking the subscription confirmation now. This can take a few seconds.','success');
+        if(params.get('checkout')==='cancelled') notice('Checkout was cancelled. No subscription was started.','success');
+        if(params.get('reset')==='1') notice('Enter your new password after opening the reset link. If your reset link is not active, request another password reset.','success');
+        await showAccount();
+        if(params.get('checkout')==='success'){
+          let tries=0;
+          const poll=setInterval(async()=>{tries++;await refreshMembership();if(tries>=12 || $('membership-badge').classList.contains(''))clearInterval(poll);},5000);
+          setTimeout(()=>clearInterval(poll),60000);
+        }
+      }catch(error){notice(error.message||'The account service could not load.','error');}
+    }
+    setMode('signin');
+    init();
+  })();
+  </script>
+</body>
+</html>
