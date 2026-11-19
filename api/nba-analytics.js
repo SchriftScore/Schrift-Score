@@ -170,8 +170,13 @@ export default async function handler(req, res) {
     // Build the season leaderboard from the exact same completed-game box scores.
     // This keeps the leaderboard and player profiles on one consistent data source.
     const playerMap = new Map();
+    // ESPN athlete IDs are the stable identity; names are only a fallback for
+    // rows where ESPN does not provide an ID.
+    const playerIdentity = player => player.playerId
+      ? 'id:' + String(player.playerId)
+      : 'name:' + normalizeName(player.name);
     for (const game of games) {
-      const key = normalizeName(game.name);
+      const key = playerIdentity(game);
       if (!playerMap.has(key)) playerMap.set(key, {
         name: game.name, team: game.team, playerId: game.playerId || '', gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
         lastGameDate: ''
@@ -211,7 +216,7 @@ export default async function handler(req, res) {
     const priorTotals = new Map();
     for (const game of games) {
       if (!latestGameDate || game.date >= latestGameDate) continue;
-      const key = normalizeName(game.name);
+      const key = playerIdentity(game);
       if (!priorTotals.has(key)) priorTotals.set(key, { gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 });
       const prior = priorTotals.get(key);
       prior.gp += 1;
@@ -231,7 +236,7 @@ export default async function handler(req, res) {
       .sort((a, b) => b.score - a.score)
       .map((p, index) => [p.key, index + 1]));
     players = players.map(player => {
-      const priorRank = priorRankByName.get(normalizeName(player.name));
+      const priorRank = priorRankByName.get(playerIdentity(player));
       return {
         ...player,
         rankYesterday: priorRank ?? null,
