@@ -239,6 +239,7 @@ async function load(){
    const messages=[];
    if(quality.scoreboardFailureCount)messages.push(quality.scoreboardFailureCount+' date(s) could not be checked');
    if(quality.boxScoreFailureCount)messages.push(quality.boxScoreFailureCount+' game box score(s) could not be loaded');
+   if(Number.isFinite(quality.boxScoreSuccessCount)&&Number.isFinite(quality.completedGameCount))messages.push(quality.boxScoreSuccessCount+' of '+quality.completedGameCount+' completed game box scores loaded');
    $('dataQualityNotice').textContent='Partial NBA data: '+messages.join('; ')+'. Some games may be missing, so player averages and samples could be incomplete. Try refreshing later.';
    $('dataQualityNotice').classList.remove('hidden');
   }else{
