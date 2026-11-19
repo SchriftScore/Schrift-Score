@@ -120,7 +120,20 @@ export default async function handler(req, res) {
             const vals = row.stats || [];
             const get = key => {
               const idx = indexOf(key);
-              return idx >= 0 ? vals[idx] : 0;
+              if (idx < 0 || idx >= vals.length) {
+                throw new Error('ESPN player row is missing the ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
+              }
+              return vals[idx];
+            };
+            const parseRequiredStat = (key, rawValue) => {
+              if (rawValue === null || rawValue === undefined || String(rawValue).trim() === '') {
+                throw new Error('ESPN returned a blank ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
+              }
+              const parsed = Number(String(rawValue).replace(/,/g, '').trim());
+              if (!Number.isFinite(parsed) || parsed < 0) {
+                throw new Error('ESPN returned an invalid ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
+              }
+              return parsed;
             };
             const minutes = get('MIN');
             const minuteText = String(minutes ?? '').trim();
@@ -134,8 +147,11 @@ export default async function handler(req, res) {
             if (seen.has(key) || gameSeen.has(key)) continue;
             gameSeen.add(key);
             teamLineCounts.set(normalizedTeam, (teamLineCounts.get(normalizedTeam) || 0) + 1);
-            const pts = num(get('PTS')), reb = num(get('REB')), ast = num(get('AST'));
-            const stl = num(get('STL')), blk = num(get('BLK'));
+            const pts = parseRequiredStat('PTS', get('PTS'));
+            const reb = parseRequiredStat('REB', get('REB'));
+            const ast = parseRequiredStat('AST', get('AST'));
+            const stl = parseRequiredStat('STL', get('STL'));
+            const blk = parseRequiredStat('BLK', get('BLK'));
             gameLines.push({
               name, team, playerId: athlete.id ? String(athlete.id) : '', date: game.date, eventId: game.eventId,
               opponent, homeAway: isHome ? 'home' : 'away',
