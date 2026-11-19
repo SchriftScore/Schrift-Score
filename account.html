@@ -40,6 +40,15 @@
         <button id="forgot-password" class="text-sm text-slate-400 hover:text-white mt-4">Forgot password?</button>
         <p class="text-xs leading-relaxed text-slate-500 mt-5">Your account uses secure email authentication. Your password is managed by Supabase and is never shared with Schrift Score.</p>
       </section>
+      <section id="reset-panel" class="hidden rounded-2xl border border-slate-700 bg-slate-900/90 p-5 sm:p-7">
+        <h2 class="font-black text-xl">Choose a new password</h2>
+        <p class="text-sm text-slate-400 mt-2 mb-5">Set a new password for your Schrift Score account.</p>
+        <form id="reset-form" class="space-y-4">
+          <div><label for="new-password" class="block text-sm text-slate-300 mb-1.5">New password</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" required></div>
+          <div><label for="new-password-confirm" class="block text-sm text-slate-300 mb-1.5">Confirm new password</label><input id="new-password-confirm" type="password" minlength="8" autocomplete="new-password" required></div>
+          <button class="w-full rounded-xl bg-emerald-400 text-slate-950 font-extrabold py-3" type="submit">Update password</button>
+        </form>
+      </section>
       <section id="account-panel" class="hidden rounded-2xl border border-slate-700 bg-slate-900/90 p-5 sm:p-7">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div><div class="text-xs uppercase tracking-widest text-slate-500">Signed in as</div><div id="account-email" class="font-bold mt-1 break-all"></div></div>
@@ -162,6 +171,19 @@
       if(result.error) notice(result.error.message,'error');
       else notice('Password reset email sent. Check your inbox.','success');
     });
+    $('reset-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const password=$('new-password').value;
+      if(password!==$('new-password-confirm').value){notice('Your passwords do not match.','error');return;}
+      try{
+        const result=await window.SchriftScoreAuth.getClient().auth.updateUser({password});
+        if(result.error) throw result.error;
+        $('reset-panel').classList.add('hidden');
+        notice('Your password has been updated. Sign in with your new password next time.','success');
+        await window.SchriftScoreAuth.getClient().auth.signOut();
+        await showAccount();
+      }catch(error){notice(error.message||'Unable to update password.','error');}
+    });
     $('signout').addEventListener('click',async()=>{
       const result=await window.SchriftScoreAuth.getClient().auth.signOut();
       if(result.error) notice(result.error.message,'error');
@@ -178,11 +200,25 @@
         await window.SchriftScoreAuth.ready;
         if(params.get('checkout')==='success') notice('Stripe returned you to Schrift Score. We are checking the subscription confirmation now. This can take a few seconds.','success');
         if(params.get('checkout')==='cancelled') notice('Checkout was cancelled. No subscription was started.','success');
-        if(params.get('reset')==='1') notice('Enter your new password after opening the reset link. If your reset link is not active, request another password reset.','success');
+        if(params.get('reset')==='1'){
+          const session=await window.SchriftScoreAuth.getClient().auth.getSession();
+          if(session.data.session){
+            $('auth-panel').classList.add('hidden');
+            $('account-panel').classList.add('hidden');
+            $('reset-panel').classList.remove('hidden');
+            notice('Enter your new password below.','success');
+            return;
+          }
+          notice('This password-reset link is expired or invalid. Request a new one below.','error');
+        }
         await showAccount();
         if(params.get('checkout')==='success'){
           let tries=0;
-          const poll=setInterval(async()=>{tries++;await refreshMembership();if(tries>=12 || $('membership-badge').classList.contains(''))clearInterval(poll);},5000);
+          const poll=setInterval(async()=>{
+            tries++;
+            const status=await refreshMembership();
+            if(status.hasPlus || tries>=12) clearInterval(poll);
+          },5000);
           setTimeout(()=>clearInterval(poll),60000);
         }
       }catch(error){notice(error.message||'The account service could not load.','error');}
