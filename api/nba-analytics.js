@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     return Number.isFinite(parsed) ? parsed : 0;
   };
   const normalizeName = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const dataQuality = { scoreboardFailures: [], boxScoreFailures: [], invalidBoxScores: [] };
+  const dataQuality = { scoreboardFailures: [], boxScoreFailures: [], invalidBoxScores: [], scoreboardSuccessCount: 0, boxScoreSuccessCount: 0 };
   const scoreWorkers = async (items, count, fn) => {
     const workers = Array.from({length: Math.min(count, items.length)}, async (_, worker) => {
       for (let i = worker; i < items.length; i += Math.min(count, items.length)) await fn(items[i], i);
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
       const compactDate = date.replace(/-/g, '');
       try {
         dailyPayloads[index] = await getJson('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + compactDate + '&limit=100');
+        dataQuality.scoreboardSuccessCount += 1;
       } catch (error) {
         dataQuality.scoreboardFailures.push({ date, error: error?.message || 'Unknown ESPN error' });
       }
@@ -129,6 +130,7 @@ export default async function handler(req, res) {
           }
         }
       }
+        dataQuality.boxScoreSuccessCount += 1;
       } catch (error) {
         dataQuality.boxScoreFailures.push({ eventId: game.eventId, date: game.date, error: error?.message || 'Unknown ESPN error' });
       }
@@ -220,7 +222,10 @@ export default async function handler(req, res) {
       dataQuality: {
         partial: dataQuality.scoreboardFailures.length > 0 || dataQuality.boxScoreFailures.length > 0,
         requestedDates: dayKeys.length,
+        scoreboardSuccessCount: dataQuality.scoreboardSuccessCount,
         scoreboardFailureCount: dataQuality.scoreboardFailures.length,
+        completedGameCount: descriptors.length,
+        boxScoreSuccessCount: dataQuality.boxScoreSuccessCount,
         boxScoreFailureCount: dataQuality.boxScoreFailures.length,
         scoreboardFailures: dataQuality.scoreboardFailures,
         boxScoreFailures: dataQuality.boxScoreFailures
