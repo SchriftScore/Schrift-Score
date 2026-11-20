@@ -117,12 +117,12 @@
       $('auth-panel').classList.add('hidden');
       $('account-panel').classList.remove('hidden');
       $('account-email').textContent=currentUser.email || 'Email not confirmed';
-      $('email-confirmation').classList.toggle('hidden',!currentUser.email || !currentUser.email_confirmed_at);
       await refreshMembership();
     }
     async function refreshMembership(){
       const data=await window.SchriftScoreAuth.refreshPlusStatus();
       const active=!!data.hasPlus;
+      $('email-confirmation').classList.toggle('hidden', !currentUser?.email || data.emailConfirmed !== false);
       $('membership-badge').classList.toggle('hidden',!active);
       $('upgrade-wrap').classList.toggle('hidden',active);
       $('manage-wrap').classList.toggle('hidden',!active);
