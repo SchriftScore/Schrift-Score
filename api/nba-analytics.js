@@ -119,7 +119,7 @@ export default async function handler(req, res) {
               return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
             };
             const minuteText = String(get('MIN') ?? '0:00').trim();
-            const minuteMatch = minuteText.match(/^(\\d+)(?::([0-5]\\d(?:\\.\\d+)?))?$/);
+            const minuteMatch = minuteText.match(/^(\d+)(?::([0-5]\d(?:\.\d+)?))?$/);
             const playedSeconds = minuteMatch
               ? (minuteMatch[2] !== undefined
                   ? Number(minuteMatch[1]) * 60 + Number(minuteMatch[2])
