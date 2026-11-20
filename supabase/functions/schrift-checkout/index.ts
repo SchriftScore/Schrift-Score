@@ -77,8 +77,8 @@ Deno.serve(async (req: Request) => {
     form.set("client_reference_id", user.id);
     form.set("metadata[supabase_user_id]", user.id);
     form.set("subscription_data[metadata][supabase_user_id]", user.id);
-    form.set("success_url", "https://nbaschriftscore.com/account.html?checkout=success");
-    form.set("cancel_url", "https://nbaschriftscore.com/account.html?checkout=cancelled");
+    form.set("success_url", allowedOrigin(origin) + "/account.html?checkout=success");
+    form.set("cancel_url", allowedOrigin(origin) + "/account.html?checkout=cancelled");
     if (existing?.stripe_customer_id) form.set("customer", existing.stripe_customer_id);
     else form.set("customer_email", user.email);
     const session = await stripeRequest("checkout/sessions", form);
