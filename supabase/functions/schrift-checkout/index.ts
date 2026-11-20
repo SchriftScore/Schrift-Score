@@ -28,6 +28,13 @@ async function currentUser(req: Request) {
   if (!response.ok) throw new Error("Your session expired. Sign in again.");
   return await response.json();
 }
+async function confirmedAccountUser(userId: string) {
+  const response = await fetch(SUPABASE_URL + "/auth/v1/admin/users/" + encodeURIComponent(userId), {
+    headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY }
+  });
+  if (!response.ok) throw new Error("Unable to verify your account email status.");
+  return await response.json();
+}
 async function adminRpc(name: string, body: Record<string, unknown>) {
   const response = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
     method: "POST",
@@ -62,7 +69,8 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405, origin);
   try {
     const user = await currentUser(req);
-    if (!user.email || !user.email_confirmed_at) return json({ error: "Confirm your email address before subscribing." }, 403, origin);
+    const verifiedUser = await confirmedAccountUser(user.id);
+    if (!verifiedUser.email || !verifiedUser.email_confirmed_at) return json({ error: "Confirm your email address before subscribing." }, 403, origin);
     const body = await req.json().catch(() => ({}));
     const plan = body?.plan === "annual" ? "annual" : body?.plan === "monthly" ? "monthly" : null;
     if (!plan) return json({ error: "Choose a valid Schrift Score Plus plan." }, 400, origin);
@@ -80,7 +88,7 @@ Deno.serve(async (req: Request) => {
     form.set("success_url", allowedOrigin(origin) + "/account.html?checkout=success");
     form.set("cancel_url", allowedOrigin(origin) + "/account.html?checkout=cancelled");
     if (existing?.stripe_customer_id) form.set("customer", existing.stripe_customer_id);
-    else form.set("customer_email", user.email);
+    else form.set("customer_email", verifiedUser.email);
     const session = await stripeRequest("checkout/sessions", form);
     return json({ url: session.url }, 200, origin);
   } catch (error) {
