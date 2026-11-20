@@ -133,6 +133,7 @@
         ? statusText + new Date(data.currentPeriodEnd).toLocaleDateString()
         : statusText;
       if(data.status==='past_due' || data.status==='unpaid') $('manage-wrap').classList.remove('hidden');
+      return data;
     }
     $('show-signin').addEventListener('click',()=>setMode('signin'));
     $('show-signup').addEventListener('click',()=>setMode('signup'));
