@@ -68,9 +68,15 @@ Deno.serve(async (req: Request) => {
     if (!(await verifySignature(raw, signature))) return new Response("Invalid signature", { status: 400 });
     const event = JSON.parse(raw);
     const object = event.data?.object || {};
-    if (event.type === "checkout.session.completed") {
+    if (
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded" ||
+      event.type === "checkout.session.async_payment_failed"
+    ) {
       const subscriptionId = typeof object.subscription === "string" ? object.subscription : object.subscription?.id;
-      if (subscriptionId) {
+      // A completed Checkout Session can still be unpaid when a delayed payment method is used.
+      // Wait for the asynchronous success/failure event before syncing subscription state.
+      if (subscriptionId && !(event.type === "checkout.session.completed" && object.payment_status === "unpaid")) {
         const sub = await stripeGetSubscription(subscriptionId);
         await saveSubscription(sub, object.metadata?.supabase_user_id || object.client_reference_id || null);
       }
