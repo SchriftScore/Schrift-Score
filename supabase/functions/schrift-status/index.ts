@@ -28,6 +28,13 @@ async function currentUser(req: Request) {
   if (!response.ok) throw new Error("Your session expired. Sign in again.");
   return await response.json();
 }
+async function confirmedAccountUser(userId: string) {
+  const response = await fetch(SUPABASE_URL + "/auth/v1/admin/users/" + encodeURIComponent(userId), {
+    headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY }
+  });
+  if (!response.ok) throw new Error("Unable to verify your account email status.");
+  return await response.json();
+}
 async function adminRpc(name: string, body: Record<string, unknown>) {
   const response = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
     method: "POST",
@@ -58,10 +65,13 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405, origin);
   try {
     const user = await currentUser(req);
+    const verifiedUser = await confirmedAccountUser(user.id);
+    const emailConfirmed = !!verifiedUser.email_confirmed_at;
     const subscription = await adminRpc("schrift_get_subscription", { p_user_id: user.id });
     const hasPlus = !!subscription && ["active", "trialing"].includes(subscription.status);
     return json({
       hasPlus,
+      emailConfirmed,
       status: subscription?.status || "inactive",
       currentPeriodEnd: subscription?.current_period_end || null,
       cancelAtPeriodEnd: !!subscription?.cancel_at_period_end
