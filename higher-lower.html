@@ -124,7 +124,7 @@ function updateStats(){
  $('progress').innerHTML=Array.from({length:count},(_,i)=>'<div class="progress-dot flex-1 '+(mode==='daily'?(i<round?'done':i===round?'current':''):(i<round?'done':i===round?'current':''))+'"></div>').join('');
 }
 function renderCard(suffix,p,revealValue){
- const img=$('photo-'+suffix);img.style.visibility='visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
+ const img=$('photo-'+suffix);img.style.visibility=(difficulty==='hof'&&suffix==='b'&&!revealValue)?'hidden':'visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
  $('name-'+suffix).textContent=difficulty==='hof'&&suffix==='b'&&!revealValue?'MYSTERY PLAYER':p.name;
  $('team-'+suffix).textContent=difficulty==='hof'&&suffix==='b'&&!revealValue?'???':(p.team||'NBA');
  const stats=$('stats-'+suffix);
@@ -159,8 +159,6 @@ function startMode(nextMode){
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
  if(mode==='daily'){
   sequence=buildDaily();
-  const saved=records.dailyRuns?.[todayKey()];
-  if(saved?.completed){finish('dailyDone');return}
  }else sequence=shuffle(players,Math.floor(Math.random()*4294967295));
  if(sequence.length<2){showError('There are not enough players to create a matchup.');return}
  currentA=sequence[0];currentB=sequence[1];
