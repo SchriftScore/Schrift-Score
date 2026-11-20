@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NBA Battle Center | Schrift Score</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']},colors:{court:{950:'#070a11',900:'#0c111d',850:'#111827',800:'#162032',700:'#1e2d44',border:'#1f2e47'}}}}}</script>
+<style>
+:root{color-scheme:dark}body{background:#070a11;color:#e2e8f0;font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}
+.grid-glow{background-image:radial-gradient(circle at 50% 0%,#10b98118,transparent 48%),linear-gradient(#17243a55 1px,transparent 1px),linear-gradient(90deg,#17243a55 1px,transparent 1px);background-size:auto,38px 38px,38px 38px}
+.game-card{background:linear-gradient(145deg,#131e30,#0c111d);border:1px solid #263650;transition:transform .18s,border-color .18s,box-shadow .18s}
+.game-card.live:hover{transform:translateY(-4px);border-color:#10b981;box-shadow:0 14px 40px #0006}
+.game-card.soon{opacity:.72}.game-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:#1e2d44;font-size:24px}
+.pill{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em}
+</style>
+</head>
+<body class="min-h-screen">
+<header class="border-b border-court-border bg-court-900/90">
+ <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+  <a href="/" class="font-black tracking-tight text-white text-lg">NBA <span class="text-emerald-400">SCHRIFT SCORE</span></a>
+  <a href="/" class="text-xs font-mono text-slate-400 hover:text-white">← LEADERBOARD</a>
+ </div>
+</header>
+<main class="max-w-6xl mx-auto px-4 pb-16">
+ <section class="grid-glow text-center rounded-b-3xl px-4 pt-12 pb-10 sm:pt-16 sm:pb-14">
+  <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 pill text-emerald-300 mb-5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> THE NBA GAME ROOM</div>
+  <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white">BATTLE <span class="text-emerald-400">CENTER</span></h1>
+  <p class="max-w-xl mx-auto text-slate-400 mt-4 text-sm sm:text-base leading-relaxed">Put your NBA knowledge to the test. Compete against the numbers, beat the clock, and prove you know the league.</p>
+  <div class="flex flex-wrap justify-center gap-3 mt-7">
+   <a href="/higher-lower.html" class="rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-sm px-6 py-3">PLAY PLAYER BATTLE <span aria-hidden="true">→</span></a>
+   <a href="#games" class="rounded-xl bg-court-800 border border-court-border hover:border-slate-500 text-white font-bold text-sm px-6 py-3">EXPLORE GAMES</a>
+  </div>
+ </section>
+ <section class="mt-9">
+  <div class="flex items-end justify-between gap-3 mb-4"><div><div class="pill text-emerald-400 mb-1">CHOOSE YOUR CHALLENGE</div><h2 class="text-2xl sm:text-3xl font-black text-white">THE GAME ROOM</h2></div><span class="text-xs font-mono text-slate-500">6 GAME MODES</span></div>
+  <div id="games" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   <a href="/higher-lower.html" class="game-card live rounded-2xl p-5 sm:p-6 block">
+    <div class="flex justify-between items-start"><div class="game-icon">⚔️</div><span class="pill text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2.5 py-1">PLAY NOW</span></div>
+    <h3 class="text-xl font-black text-white mt-5">Player Battle</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Go head-to-head. Can you tell which NBA player has the higher Schrift Score?</p>
+    <div class="text-xs font-mono text-emerald-300 mt-5">DAILY 10 · ENDLESS MODE <span class="float-right">→</span></div>
+   </a>
+   <article class="game-card soon rounded-2xl p-5 sm:p-6"><div class="flex justify-between items-start"><div class="game-icon">🕵️</div><span class="pill text-slate-400 bg-slate-700/50 rounded-full px-2.5 py-1">IN DEVELOPMENT</span></div><h3 class="text-xl font-black text-white mt-5">Guess the Player</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Use stats, team clues, and hints to identify the mystery NBA player.</p><div class="text-xs font-mono text-slate-500 mt-5">CLUES · PLAYER KNOWLEDGE</div></article>
+   <article class="game-card soon rounded-2xl p-5 sm:p-6"><div class="flex justify-between items-start"><div class="game-icon">📊</div><span class="pill text-slate-400 bg-slate-700/50 rounded-full px-2.5 py-1">IN DEVELOPMENT</span></div><h3 class="text-xl font-black text-white mt-5">Stat Detective</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Read the numbers, spot the outlier, and figure out what the stat line is telling you.</p><div class="text-xs font-mono text-slate-500 mt-5">BOX SCORES · ANALYSIS</div></article>
+   <article class="game-card soon rounded-2xl p-5 sm:p-6"><div class="flex justify-between items-start"><div class="game-icon">🧠</div><span class="pill text-slate-400 bg-slate-700/50 rounded-full px-2.5 py-1">IN DEVELOPMENT</span></div><h3 class="text-xl font-black text-white mt-5">NBA Trivia</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Test your knowledge of NBA history, records, awards, teams, and the current league.</p><div class="text-xs font-mono text-slate-500 mt-5">HISTORY · RECORDS · CULTURE</div></article>
+   <article class="game-card soon rounded-2xl p-5 sm:p-6"><div class="flex justify-between items-start"><div class="game-icon">🏀</div><span class="pill text-slate-400 bg-slate-700/50 rounded-full px-2.5 py-1">IN DEVELOPMENT</span></div><h3 class="text-xl font-black text-white mt-5">Draft Your Starting Five</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Build a five-player lineup while staying under a budget. Make every pick count.</p><div class="text-xs font-mono text-slate-500 mt-5">LINEUP BUILDING · STRATEGY</div></article>
+   <article class="game-card soon rounded-2xl p-5 sm:p-6"><div class="flex justify-between items-start"><div class="game-icon">⏱️</div><span class="pill text-slate-400 bg-slate-700/50 rounded-full px-2.5 py-1">IN DEVELOPMENT</span></div><h3 class="text-xl font-black text-white mt-5">24-Second Challenge</h3><p class="text-sm text-slate-400 mt-2 leading-relaxed">Answer as many NBA questions as you can before the shot clock hits zero.</p><div class="text-xs font-mono text-slate-500 mt-5">SPEED ROUND · HIGH SCORE</div></article>
+  </div>
+ </section>
+ <section class="mt-8 rounded-2xl border border-court-border bg-court-900 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div><div class="pill text-sky-300 mb-2">YOUR NEXT RUN STARTS HERE</div><h2 class="text-xl font-black text-white">Think you know the NBA?</h2><p class="text-sm text-slate-400 mt-1">Start with Player Battle. A fresh Daily 10 is waiting.</p></div>
+  <a href="/higher-lower.html" class="shrink-0 text-center rounded-xl bg-white text-slate-950 font-black text-sm px-5 py-3 hover:bg-slate-200">TAKE THE CHALLENGE →</a>
+ </section>
+ <p class="text-center text-[11px] text-slate-600 mt-8">Schrift Score Battle Center · Player statistics powered by the Schrift Score season leaderboard.</p>
+</main>
+</body></html>
