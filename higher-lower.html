@@ -8,180 +8,240 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']},colors:{court:{950:'#070a11',900:'#0c111d',850:'#111827',800:'#162032',700:'#1e2d44',border:'#1f2e47'}}}}}</script>
 <style>
-body{background:#070a11;color:#e2e8f0;font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}
-button{transition:transform .15s,background .15s,border-color .15s}button:active{transform:scale(.98)}
-.player-card{background:linear-gradient(145deg,#131e30,#0c111d);border:1px solid #263650;border-radius:22px;min-height:300px}
-.player-photo{width:124px;height:124px;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 8px 16px #0008)}
-.choice{min-height:64px;font-weight:900;letter-spacing:.08em;border-radius:14px}
-.reveal{animation:pop .45s ease-out}@keyframes pop{0%{transform:scale(.82);opacity:.3}65%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-.correct{border-color:#10b981!important;box-shadow:0 0 0 1px #10b98155,0 0 35px #10b98118}.wrong{border-color:#f43f5e!important;box-shadow:0 0 0 1px #f43f5e55}
-.progress-dot{height:7px;border-radius:99px;background:#263650}.progress-dot.done{background:#10b981}.progress-dot.current{background:#38bdf8}
+:root{color-scheme:dark}body{background:#070a11;color:#e2e8f0;font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}
+button{transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}button:active{transform:scale(.98)}
+.grid-glow{background-image:radial-gradient(circle at 50% 0%,#10b98118,transparent 55%),linear-gradient(#17243a44 1px,transparent 1px),linear-gradient(90deg,#17243a44 1px,transparent 1px);background-size:auto,36px 36px,36px 36px}
+.player-card{background:linear-gradient(145deg,#17243a,#0c111d 75%);border:1px solid #2a3c59;border-radius:22px;min-height:340px;position:relative;overflow:hidden}
+.player-card:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 10%,#ffffff0b,transparent 58%);pointer-events:none}
+.player-photo{width:142px;height:142px;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 8px 18px #0009);position:relative}
+.choice{min-height:68px;font-weight:900;letter-spacing:.07em;border-radius:15px;border:1px solid transparent}
+.choice:disabled{opacity:.45;cursor:not-allowed}
+.correct{border-color:#10b981!important;box-shadow:0 0 0 1px #10b98155,0 0 36px #10b98120}.wrong{border-color:#f43f5e!important;box-shadow:0 0 0 1px #f43f5e55}
+.progress-dot{height:6px;border-radius:99px;background:#263650}.progress-dot.done{background:#10b981}.progress-dot.current{background:#38bdf8}
+.pill{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em}
+.stat-chip{border:1px solid #2b3c57;background:#101a2a;border-radius:12px;padding:8px 10px}
+@keyframes pop{0%{transform:scale(.86);opacity:.2}65%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}.reveal{animation:pop .35s ease-out}
+@keyframes pulse{50%{opacity:.55}}.timer-low{color:#fb7185;animation:pulse .8s infinite}
 </style>
 </head>
 <body class="min-h-screen">
 <header class="border-b border-court-border bg-court-900/90">
- <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-  <a href="/" class="font-black tracking-tight text-white text-lg">NBA <span class="text-emerald-400">SCHRIFT SCORE</span></a>
-  <a href="/" class="text-xs font-mono text-slate-400 hover:text-white">← BACK TO LEADERBOARD</a>
+ <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+  <a href="/battle.html" class="font-black tracking-tight text-white text-lg">NBA <span class="text-emerald-400">SCHRIFT SCORE</span></a>
+  <a href="/battle.html" class="text-xs font-mono text-slate-400 hover:text-white">← BATTLE CENTER</a>
  </div>
 </header>
-<main class="max-w-5xl mx-auto px-4 py-7 sm:py-10">
- <div class="text-center mb-7">
-  <div class="text-xs font-mono tracking-[.25em] text-emerald-400 mb-2">THE SCHRIFT SCORE BATTLE</div>
-  <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white">PLAYER <span class="text-emerald-400">BATTLE</span></h1>
-  <p class="text-sm text-slate-400 mt-3">Two NBA players. One question: who has the higher season Schrift Score?</p>
- </div>
- <section class="max-w-3xl mx-auto">
-  <div class="flex flex-wrap justify-center gap-2 mb-5">
-   <button id="daily-tab" class="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950">Daily 10</button>
-   <button id="endless-tab" class="px-4 py-2 rounded-xl text-sm font-bold bg-court-800 border border-court-border text-slate-300">Endless</button>
-   <select id="difficulty" class="px-3 py-2 rounded-xl text-sm font-bold bg-court-800 border border-court-border text-white"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option></select>
+<main class="max-w-6xl mx-auto px-4 pb-16">
+ <section class="grid-glow text-center rounded-b-3xl px-3 pt-9 pb-8 sm:pt-12 sm:pb-10">
+  <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 pill text-emerald-300 mb-4">⚔ THE SCHRIFT SCORE SHOWDOWN</div>
+  <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white">PLAYER <span class="text-emerald-400">BATTLE</span></h1>
+  <p class="text-sm sm:text-base text-slate-400 mt-3 max-w-xl mx-auto">Know the players. Know the numbers. Prove it.</p>
+ </section>
+ <section class="max-w-5xl mx-auto -mt-1">
+  <div class="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
+   <button id="daily-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-emerald-400 text-slate-950 border border-emerald-300"><div class="pill opacity-70">10 MATCHUPS</div><div class="font-black text-sm sm:text-base mt-1">Daily 10</div></button>
+   <button id="endless-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">3 LIVES</div><div class="font-black text-sm sm:text-base mt-1">Endless</div></button>
+   <button id="timed-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">60 SECONDS</div><div class="font-black text-sm sm:text-base mt-1">Shot Clock</div></button>
   </div>
-  <div class="bg-court-900 border border-court-border rounded-2xl p-4 sm:p-5 mb-5">
-   <div class="flex justify-between items-center gap-3 text-xs font-mono text-slate-400"><span id="mode-label">DAILY CHALLENGE</span><span id="streak-label">🔥 STREAK: 0</span></div>
-   <div class="flex gap-1.5 mt-3" id="progress"></div>
-   <div class="flex justify-between items-center mt-3 text-xs text-slate-500"><span id="round-label">ROUND 1 OF 10</span><span id="best-label">BEST: 0</span></div>
+  <div class="grid sm:grid-cols-3 gap-2 mt-3">
+   <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">COMPARE BY</span><select id="category" class="w-full bg-transparent text-sm font-bold text-white outline-none"><option value="total">Schrift Score</option><option value="ppg">Points per game</option><option value="rpg">Rebounds per game</option><option value="apg">Assists per game</option><option value="spg">Steals per game</option><option value="bpg">Blocks per game</option><option value="gp">Games played</option></select></label>
+   <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">DIFFICULTY</span><select id="difficulty" class="w-full bg-transparent text-sm font-bold text-white outline-none"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option><option value="hof">Hall of Fame · Mystery mode</option></select></label>
+   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
   </div>
-  <div id="loading" class="text-center py-16 text-slate-400">Loading this season’s player leaderboard…</div>
-  <div id="game" class="hidden">
+  <div class="grid grid-cols-3 gap-2 mt-3">
+   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">SCORE</div><div id="score-count" class="font-mono font-black text-2xl text-white mt-1">0</div></div>
+   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">STREAK</div><div id="streak-count" class="font-mono font-black text-2xl text-orange-300 mt-1">0 🔥</div></div>
+   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500" id="progress-caption">ROUND</div><div id="round-count" class="font-mono font-black text-2xl text-sky-300 mt-1">1/10</div></div>
+  </div>
+  <div class="mt-4 flex items-center justify-between gap-3 text-xs font-mono text-slate-500"><span id="mode-description">TODAY'S SHARED CHALLENGE</span><span id="lives-label" class="text-rose-300 hidden">♥ ♥ ♥</span><span id="timer-label" class="text-amber-300 hidden">01:00</span></div>
+  <div id="progress" class="flex gap-1.5 mt-2"></div>
+  <div id="loading" class="text-center py-20 text-slate-400">Loading the current NBA player pool…</div>
+  <div id="error" class="hidden text-center py-12 px-5 rounded-2xl border border-rose-500/30 bg-rose-500/5"><div class="text-rose-400 font-bold">Couldn’t load the player pool.</div><p id="error-detail" class="text-sm text-slate-400 mt-2"></p><button id="retry" class="mt-4 px-4 py-2 bg-court-800 rounded-lg text-sm font-bold">TRY AGAIN</button></div>
+  <div id="game" class="hidden mt-5">
+   <div class="flex items-center justify-center gap-3 mb-4"><span class="h-px bg-court-border flex-1"></span><span id="question" class="pill text-slate-300 text-center">WHO HAS THE HIGHER SCHRIFT SCORE?</span><span class="h-px bg-court-border flex-1"></span></div>
    <div class="grid grid-cols-2 gap-3 sm:gap-5 items-stretch">
     <article id="card-a" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
-     <div class="text-[10px] font-mono tracking-widest text-emerald-400 mb-2">PLAYER A · KNOWN</div>
-     <div class="h-32 flex items-end justify-center"><img id="photo-a" class="player-photo" alt=""></div>
-     <div id="name-a" class="font-black text-lg sm:text-xl text-white mt-2 leading-tight"></div>
-     <div id="team-a" class="text-xs font-mono text-slate-400 mt-1"></div>
-     <div id="stats-a" class="mt-4 text-xs text-slate-400 leading-6"></div>
-     <div id="score-a" class="font-mono font-black text-3xl sm:text-4xl text-emerald-400 mt-auto pt-4"></div>
-     <div class="text-[9px] text-slate-500 font-mono mt-1">SEASON SCHRIFT SCORE</div>
+     <div class="pill text-emerald-300 mb-1">PLAYER A · THE BENCHMARK</div>
+     <div class="h-36 flex items-end justify-center w-full"><img id="photo-a" class="player-photo" alt=""></div>
+     <div id="name-a" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-a" class="text-xs font-mono text-slate-400 mt-1"></div>
+     <div id="stats-a" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
+     <div class="mt-auto pt-4 w-full"><div id="value-a" class="font-mono font-black text-3xl sm:text-4xl text-emerald-300">—</div><div id="label-a" class="pill text-slate-500 mt-1">SCHRIFT SCORE</div></div>
     </article>
     <article id="card-b" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
-     <div class="text-[10px] font-mono tracking-widest text-sky-400 mb-2">PLAYER B · CHALLENGER</div>
-     <div class="h-32 flex items-end justify-center"><img id="photo-b" class="player-photo" alt=""></div>
-     <div id="name-b" class="font-black text-lg sm:text-xl text-white mt-2 leading-tight"></div>
-     <div id="team-b" class="text-xs font-mono text-slate-400 mt-1"></div>
-     <div id="stats-b" class="mt-4 text-xs text-slate-400 leading-6"></div>
-     <div id="score-b" class="font-mono font-black text-3xl sm:text-4xl text-slate-500 mt-auto pt-4">??.??</div>
-     <div class="text-[9px] text-slate-500 font-mono mt-1">SEASON SCHRIFT SCORE</div>
+     <div class="pill text-sky-300 mb-1">PLAYER B · THE CHALLENGER</div>
+     <div class="h-36 flex items-end justify-center w-full"><img id="photo-b" class="player-photo" alt=""></div>
+     <div id="name-b" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-b" class="text-xs font-mono text-slate-400 mt-1"></div>
+     <div id="stats-b" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
+     <div class="mt-auto pt-4 w-full"><div id="value-b" class="font-mono font-black text-3xl sm:text-4xl text-slate-500">???</div><div id="label-b" class="pill text-slate-500 mt-1">HIDDEN VALUE</div></div>
     </article>
    </div>
-   <div id="question" class="text-center text-sm font-bold text-white mt-5 mb-3">Does Player B have a HIGHER or LOWER Schrift Score?</div>
-   <div id="choices" class="grid grid-cols-2 gap-3">
-    <button id="higher" class="choice bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm sm:text-base">HIGHER ↑</button>
-    <button id="lower" class="choice bg-sky-500 hover:bg-sky-400 text-slate-950 text-sm sm:text-base">LOWER ↓</button>
+   <div class="text-center mt-5 mb-3"><div class="text-xs text-slate-500">MAKE YOUR CALL</div><div id="choice-prompt" class="text-lg sm:text-xl font-black text-white mt-1">Does Player B have the higher number?</div></div>
+   <div class="grid grid-cols-3 gap-2 sm:gap-3" id="choices">
+    <button id="higher" class="choice bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs sm:text-sm">HIGHER <span class="block text-lg">↑</span></button>
+    <button id="tie" class="choice bg-court-800 hover:bg-court-700 border border-court-border text-white text-xs sm:text-sm">SAME <span class="block text-lg">=</span></button>
+    <button id="lower" class="choice bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs sm:text-sm">LOWER <span class="block text-lg">↓</span></button>
    </div>
-   <div id="feedback" class="hidden text-center mt-4 p-4 rounded-xl bg-court-900 border border-court-border">
-    <div id="feedback-title" class="font-black text-lg"></div><div id="feedback-detail" class="text-sm text-slate-400 mt-1"></div>
-    <button id="continue" class="mt-3 px-6 py-3 rounded-xl bg-white text-slate-950 font-black text-sm">NEXT MATCHUP →</button>
+   <div id="feedback" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-court-900 border border-court-border">
+    <div class="flex items-start justify-between gap-3"><div><div id="feedback-title" class="font-black text-xl"></div><div id="feedback-detail" class="text-sm text-slate-400 mt-1"></div></div><div id="points-earned" class="font-mono font-black text-2xl text-emerald-300 whitespace-nowrap"></div></div>
+    <button id="continue" class="mt-4 w-full sm:w-auto px-7 py-3 rounded-xl bg-white text-slate-950 font-black text-sm">NEXT MATCHUP →</button>
    </div>
-   <div id="game-over" class="hidden text-center mt-5 p-5 rounded-2xl bg-court-900 border border-court-border">
-    <div class="text-3xl mb-2">🏀</div><div class="text-2xl font-black text-white" id="final-title">RUN COMPLETE</div>
-    <div class="text-slate-400 text-sm mt-2" id="final-detail"></div>
-    <div class="flex flex-wrap justify-center gap-2 mt-4"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-500 text-slate-950 font-black text-sm">SHARE SCORE ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button></div>
+   <div id="game-over" class="hidden mt-5 text-center p-6 sm:p-8 rounded-2xl bg-court-900 border border-court-border">
+    <div class="text-4xl mb-3" id="result-emoji">🏀</div><div class="pill text-emerald-300">FINAL BUZZER</div><div class="text-3xl font-black text-white mt-2" id="final-title">RUN COMPLETE</div>
+    <div id="final-score" class="font-mono font-black text-5xl text-emerald-300 mt-3">0</div><div class="text-xs text-slate-500 pill mt-1">POINTS</div>
+    <div class="text-slate-400 text-sm mt-3" id="final-detail"></div>
+    <div class="grid grid-cols-3 gap-2 max-w-md mx-auto mt-5"><div class="stat-chip"><div class="pill text-slate-500">CORRECT</div><div id="final-correct" class="font-mono font-black text-xl mt-1">0</div></div><div class="stat-chip"><div class="pill text-slate-500">ACCURACY</div><div id="final-accuracy" class="font-mono font-black text-xl mt-1">0%</div></div><div class="stat-chip"><div class="pill text-slate-500">BEST STREAK</div><div id="final-streak" class="font-mono font-black text-xl mt-1">0</div></div></div>
+    <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
    </div>
   </div>
-  <div id="error" class="hidden text-center py-12 px-5 rounded-2xl border border-rose-500/30 bg-rose-500/5"><div class="text-rose-400 font-bold">Couldn’t load the player pool.</div><p id="error-detail" class="text-sm text-slate-400 mt-2"></p><button onclick="loadPlayers()" class="mt-4 px-4 py-2 bg-court-800 rounded-lg text-sm font-bold">TRY AGAIN</button></div>
-  <p class="text-[11px] text-slate-600 text-center mt-6">Scores use the current season’s published Schrift Score formula and ESPN season-to-date stats. Daily matchups are shared by date; streaks are stored on this device.</p>
+  <p class="text-[11px] text-slate-600 text-center mt-7">Player statistics come from the live Schrift Score season leaderboard. Daily matchups are shared by date; personal records are saved on this device.</p>
  </section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let players=[],mode='daily',difficulty='rookie',sequence=[],round=0,streak=0,best=0,currentA=null,currentB=null,answered=false,used=new Set(),dailyDate='';
-const storageKey='schriftHigherLower.v1';
+const STORE='schriftPlayerBattle.v2';
+const CATEGORIES={total:{label:'SCHRIFT SCORE',question:'Who has the higher Schrift Score?',digits:2},ppg:{label:'POINTS PER GAME',question:'Who scores more points per game?',digits:1},rpg:{label:'REBOUNDS PER GAME',question:'Who grabs more rebounds per game?',digits:1},apg:{label:'ASSISTS PER GAME',question:'Who averages more assists per game?',digits:1},spg:{label:'STEALS PER GAME',question:'Who averages more steals per game?',digits:1},bpg:{label:'BLOCKS PER GAME',question:'Who averages more blocks per game?',digits:1},gp:{label:'GAMES PLAYED',question:'Who has played more games?',digits:0}};
+let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,finished=false,history=[];
+let records={};
+try{records=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){records={}}
 function todayKey(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date())}
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function seededShuffle(arr,seed){let a=arr.slice(),x=seed||1;for(let i=a.length-1;i>0;i--){x=(Math.imul(x,1664525)+1013904223)>>>0;let j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
-function score(p){return Number(p.total)}
-function fmt(n){return score(n).toFixed(2)}
-function safeText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function playerPhoto(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
-function statsMarkup(p){return 'PPG <b class="text-white">'+Number(p.ppg).toFixed(1)+'</b>　RPG <b class="text-white">'+Number(p.rpg).toFixed(1)+'</b><br>APG <b class="text-white">'+Number(p.apg).toFixed(1)+'</b>'}
-function loadSaved(){try{return JSON.parse(localStorage.getItem(storageKey)||'{}')}catch(_){return {}}}
-function save(){try{localStorage.setItem(storageKey,JSON.stringify(state))}catch(_){}}
-let state=loadSaved();
-async function loadPlayers(){
- $('loading').classList.remove('hidden');$('game').classList.add('hidden');$('error').classList.add('hidden');
- try{
-  const res=await fetch('/api/nba-analytics',{cache:'no-store'});const data=await res.json();
-  if(!res.ok||!Array.isArray(data.players))throw new Error(data.error||'The season leaderboard response was invalid.');
-  if(data.dataQuality?.partial)throw new Error('The live player feed is currently marked partial. Try again after ESPN data refreshes.');
-  players=data.players.filter(p=>p.name&&Number.isFinite(Number(p.total))&&Number(p.gp)>0);
-  if(players.length<12)throw new Error('Not enough qualified players are available yet.');
-  $('loading').classList.add('hidden');$('game').classList.remove('hidden');startGame();
- }catch(e){$('loading').classList.add('hidden');$('error').classList.remove('hidden');$('error-detail').textContent=e.message||'Unknown error.'}
+function shuffle(list,seed){let a=list.slice(),x=seed||1;for(let i=a.length-1;i>0;i--){x=(Math.imul(x,1664525)+1013904223)>>>0;let j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+function value(p){return Number(p[category]??0)}
+function formatted(p){return value(p).toFixed(CATEGORIES[category].digits)}
+function safe(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function photo(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
+function recordKey(){return mode+'_'+category}
+function bestForMode(){return Number(records[recordKey()]?.best)||0}
+function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+function updateStats(){
+ $('score-count').textContent=score;$('streak-count').textContent=streak+' 🔥';$('personal-best').textContent=bestForMode();
+ $('round-count').textContent=mode==='daily'?Math.min(round+1,10)+'/10':mode==='endless'?round+1:'—';
+ $('progress-caption').textContent=mode==='timed'?'TIME LEFT':'ROUND';
+ $('lives-label').classList.toggle('hidden',mode!=='endless');$('lives-label').textContent='♥ '.repeat(Math.max(0,lives));
+ $('timer-label').classList.toggle('hidden',mode!=='timed');$('timer-label').textContent='00:'+String(Math.max(0,timer)).padStart(2,'0');$('timer-label').classList.toggle('timer-low',timer<=10);
+ const count=mode==='daily'?10:Math.min(20,Math.max(10,round+2));
+ $('progress').innerHTML=Array.from({length:count},(_,i)=>'<div class="progress-dot flex-1 '+(mode==='daily'?(i<round?'done':i===round?'current':''):(i<round?'done':i===round?'current':''))+'"></div>').join('');
 }
-function makeDaily(){
- return seededShuffle(players,todayKey().split('-').join('')|0).slice(0,11);
-}
-function makeEndless(){
- const pool=seededShuffle(players,Math.floor(Math.random()*4294967295));return pool.slice(0,Math.min(pool.length,100));
-}
-function startGame(){
- difficulty=$('difficulty').value;round=0;streak=0;answered=false;used=new Set();dailyDate=todayKey();
- if(mode==='daily'){
-  sequence=makeDaily();
-  const saved=loadSaved().daily||{};
-  if(saved.date===dailyDate){round=Math.min(10,Number(saved.round)||0);streak=Number(saved.finalStreak??saved.streak)||0;if(saved.done){$('mode-label').textContent='DAILY CHALLENGE · '+dailyDate;finish(round>=10);return;}}
-  $('mode-label').textContent='DAILY CHALLENGE · '+dailyDate;
- }else{
-  sequence=makeEndless();$('mode-label').textContent='ENDLESS SURVIVAL';
- }
- best=mode==='daily'?Number((loadSaved().daily||{}).best)||0:Number(state.endlessBest)||0;
- if(mode==='daily'&&round>=10){finish(true);return}
- if(!sequence.length){$('error-detail').textContent='No matchups could be created.';$('error').classList.remove('hidden');$('game').classList.add('hidden');return}
- if(mode==='daily'){currentA=sequence[round];currentB=sequence[round+1];}else{currentA=sequence[0];currentB=sequence[1];round=0;}renderRound();
+function renderCard(suffix,p,revealValue){
+ const img=$('photo-'+suffix);img.style.visibility='visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
+ $('name-'+suffix).textContent=difficulty==='hof'&&suffix==='b'&&!revealValue?'MYSTERY PLAYER':p.name;
+ $('team-'+suffix).textContent=difficulty==='hof'&&suffix==='b'&&!revealValue?'???':(p.team||'NBA');
+ const stats=$('stats-'+suffix);
+ if(difficulty==='rookie'||revealValue){
+  const items=[['PPG',p.ppg],['RPG',p.rpg],['APG',p.apg],['SPG',p.spg],['BPG',p.bpg]];
+  stats.innerHTML=items.map(x=>'<div class="stat-chip text-slate-400">'+x[0]+' <b class="text-white ml-1">'+Number(x[1]||0).toFixed(1)+'</b></div>').join('');
+ }else stats.innerHTML='<div class="stat-chip col-span-2 text-slate-500">SCOUTING REPORT LOCKED</div>';
+ $('value-'+suffix).textContent=revealValue?formatted(p):suffix==='a'?formatted(p):'???';
+ $('value-'+suffix).className='font-mono font-black text-3xl sm:text-4xl '+(revealValue||suffix==='a'?'text-emerald-300':'text-slate-500');
+ $('label-'+suffix).textContent=revealValue||suffix==='a'?CATEGORIES[category].label:'HIDDEN VALUE';
 }
 function renderRound(){
- answered=false;$('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('choices').classList.remove('hidden');
+ if(finished)return;answered=false;
+ $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('choices').classList.remove('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');
- const a=currentA,b=currentB;
- for(const [suffix,p] of [['a',a],['b',b]]){
-  const img=$('photo-'+suffix);img.src=playerPhoto(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
-  img.style.visibility='visible';$('name-'+suffix).textContent=p.name;$('team-'+suffix).textContent=p.team||'NBA';
-  $('stats-'+suffix).innerHTML=difficulty==='rookie'?statsMarkup(p):'';
- }
- $('score-a').textContent=fmt(a)+' SS';$('score-b').textContent='??.??';
- $('round-label').textContent=mode==='daily'?'ROUND '+(round+1)+' OF 10':'ROUND '+(round+1);
- $('streak-label').textContent='🔥 STREAK: '+streak;$('best-label').textContent='BEST: '+best;
- $('progress').innerHTML=Array.from({length:10},(_,i)=>'<div class="progress-dot flex-1 '+(mode==='daily'?(i<round?'done':i===round?'current':''):'')+'"></div>').join('');
- $('question').textContent='Does '+b.name+' have a HIGHER or LOWER Schrift Score?';
+ renderCard('a',currentA,true);renderCard('b',currentB,false);
+ $('question').textContent=CATEGORIES[category].question.toUpperCase();
+ $('choice-prompt').textContent='Does '+(difficulty==='hof'?'the mystery player':currentB.name)+' have the higher number?';
+ $('continue').textContent='NEXT MATCHUP →';updateStats();
 }
-function reveal(choice){
- if(answered)return;answered=true;
- const a=score(currentA),b=score(currentB),correct=(choice==='higher'&&b>a)||(choice==='lower'&&b<a);
- const tied=b===a;const won=correct;
- $('choices').classList.add('hidden');$('score-b').textContent=fmt(currentB)+' SS';$('score-b').classList.add('reveal');
- $('card-b').classList.add(won?'correct':'wrong');
- if(won){streak++;best=Math.max(best,streak);$('feedback-title').textContent=tied?'EXACT TIE — COUNTED AS CORRECT':'CORRECT! 🔥';$('feedback-title').className='font-black text-lg text-emerald-400';$('feedback-detail').textContent=currentB.name+' has '+Math.abs(b-a).toFixed(2)+' '+(b>=a?'more':'fewer')+' Schrift Score points.'}
- else{$('feedback-title').textContent='NOT QUITE';$('feedback-title').className='font-black text-lg text-rose-400';$('feedback-detail').textContent='Missed by '+Math.abs(b-a).toFixed(2)+' SS. '+currentB.name+' has '+fmt(currentB)+' SS.'}
- $('streak-label').textContent='🔥 STREAK: '+streak;$('best-label').textContent='BEST: '+best;
- $('feedback').classList.remove('hidden');$('continue').textContent=won?(mode==='daily'&&round===9?'SEE RESULTS →':'NEXT MATCHUP →'):'SEE RESULTS →';
- if(mode==='daily'){state.daily={date:dailyDate,round:round+(won?1:0),streak:won?streak:0,best:Math.max(Number((state.daily||{}).best)||0,best),done:!won||round===9,finalStreak:streak}}
- else state.endlessBest=Math.max(Number(state.endlessBest)||0,best);
- save();
+function buildDaily(){
+ const list=shuffle(players,hash(todayKey()+'|'+category));
+ return list.slice(0,11);
 }
-function next(){
- $('score-b').classList.remove('reveal');
+function startMode(nextMode){
+ stopTimer();mode=nextMode;round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
+ category=$('category').value;difficulty=$('difficulty').value;
+ $('daily-tab').className='mode-tab rounded-xl px-2 py-3 text-left '+(mode==='daily'?'bg-emerald-400 text-slate-950 border border-emerald-300':'bg-court-900 text-slate-300 border border-court-border');
+ $('endless-tab').className='mode-tab rounded-xl px-2 py-3 text-left '+(mode==='endless'?'bg-emerald-400 text-slate-950 border border-emerald-300':'bg-court-900 text-slate-300 border border-court-border');
+ $('timed-tab').className='mode-tab rounded-xl px-2 py-3 text-left '+(mode==='timed'?'bg-emerald-400 text-slate-950 border border-emerald-300':'bg-court-900 text-slate-300 border border-court-border');
+ $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 10-MATCHUP CHALLENGE':mode==='endless'?'THREE LIVES. HOW LONG CAN YOU SURVIVE?':'60 SECONDS. MAXIMUM POINTS.';
+ $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
  if(mode==='daily'){
-  if(round>=9){if(streak===10){round=10;state.daily={date:dailyDate,round:10,streak:10,finalStreak:10,done:true,best:Math.max(Number((state.daily||{}).best)||0,10)};save();finish(true)}else finish(false);return}
-  if(streak===0||!$('feedback-title').textContent.startsWith('CORRECT')&&!$('feedback-title').textContent.startsWith('EXACT')){finish(false);return}
-  round++;currentA=currentB;currentB=sequence[round+1];
- }else{
-  if(!$('feedback-title').textContent.startsWith('CORRECT')&&!$('feedback-title').textContent.startsWith('EXACT')){finish(false);return}
-  round++;currentA=currentB;currentB=sequence[(round+1)%sequence.length];
- }
+  sequence=buildDaily();
+  const saved=records.dailyRuns?.[todayKey()];
+  if(saved?.completed){finish('dailyDone');return}
+ }else sequence=shuffle(players,Math.floor(Math.random()*4294967295));
+ if(sequence.length<2){showError('There are not enough players to create a matchup.');return}
+ currentA=sequence[0];currentB=sequence[1];
  renderRound();
+ if(mode==='timed'){
+  timerId=setInterval(()=>{timer--;updateStats();if(timer<=0)finish('time')},1000);
+ }
 }
-function finish(completed){
- $('feedback').classList.add('hidden');$('choices').classList.add('hidden');$('game-over').classList.remove('hidden');
- $('final-title').textContent=completed?'DAILY CHALLENGE COMPLETE':'RUN OVER';
- $('final-detail').textContent=mode==='daily'?(completed?'Perfect 10/10. You cleared today’s challenge.':'You got '+streak+' correct in a row today.'):'You got '+streak+' correct in a row. Best: '+best+'.';
- $('round-label').textContent=mode==='daily'?'DAILY RESULT':'RUN COMPLETE';$('streak-label').textContent='🔥 STREAK: '+streak;
+function showError(message){$('loading').classList.add('hidden');$('game').classList.add('hidden');$('error').classList.remove('hidden');$('error-detail').textContent=message}
+async function loadPlayers(){
+ $('loading').classList.remove('hidden');$('error').classList.add('hidden');$('game').classList.add('hidden');
+ try{
+  const res=await fetch('/api/nba-analytics',{cache:'no-store'});const data=await res.json();
+  if(!res.ok||!Array.isArray(data.players))throw new Error(data.error||'The leaderboard response was invalid.');
+  if(data.dataQuality?.partial)throw new Error('The NBA feed is currently incomplete. Try again after the next data refresh.');
+  players=data.players.filter(p=>p.name&&Number.isFinite(Number(p.total))&&Number(p.gp)>0&&['ppg','rpg','apg','spg','bpg'].every(k=>Number.isFinite(Number(p[k]))));
+  if(players.length<12)throw new Error('Not enough qualified players are available yet.');
+  $('loading').classList.add('hidden');startMode('daily');
+ }catch(e){showError(e.message||'Unknown error.')}
 }
-function setMode(nextMode){mode=nextMode;$('daily-tab').className=nextMode==='daily'?'px-4 py-2 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950':'px-4 py-2 rounded-xl text-sm font-bold bg-court-800 border border-court-border text-slate-300';$('endless-tab').className=nextMode==='endless'?'px-4 py-2 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950':'px-4 py-2 rounded-xl text-sm font-bold bg-court-800 border border-court-border text-slate-300';startGame()}
-$('higher').onclick=()=>reveal('higher');$('lower').onclick=()=>reveal('lower');$('continue').onclick=next;
-$('daily-tab').onclick=()=>setMode('daily');$('endless-tab').onclick=()=>setMode('endless');$('difficulty').onchange=()=>{difficulty=$('difficulty').value;startGame()};
-$('restart').onclick=()=>startGame();
-$('share').onclick=async()=>{const text='🏀 Schrift Score '+(mode==='daily'?'Daily Challenge':'Higher/Lower')+': '+streak+' in a row. Can you beat me? '+location.origin+'/higher-lower.html';try{if(navigator.share)await navigator.share({title:'NBA Schrift Score Higher / Lower',text,url:location.origin+'/higher-lower.html'});else{await navigator.clipboard.writeText(text);$('share').textContent='COPIED!'}}catch(e){if(e.name!=='AbortError'){$('share').textContent='SHARE UNAVAILABLE'}}};
+function choose(choice){
+ if(answered||finished)return;answered=true;
+ const a=value(currentA),b=value(currentB),eps=0.000001;
+ const actual=Math.abs(a-b)<eps?'tie':b>a?'higher':'lower';
+ const won=choice===actual;
+ const margin=Math.abs(a-b);
+ const points=won?(100+Math.min(100,Math.round(margin*4))+(streak*15)):0;
+ if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0;if(mode==='endless')lives--}
+ history.push({a:currentA.name,b:currentB.name,choice,won,category});
+ $('value-b').textContent=formatted(currentB);$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-b').textContent=CATEGORIES[category].label;
+ if(difficulty==='hof'){$('name-b').textContent=currentB.name;$('team-b').textContent=currentB.team||'NBA';$('stats-b').innerHTML=[['PPG',currentB.ppg],['RPG',currentB.rpg],['APG',currentB.apg],['SPG',currentB.spg],['BPG',currentB.bpg]].map(x=>'<div class="stat-chip text-slate-400">'+x[0]+' <b class="text-white ml-1">'+Number(x[1]||0).toFixed(1)+'</b></div>').join('')}
+ $('card-b').classList.add(won?'correct':'wrong');
+ $('feedback-title').textContent=won?(choice==='tie'?'DEAD EVEN! PERFECT CALL':'THAT’S RIGHT! 🔥'):'NOT THIS TIME';
+ $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
+ $('feedback-detail').textContent=currentB.name+' recorded '+formatted(currentB)+' '+CATEGORIES[category].label+'. '+currentA.name+' recorded '+formatted(currentA)+'. '+(won?'You read that matchup perfectly.':'The correct answer was '+actual.toUpperCase()+'.');
+ $('points-earned').textContent=won?'+'+points:'0 PTS';
+ $('continue').textContent=mode==='daily'&&round===9?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
+ $('choices').classList.add('hidden');$('feedback').classList.remove('hidden');
+ if(mode==='endless'&&lives<=0)$('continue').textContent='SEE FINAL SCORE →';
+ if(mode==='timed'&&timer<=0)$('continue').textContent='SEE FINAL SCORE →';
+ updateStats();
+}
+function advance(){
+ if(!answered)return;
+ if(mode==='daily'&&round>=9){finish('dailyDone');return}
+ if(mode==='endless'&&lives<=0){finish('outOfLives');return}
+ if(mode==='timed'&&timer<=0){finish('time');return}
+ round++;
+ let next;
+ if(mode==='daily')next=sequence[round+1];
+ else{
+  const remaining=sequence.filter(p=>p!==currentA&&p!==currentB);
+  if(!remaining.length)sequence=shuffle(players,Math.floor(Math.random()*4294967295));
+  const pool=sequence.filter(p=>p!==currentA&&p!==currentB);
+  next=pool[Math.floor(Math.random()*pool.length)]||players.find(p=>p!==currentB);
+ }
+ currentA=currentB;currentB=next;renderRound();
+}
+function finish(reason){
+ if(finished)return;finished=true;stopTimer();
+ $('choices').classList.add('hidden');$('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
+ const total=history.length,accuracy=total?Math.round(correct/total*100):0;
+ $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
+ $('result-emoji').textContent=reason==='dailyDone'&&correct===10?'🏆':reason==='outOfLives'?'💀':'🏀';
+ $('final-title').textContent=reason==='dailyDone'?'DAILY 10 COMPLETE':reason==='outOfLives'?'OUT OF LIVES':reason==='time'?'SHOT CLOCK EXPIRED':'RUN COMPLETE';
+ $('final-detail').textContent=reason==='dailyDone'?'You finished today’s shared challenge. Come back tomorrow for a new set.':reason==='outOfLives'?'Three misses ended your run. Run it back.':reason==='time'?'Time expired. Every correct answer counts.':'Your Player Battle run is complete.';
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};if(mode==='daily'){records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()]={completed:true,score,correct,accuracy}}saveRecords();
+ $('personal-best').textContent=bestForMode();$('round-count').textContent=mode==='daily'?'10/10':total;$('mode-description').textContent='RUN FINISHED';
+}
+function shareResult(){
+ const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
+ if(navigator.share){navigator.share({title:'Schrift Score Player Battle',text}).catch(()=>{})}
+ else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>$('share').textContent='COPIED!').catch(()=>$('share').textContent='COPY FAILED')}
+ else $('share').textContent='SHARE UNAVAILABLE';
+}
+$('higher').onclick=()=>choose('higher');$('lower').onclick=()=>choose('lower');$('tie').onclick=()=>choose('tie');
+$('continue').onclick=advance;
+$('daily-tab').onclick=()=>startMode('daily');$('endless-tab').onclick=()=>startMode('endless');$('timed-tab').onclick=()=>startMode('timed');
+$('category').onchange=()=>{category=$('category').value;startMode(mode)};
+$('difficulty').onchange=()=>{difficulty=$('difficulty').value;startMode(mode)};
+$('restart').onclick=()=>startMode(mode);$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadPlayers();
 </script>
 </body></html>
