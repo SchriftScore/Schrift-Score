@@ -152,68 +152,41 @@ summary{transition:color .15s ease}summary:hover{color:#e8fff5}
 <body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
 
   <!-- TOP HEADER -->
-  <header class="border-b border-court-border dark:border-court-border bg-court-900/95 dark:bg-court-900/95 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-      <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-        <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-base sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">
-          SS
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-            <span class="text-sm sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
-              SCHRIFT <span class="text-emerald-500 dark:text-emerald-400">SCORE</span>
+  <header class="border-b border-court-border bg-court-900/95 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-3">
+        <a href="/" class="flex items-center gap-3 min-w-0">
+          <span class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-lg sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">SS</span>
+          <span class="min-w-0">
+            <span class="flex items-center gap-2 flex-wrap">
+              <span class="text-base sm:text-xl font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span>
+              <span id="season-badge" class="text-[9px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
+              <span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">👑 PLUS</span>
             </span>
-            <span id="season-badge" class="text-[8px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">2026/27</span>
-            <span id="vip-badge" class="hidden text-[8px] sm:text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30">👑 PLUS</span>
-          </div>
-          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-            By <span class="text-slate-800 dark:text-slate-200 font-medium">Zachary Schriftman</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- Explicitly Labeled Navigation Controls -->
-      <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
-        <!-- Theme Toggle -->
-        <button 
-          id="theme-toggle-btn" 
-          onclick="toggleTheme()" 
-          class="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-court-850 dark:hover:bg-court-800 border border-slate-300 dark:border-court-border text-slate-700 dark:text-slate-300 transition-all text-xs font-mono"
-        >
-          <span id="theme-icon">🌙</span>
-          <span id="theme-text" class="hidden sm:inline">Theme</span>
-        </button>
-
-        <!-- Compare Button -->
-        <button 
-          onclick="openComparisonModal()"
-          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-teal-600 dark:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-teal-500/30 transition-colors"
-        >
-          <span>⚔️</span>
-          <span>Compare Players</span>
-          <span id="header-compare-count" class="bg-teal-500 text-slate-950 font-extrabold px-1.5 py-0.2 rounded-full text-[9px] ml-0.5">0/3</span>
-        </button>
-
-        <!-- Stat Calculator Button -->
-        <button 
-          onclick="toggleCalculator()"
-          class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-emerald-500/30 transition-colors"
-        >
-          <span>⚡</span>
-          <span>Stat Calculator</span>
-        </button>
-
-        <a href="/receipt-generator.html" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-emerald-500/30 transition-colors"><span>🧾</span><span>Card Studio</span></a>
-        <a href="/higher-lower.html" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-sky-500/30 transition-colors"><span>🏀</span><span>Higher / Lower</span></a>
-        <a href="/account.html" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-amber-500/30 transition-colors"><span>👤</span><span>Account / Plus</span></a>
-        <!-- Time Machine temporarily hidden; feature code retained for later re-enable. -->
-        <button onclick="openDraftNight()" class="flex items-center space-x-1 text-[11px] sm:text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1.5 sm:px-3 rounded-full border border-amber-500/30 transition-colors"><span>🏆</span><span>Draft Night</span></button>
-
-        <div class="hidden md:flex items-center space-x-1 text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-court-850 px-2.5 py-1.5 rounded-full border border-slate-300 dark:border-court-border">
+            <span class="block text-[10px] sm:text-xs text-slate-400">NBA player rankings & stats</span>
+          </span>
+        </a>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-300 bg-court-850 px-3 py-2 rounded-full border border-court-border">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span id="player-count">...</span>
         </div>
       </div>
+      <nav aria-label="Main navigation" class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+        <button id="theme-toggle-btn" onclick="toggleTheme()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-court-850 hover:bg-court-800 border border-court-border text-slate-300 text-xs font-mono">
+          <span id="theme-icon">🌙</span><span id="theme-text" class="hidden sm:inline">Theme</span>
+        </button>
+        <button onclick="openComparisonModal()" class="flex items-center gap-1.5 text-xs font-mono text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-3 py-2 rounded-full border border-teal-500/30">
+          <span>⚔️</span><span>Compare</span><span id="header-compare-count" class="bg-teal-500 text-slate-950 font-extrabold px-1.5 rounded-full text-[9px] ml-0.5">0/3</span>
+        </button>
+        <button onclick="toggleCalculator()" class="flex items-center gap-1.5 text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 rounded-full border border-emerald-500/30"><span>⚡</span><span>Calculator</span></button>
+        <a href="/receipt-generator.html" class="flex items-center gap-1.5 text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 rounded-full border border-emerald-500/30"><span>🧾</span><span>Card Studio</span></a>
+        <a href="/higher-lower.html" class="flex items-center gap-1.5 text-xs font-mono text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-2 rounded-full border border-sky-500/30"><span>🏀</span><span>Player Battle</span></a>
+        <a href="/account.html" class="flex items-center gap-1.5 text-xs font-mono text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 rounded-full border border-amber-500/30"><span>👤</span><span>Sign Up</span></a>
+        <button onclick="openDraftNight()" class="flex items-center gap-1.5 text-xs font-mono text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 rounded-full border border-amber-500/30"><span>🏆</span><span>Draft Night</span></button>
+        <div class="sm:hidden flex items-center gap-1.5 text-[10px] font-mono text-slate-300 bg-court-850 px-2.5 py-2 rounded-full border border-court-border">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span id="player-count-mobile">473 Players</span>
+        </div>
+      </nav>
     </div>
   </header>
 
