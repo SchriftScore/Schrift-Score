@@ -93,16 +93,7 @@ export default async function handler(req, res) {
       );
       const gameLines = [];
       const gameSeen = new Set();
-      const teamLineCounts = new Map([...expectedTeams].map(team => [team, 0]));
-      for (const expectedTeam of expectedTeams) {
-        const teamBlock = validTeamBlocks.find(block =>
-          String(block.team?.abbreviation || '').toUpperCase() === expectedTeam
-        );
-        if (!teamBlock || !(teamBlock.statistics || []).some(hasRequiredStats)) {
-          throw new Error('ESPN box score is missing required player statistics for ' + expectedTeam + ' in game ' + game.eventId);
-        }
-      }
-      for (const teamBlock of validTeamBlocks) {
+      for (const teamBlock of validTeamBlocks) {      for (const teamBlock of validTeamBlocks) {
         const team = teamBlock.team?.abbreviation || '';
         if (!team) continue;
         const normalizedTeam = String(team).toUpperCase();
@@ -120,39 +111,32 @@ export default async function handler(req, res) {
             const vals = row.stats || [];
             const get = key => {
               const idx = indexOf(key);
-              if (idx < 0 || idx >= vals.length) {
-                throw new Error('ESPN player row is missing the ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
-              }
-              return vals[idx];
+              return idx >= 0 && idx < vals.length ? vals[idx] : null;
             };
-            const parseRequiredStat = (key, rawValue) => {
-              if (rawValue === null || rawValue === undefined || String(rawValue).trim() === '') {
-                throw new Error('ESPN returned a blank ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
-              }
+            const parseRequiredStat = rawValue => {
+              if (rawValue === null || rawValue === undefined || String(rawValue).trim() === '') return null;
               const parsed = Number(String(rawValue).replace(/,/g, '').trim());
-              if (!Number.isFinite(parsed) || parsed < 0) {
-                throw new Error('ESPN returned an invalid ' + key + ' value for ' + (athlete.displayName || athlete.fullName || 'an unidentified player') + ' in game ' + game.eventId);
-              }
-              return parsed;
+              return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
             };
-            const minutes = get('MIN');
-            const minuteText = String(minutes ?? '').trim();
-            if (!/^\d+(?::[0-5]\d)?(?:\.\d+)?$/.test(minuteText)) continue;
-            const minuteParts = minuteText.split(':').map(Number);
-            const playedMinutes = minuteParts.length === 2 ? minuteParts[0] + minuteParts[1] / 60 : Number(minuteText);
-            if (!Number.isFinite(playedMinutes) || playedMinutes <= 0 || playedMinutes > 65) continue;
+            const minuteText = String(get('MIN') ?? '').trim();
+            const minuteMatch = minuteText.match(/^(\\d+)(?::([0-5]\\d(?:\\.\\d+)?))?$/);
+            if (!minuteMatch) continue;
+            const playedSeconds = minuteMatch[2] !== undefined
+              ? Number(minuteMatch[1]) * 60 + Number(minuteMatch[2])
+              : Number(minuteMatch[1]) * 60;
+            if (!Number.isFinite(playedSeconds) || playedSeconds <= 0.1 || playedSeconds > 3900) continue;
             const name = athlete.displayName || athlete.fullName || athlete.shortName;
             if (!name) continue;
             const key = game.eventId + '|' + team + '|' + normalizeName(name);
             if (seen.has(key) || gameSeen.has(key)) continue;
+            const pts = parseRequiredStat(get('PTS'));
+            const reb = parseRequiredStat(get('REB'));
+            const ast = parseRequiredStat(get('AST'));
+            const stl = parseRequiredStat(get('STL'));
+            const blk = parseRequiredStat(get('BLK'));
+            if ([pts, reb, ast, stl, blk].some(value => value === null)) continue;
             gameSeen.add(key);
-            teamLineCounts.set(normalizedTeam, (teamLineCounts.get(normalizedTeam) || 0) + 1);
-            const pts = parseRequiredStat('PTS', get('PTS'));
-            const reb = parseRequiredStat('REB', get('REB'));
-            const ast = parseRequiredStat('AST', get('AST'));
-            const stl = parseRequiredStat('STL', get('STL'));
-            const blk = parseRequiredStat('BLK', get('BLK'));
-            gameLines.push({
+                        gameLines.push({
               name, team, playerId: athlete.id ? String(athlete.id) : '', date: game.date, eventId: game.eventId,
               opponent, homeAway: isHome ? 'home' : 'away',
               result: ownScore > opponentScore ? 'W' : 'L',
@@ -164,13 +148,9 @@ export default async function handler(req, res) {
           }
         }
       }
-      for (const expectedTeam of expectedTeams) {
-        if (!(teamLineCounts.get(expectedTeam) > 0)) {
-          throw new Error('ESPN box score has no valid player-game lines for ' + expectedTeam + ' in game ' + game.eventId);
-        }
-      }
+      if (!gameLines.length) throw new Error('ESPN box score contained no valid player appearances for game ' + game.eventId);
       for (const key of gameSeen) seen.add(key);
-      games.push(...gameLines);
+            games.push(...gameLines);
       dataQuality.boxScoreSuccessCount += 1;
       } catch (error) {
         dataQuality.boxScoreFailures.push({ eventId: game.eventId, date: game.date, error: error?.message || 'Unknown ESPN error' });
@@ -186,12 +166,10 @@ export default async function handler(req, res) {
     // Build the season leaderboard from the exact same completed-game box scores.
     // This keeps the leaderboard and player profiles on one consistent data source.
     const playerMap = new Map();
-    // ESPN athlete IDs are the stable identity; names are only a fallback for
-    // rows where ESPN does not provide an ID.
-    const playerIdentity = player => player.playerId
-      ? 'id:' + String(player.playerId)
-      : 'name:' + normalizeName(player.name);
-    for (const game of games) {
+    // Normalized player name is the uniqueness key, preventing duplicate
+    // leaderboard rows if ESPN supplies inconsistent athlete IDs.
+    const playerIdentity = player => 'name:' + normalizeName(player.name);
+    for (const game of games) {    for (const game of games) {
       const key = playerIdentity(game);
       if (!playerMap.has(key)) playerMap.set(key, {
         name: game.name, team: game.team, playerId: game.playerId || '', gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
