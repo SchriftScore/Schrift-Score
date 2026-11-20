@@ -93,7 +93,7 @@ export default async function handler(req, res) {
       );
       const gameLines = [];
       const gameSeen = new Set();
-      for (const teamBlock of validTeamBlocks) {      for (const teamBlock of validTeamBlocks) {
+      for (const teamBlock of validTeamBlocks) {
         const team = teamBlock.team?.abbreviation || '';
         if (!team) continue;
         const normalizedTeam = String(team).toUpperCase();
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
     // Normalized player name is the uniqueness key, preventing duplicate
     // leaderboard rows if ESPN supplies inconsistent athlete IDs.
     const playerIdentity = player => 'name:' + normalizeName(player.name);
-    for (const game of games) {    for (const game of games) {
+    for (const game of games) {
       const key = playerIdentity(game);
       if (!playerMap.has(key)) playerMap.set(key, {
         name: game.name, team: game.team, playerId: game.playerId || '', gp: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0,
