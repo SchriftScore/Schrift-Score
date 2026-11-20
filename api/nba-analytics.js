@@ -118,13 +118,14 @@ export default async function handler(req, res) {
               const parsed = Number(String(rawValue).replace(/,/g, '').trim());
               return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
             };
-            const minuteText = String(get('MIN') ?? '').trim();
+            const minuteText = String(get('MIN') ?? '0:00').trim();
             const minuteMatch = minuteText.match(/^(\\d+)(?::([0-5]\\d(?:\\.\\d+)?))?$/);
-            if (!minuteMatch) continue;
-            const playedSeconds = minuteMatch[2] !== undefined
-              ? Number(minuteMatch[1]) * 60 + Number(minuteMatch[2])
-              : Number(minuteMatch[1]) * 60;
-            if (!Number.isFinite(playedSeconds) || playedSeconds <= 0.1 || playedSeconds > 3900) continue;
+            const playedSeconds = minuteMatch
+              ? (minuteMatch[2] !== undefined
+                  ? Number(minuteMatch[1]) * 60 + Number(minuteMatch[2])
+                  : Number(minuteMatch[1]) * 60)
+              : 0;
+            if (!Number.isFinite(playedSeconds) || playedSeconds > 3900) continue;
             const name = athlete.displayName || athlete.fullName || athlete.shortName;
             if (!name) continue;
             const key = game.eventId + '|' + team + '|' + normalizeName(name);
@@ -134,7 +135,14 @@ export default async function handler(req, res) {
             const ast = parseRequiredStat(get('AST'));
             const stl = parseRequiredStat(get('STL'));
             const blk = parseRequiredStat(get('BLK'));
+            const turnovers = parseRequiredStat(get('TO'));
             if ([pts, reb, ast, stl, blk].some(value => value === null)) continue;
+            // Some players record a stat (for example, a five-second-violation
+            // turnover) despite ESPN listing 0:00 minutes. Count those real
+            // game participants, but do not count inactive/DNP rows with no stats.
+            const recordedGameAction = [pts, reb, ast, stl, blk, turnovers]
+              .some(value => value !== null && value > 0);
+            if (playedSeconds <= 0 && !recordedGameAction) continue;
             gameSeen.add(key);
                         gameLines.push({
               name, team, playerId: athlete.id ? String(athlete.id) : '', date: game.date, eventId: game.eventId,
