@@ -25,76 +25,126 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
 </style>
 </head>
 <body class="min-h-screen">
-<header class="border-b border-court-border bg-court-900/90">
- <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-  <a href="/battle.html" class="font-black tracking-tight text-white text-lg">NBA <span class="text-emerald-400">SCHRIFT SCORE</span></a>
-  <a href="/battle.html" class="text-xs font-mono text-slate-400 hover:text-white">← BATTLE CENTER</a>
- </div>
+<style>
+.site-topbar{height:70px;border-bottom:1px solid #263447;background:#0b111b;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100vw - 1120px)/2));gap:18px}
+.brand-lockup{display:flex;align-items:center;gap:11px;text-decoration:none;color:#fff}
+.brand-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#35d39a,#087c61);font-weight:900;color:#06110e}
+.brand-lockup strong{display:block;font-size:15px;letter-spacing:-.04em}.brand-lockup em{font-style:normal;color:#35d39a}
+.brand-lockup small{display:block;font-size:9px;letter-spacing:.12em;color:#8fa0b3;margin-top:3px}
+.back-link{font-size:11px;font-weight:800;letter-spacing:.08em;color:#aab8c8;text-decoration:none}.back-link:hover{color:#35d39a}
+.game-wrap{max-width:1120px;margin:0 auto;padding:28px 20px 54px}
+.game-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:12px 0 24px;border-bottom:1px solid #263447}
+.game-kicker{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.17em;color:#35d39a}
+.game-heading h1{font-size:clamp(30px,5vw,48px);line-height:1;font-weight:900;letter-spacing:-.06em;color:#f8fafc;margin-top:10px}
+.game-heading p{color:#8fa0b3;font-size:13px;margin-top:9px}
+.heading-mark{font:800 11px 'JetBrains Mono',monospace;color:#8fa0b3;text-align:right}
+.control-panel{display:grid;grid-template-columns:1.2fr 1.2fr 1fr;gap:10px;margin-top:18px}
+.control-panel label,.best-panel{display:block;padding:11px 14px;border:1px solid #263447;border-radius:12px;background:#101722}
+.control-panel label>span,.best-panel>span{display:block;font:700 9px 'JetBrains Mono',monospace;letter-spacing:.14em;color:#8191a5;margin-bottom:6px}
+.control-panel select{width:100%;background:transparent;color:#f1f5f9;font-size:13px;font-weight:750;outline:none}
+.best-panel{display:flex;align-items:center;justify-content:space-between}.best-panel strong{font:900 24px 'JetBrains Mono',monospace;color:#f4c66a}
+.mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
+.mode-tab{border-radius:12px;padding:12px 14px!important;text-align:left!important;min-height:66px}
+.mode-tab .pill{font-size:9px;letter-spacing:.14em}
+.score-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.score-cell{padding:11px;border:1px solid #263447;border-radius:12px;background:#0d1520;text-align:center}
+.score-cell .pill{color:#8292a6}.score-cell strong{display:block;font:900 23px 'JetBrains Mono',monospace;color:#f8fafc;margin-top:4px}
+.game-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:19px;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#8191a5}
+.progress-dot{height:5px}
+.matchup-panel{margin-top:20px;padding:20px;border:1px solid #263447;border-radius:20px;background:linear-gradient(145deg,#111c2a,#0b111b)}
+.matchup-question{font:800 11px 'JetBrains Mono',monospace;letter-spacing:.15em;color:#aebdcd;text-align:center;margin-bottom:18px}
+.player-card{min-height:370px;border-radius:16px;background:linear-gradient(155deg,#19283a,#101722 70%);border:1px solid #30445f;padding:18px;box-shadow:inset 0 1px #ffffff08}
+.player-card:after{content:"";position:absolute;inset:auto 0 0;height:110px;background:linear-gradient(transparent,#0b111b55);pointer-events:none}
+.player-photo{width:166px;height:166px}
+.player-card .pill{position:relative;z-index:1}
+.player-card [id^="name-"]{font-size:clamp(17px,2.5vw,25px);letter-spacing:-.04em}
+.stat-chip{padding:7px 8px;font-size:10px}
+.choice{min-height:62px;font-size:13px}
+.decision-area{max-width:620px;margin:22px auto 0}
+.decision-kicker{font:700 9px 'JetBrains Mono',monospace;letter-spacing:.16em;color:#8494a8}
+.decision-prompt{font-size:clamp(17px,2.5vw,22px);font-weight:850;color:#f8fafc;margin:6px 0 14px}
+#feedback,#game-over{background:#101722;border-color:#2b3c52}
+.site-credit{font-size:10px;color:#65758a;text-align:center;margin-top:22px;letter-spacing:.04em}
+@media(max-width:680px){
+ .site-topbar{height:62px;padding:0 14px}.brand-mark{width:34px;height:34px}.brand-lockup strong{font-size:13px}.brand-lockup small{font-size:8px}.back-link{font-size:9px}
+ .game-wrap{padding:18px 12px 36px}.game-heading{padding:7px 0 17px}.heading-mark{display:none}
+ .control-panel{grid-template-columns:1fr 1fr}.best-panel{grid-column:1/-1}
+ .mode-row{margin-top:12px}.mode-tab{padding:10px 9px!important;min-height:60px}
+ .score-cell{padding:9px 5px}.score-cell strong{font-size:20px}
+ .matchup-panel{padding:11px;margin-top:15px;border-radius:15px}.player-card{min-height:315px;padding:10px;border-radius:13px}.player-photo{width:120px;height:135px}
+ .stat-chip{padding:6px 4px;font-size:9px}.player-card .pill{font-size:8px;letter-spacing:.08em}
+ .choice{min-height:58px;font-size:11px}
+}
+</style>
+<header class="site-topbar">
+ <a href="/" class="brand-lockup"><span class="brand-mark">SS</span><span><strong>SCHRIFT <em>SCORE</em></strong><small>CREATED BY ZACHARY SCHRIFTMAN</small></span></a>
+ <a class="back-link" href="/battle.html">← BATTLE CENTER</a>
 </header>
-<main class="max-w-6xl mx-auto px-4 pb-16">
- <section class="grid-glow text-center rounded-b-3xl px-3 pt-9 pb-8 sm:pt-12 sm:pb-10">
-  <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 pill text-emerald-300 mb-4">⚔ THE SCHRIFT SCORE SHOWDOWN</div>
-  <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white">PLAYER <span class="text-emerald-400">BATTLE</span></h1>
-  <p class="text-sm sm:text-base text-slate-400 mt-3 max-w-xl mx-auto">Know the players. Know the numbers. Prove it.</p>
+<main class="game-wrap">
+ <section class="game-heading">
+  <div><div class="game-kicker">THE NBA · HEAD-TO-HEAD</div><h1>PLAYER <span class="text-emerald-400">BATTLE</span></h1><p>Two players. One number. Make the right call.</p></div>
+  <div class="heading-mark">SCHRIFT SCORE<br>2026–27 SEASON</div>
  </section>
- <section class="max-w-5xl mx-auto -mt-1">
-  <div class="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
-   <button id="daily-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-emerald-400 text-slate-950 border border-emerald-300"><div class="pill opacity-70">10 MATCHUPS</div><div class="font-black text-sm sm:text-base mt-1">Daily 10</div></button>
-   <button id="endless-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">3 LIVES</div><div class="font-black text-sm sm:text-base mt-1">Endless</div></button>
-   <button id="timed-tab" class="mode-tab rounded-xl px-2 py-3 text-left bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">60 SECONDS</div><div class="font-black text-sm sm:text-base mt-1">Shot Clock</div></button>
-  </div>
-  <div class="grid sm:grid-cols-3 gap-2 mt-3">
-   <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">COMPARE BY</span><select id="category" class="w-full bg-transparent text-sm font-bold text-white outline-none"><option value="total">Schrift Score</option><option value="ppg">Points per game</option><option value="rpg">Rebounds per game</option><option value="apg">Assists per game</option><option value="spg">Steals per game</option><option value="bpg">Blocks per game</option><option value="gp">Games played</option></select></label>
-   <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">DIFFICULTY</span><select id="difficulty" class="w-full bg-transparent text-sm font-bold text-white outline-none"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option><option value="hof">Hall of Fame · Mystery mode</option></select></label>
-   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
-  </div>
-  <div class="grid grid-cols-3 gap-2 mt-3">
-   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">SCORE</div><div id="score-count" class="font-mono font-black text-2xl text-white mt-1">0</div></div>
-   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">STREAK</div><div id="streak-count" class="font-mono font-black text-2xl text-orange-300 mt-1">0 🔥</div></div>
-   <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500" id="progress-caption">ROUND</div><div id="round-count" class="font-mono font-black text-2xl text-sky-300 mt-1">1/10</div></div>
-  </div>
-  <div class="mt-4 flex items-center justify-between gap-3 text-xs font-mono text-slate-500"><span id="mode-description">TODAY'S SHARED CHALLENGE</span><span id="lives-label" class="text-rose-300 hidden">♥ ♥ ♥</span><span id="timer-label" class="text-amber-300 hidden">01:00</span></div>
-  <div id="progress" class="flex gap-1.5 mt-2"></div>
-  <div id="loading" class="text-center py-20 text-slate-400">Loading the current NBA player pool…</div>
-  <div id="error" class="hidden text-center py-12 px-5 rounded-2xl border border-rose-500/30 bg-rose-500/5"><div class="text-rose-400 font-bold">Couldn’t load the player pool.</div><p id="error-detail" class="text-sm text-slate-400 mt-2"></p><button id="retry" class="mt-4 px-4 py-2 bg-court-800 rounded-lg text-sm font-bold">TRY AGAIN</button></div>
-  <div id="game" class="hidden mt-5">
-   <div class="flex items-center justify-center gap-3 mb-4"><span class="h-px bg-court-border flex-1"></span><span id="question" class="pill text-slate-300 text-center">WHO HAS THE HIGHER SCHRIFT SCORE?</span><span class="h-px bg-court-border flex-1"></span></div>
+ <section class="control-panel">
+  <label><span>COMPARE BY</span><select id="category"><option value="total">Schrift Score</option><option value="ppg">Points per game</option><option value="rpg">Rebounds per game</option><option value="apg">Assists per game</option><option value="spg">Steals per game</option><option value="bpg">Blocks per game</option><option value="gp">Games played</option></select></label>
+  <label><span>DIFFICULTY</span><select id="difficulty"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option><option value="hof">Hall of Fame · Mystery mode</option></select></label>
+  <div class="best-panel"><div><span>PERSONAL BEST</span><strong id="personal-best">0</strong></div><span aria-hidden="true">🏆</span></div>
+ </section>
+ <section class="mode-row">
+  <button id="daily-tab" class="mode-tab bg-emerald-400 text-slate-950 border border-emerald-300"><div class="pill opacity-70">10 MATCHUPS</div><div class="font-black text-sm sm:text-base mt-1">Daily 10</div></button>
+  <button id="endless-tab" class="mode-tab bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">3 LIVES</div><div class="font-black text-sm sm:text-base mt-1">Endless</div></button>
+  <button id="timed-tab" class="mode-tab bg-court-900 text-slate-300 border border-court-border"><div class="pill text-slate-500">60 SECONDS</div><div class="font-black text-sm sm:text-base mt-1">Shot Clock</div></button>
+ </section>
+ <section class="score-strip" aria-label="Current game stats">
+  <div class="score-cell"><div class="pill">SCORE</div><strong id="score-count">0</strong></div>
+  <div class="score-cell"><div class="pill">STREAK</div><strong id="streak-count" style="color:#f4a261">0 🔥</strong></div>
+  <div class="score-cell"><div class="pill" id="progress-caption">ROUND</div><strong id="round-count">1/10</strong></div>
+ </section>
+ <div class="game-meta"><span id="mode-description">TODAY'S SHARED CHALLENGE</span><span id="lives-label" class="text-rose-300 hidden">♥ ♥ ♥</span><span id="timer-label" class="text-amber-300 hidden">01:00</span></div>
+ <div id="progress" class="flex gap-1.5 mt-2"></div>
+ <div id="loading" class="text-center py-20 text-slate-400">Loading the current NBA player pool…</div>
+ <div id="error" class="hidden text-center py-12 px-5 rounded-2xl border border-rose-500/30 bg-rose-500/5"><div class="text-rose-400 font-bold">Couldn’t load the player pool.</div><p id="error-detail" class="text-sm text-slate-400 mt-2"></p><button id="retry" class="mt-4 px-4 py-2 bg-court-800 rounded-lg text-sm font-bold">TRY AGAIN</button></div>
+ <div id="game" class="hidden">
+  <section class="matchup-panel">
+   <div id="question" class="matchup-question">WHO HAS THE HIGHER SCHRIFT SCORE?</div>
    <div class="grid grid-cols-2 gap-3 sm:gap-5 items-stretch">
-    <article id="card-a" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
-     <div class="pill text-emerald-300 mb-1">PLAYER A · THE BENCHMARK</div>
+    <article id="card-a" class="player-card flex flex-col items-center text-center relative overflow-hidden">
+     <div class="pill text-emerald-300 mb-1">PLAYER A · LEADER</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-a" class="player-photo" alt=""></div>
      <div id="name-a" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-a" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-a" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
      <div class="mt-auto pt-4 w-full"><div id="value-a" class="font-mono font-black text-3xl sm:text-4xl text-emerald-300">—</div><div id="label-a" class="pill text-slate-500 mt-1">SCHRIFT SCORE</div></div>
     </article>
-    <article id="card-b" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
-     <div class="pill text-sky-300 mb-1">PLAYER B · THE CHALLENGER</div>
+    <article id="card-b" class="player-card flex flex-col items-center text-center relative overflow-hidden">
+     <div class="pill text-sky-300 mb-1">PLAYER B · CHALLENGER</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-b" class="player-photo" alt=""></div>
      <div id="name-b" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-b" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-b" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
      <div class="mt-auto pt-4 w-full"><div id="value-b" class="font-mono font-black text-3xl sm:text-4xl text-slate-500">???</div><div id="label-b" class="pill text-slate-500 mt-1">HIDDEN VALUE</div></div>
     </article>
    </div>
-   <div class="text-center mt-5 mb-3"><div class="text-xs text-slate-500">MAKE YOUR CALL</div><div id="choice-prompt" class="text-lg sm:text-xl font-black text-white mt-1">Does Player B have the higher number?</div></div>
-   <div class="grid grid-cols-3 gap-2 sm:gap-3" id="choices">
-    <button id="higher" class="choice bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs sm:text-sm">HIGHER <span class="block text-lg">↑</span></button>
-    <button id="tie" class="choice bg-court-800 hover:bg-court-700 border border-court-border text-white text-xs sm:text-sm">SAME <span class="block text-lg">=</span></button>
-    <button id="lower" class="choice bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs sm:text-sm">LOWER <span class="block text-lg">↓</span></button>
+   <div class="decision-area text-center">
+    <div class="decision-kicker">MAKE YOUR CALL</div><div id="choice-prompt" class="decision-prompt">Does Player B have the higher number?</div>
+    <div class="grid grid-cols-3 gap-2 sm:gap-3" id="choices">
+     <button id="higher" class="choice bg-emerald-400 hover:bg-emerald-300 text-slate-950">HIGHER <span class="block text-lg">↑</span></button>
+     <button id="tie" class="choice bg-court-800 hover:bg-court-700 border border-court-border text-white">SAME <span class="block text-lg">=</span></button>
+     <button id="lower" class="choice bg-sky-400 hover:bg-sky-300 text-slate-950">LOWER <span class="block text-lg">↓</span></button>
+    </div>
    </div>
-   <div id="feedback" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-court-900 border border-court-border">
+   <div id="feedback" class="hidden mt-4 p-4 sm:p-5 rounded-2xl border">
     <div class="flex items-start justify-between gap-3"><div><div id="feedback-title" class="font-black text-xl"></div><div id="feedback-detail" class="text-sm text-slate-400 mt-1"></div></div><div id="points-earned" class="font-mono font-black text-2xl text-emerald-300 whitespace-nowrap"></div></div>
     <button id="continue" class="mt-4 w-full sm:w-auto px-7 py-3 rounded-xl bg-white text-slate-950 font-black text-sm">NEXT MATCHUP →</button>
    </div>
-   <div id="game-over" class="hidden mt-5 text-center p-6 sm:p-8 rounded-2xl bg-court-900 border border-court-border">
-    <div class="text-4xl mb-3" id="result-emoji">🏀</div><div class="pill text-emerald-300">FINAL BUZZER</div><div class="text-3xl font-black text-white mt-2" id="final-title">RUN COMPLETE</div>
-    <div id="final-score" class="font-mono font-black text-5xl text-emerald-300 mt-3">0</div><div class="text-xs text-slate-500 pill mt-1">POINTS</div>
-    <div class="text-slate-400 text-sm mt-3" id="final-detail"></div>
-    <div class="grid grid-cols-3 gap-2 max-w-md mx-auto mt-5"><div class="stat-chip"><div class="pill text-slate-500">CORRECT</div><div id="final-correct" class="font-mono font-black text-xl mt-1">0</div></div><div class="stat-chip"><div class="pill text-slate-500">ACCURACY</div><div id="final-accuracy" class="font-mono font-black text-xl mt-1">0%</div></div><div class="stat-chip"><div class="pill text-slate-500">BEST STREAK</div><div id="final-streak" class="font-mono font-black text-xl mt-1">0</div></div></div>
-    <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
-   </div>
+  </section>
+  <div id="game-over" class="hidden mt-5 text-center p-6 sm:p-8 rounded-2xl border">
+   <div class="text-4xl mb-3" id="result-emoji">🏀</div><div class="pill text-emerald-300">FINAL BUZZER</div><div class="text-3xl font-black text-white mt-2" id="final-title">RUN COMPLETE</div>
+   <div id="final-score" class="font-mono font-black text-5xl text-emerald-300 mt-3">0</div><div class="text-xs text-slate-500 pill mt-1">POINTS</div>
+   <div class="text-slate-400 text-sm mt-3" id="final-detail"></div>
+   <div class="grid grid-cols-3 gap-2 max-w-md mx-auto mt-5"><div class="stat-chip"><div class="pill text-slate-500">CORRECT</div><div id="final-correct" class="font-mono font-black text-xl mt-1">0</div></div><div class="stat-chip"><div class="pill text-slate-500">ACCURACY</div><div id="final-accuracy" class="font-mono font-black text-xl mt-1">0%</div></div><div class="stat-chip"><div class="pill text-slate-500">BEST STREAK</div><div id="final-streak" class="font-mono font-black text-xl mt-1">0</div></div></div>
+   <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
   </div>
-  <p class="text-[11px] text-slate-600 text-center mt-7">Player statistics come from the live Schrift Score season leaderboard. Daily matchups are shared by date; personal records are saved on this device.</p>
- </section>
+ </div>
+ <p class="site-credit">Created by Zachary Schriftman · Player statistics from the live Schrift Score leaderboard.</p>
 </main>
 <script>
 const $=id=>document.getElementById(id);
