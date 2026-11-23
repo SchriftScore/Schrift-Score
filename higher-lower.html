@@ -116,7 +116,7 @@ function updateStats(){
  $('score-count').textContent=score;$('streak-count').textContent=streak+' 🔥';$('personal-best').textContent=bestForMode();
  $('round-count').textContent=mode==='daily'?Math.min(round+1,20)+'/20':String(round+1);
  $('progress-caption').textContent='ROUND';
- $('lives-label').classList.add('hidden');$('timer-label').classList.add('hidden');
+ $('lives-label').classList.add('hidden');$('timer-label').classList.toggle('hidden',!(mode==='endless'&&endlessVariation==='time'&&!finished));
  $('progress').innerHTML=mode==='daily'?Array.from({length:20},(_,i)=>'<div class="progress-dot flex-1 '+(i<round?'done':i===round?'current':'')+'"></div>').join(''):'';
 }
 function renderCard(suffix,p){
