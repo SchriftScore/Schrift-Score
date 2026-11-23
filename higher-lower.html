@@ -44,6 +44,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
    <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">DIFFICULTY</span><select id="difficulty" class="w-full bg-[#0c111d] text-white text-sm font-bold outline-none" style="color-scheme:dark"><option value="rookie">Rookie</option><option value="allstar">All-Star · 1.25× points</option></select></label>
   </div>
   <button id="endless-start" type="button" class="mt-3 w-full rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 text-left hover:border-sky-300 flex items-center justify-between"><span><span class="pill text-sky-300 block">ENDLESS MODE</span><span class="text-sm font-bold text-white">Play as long as you can. One mistake ends your run.</span></span><span class="text-sky-300 font-black">PLAY →</span></button>
+  <label id="endless-variation-wrap" class="hidden mt-2 rounded-xl bg-court-900 border border-sky-400/25 px-3 py-3 block"><span class="pill text-sky-300 block mb-2">ENDLESS VARIATION</span><select id="endless-variation" class="w-full bg-[#0c111d] text-white text-sm font-bold outline-none" style="color-scheme:dark"><option value="classic">Classic Run · One stat at a time</option><option value="sweep">Stat Sweep · Compare five categories</option><option value="time">Time Attack · 45 seconds</option></select><p id="variation-description" class="text-xs text-slate-400 mt-2">The original head-to-head comparison, with rotating categories.</p><button id="start-variation" type="button" class="mt-3 w-full rounded-lg bg-sky-400 text-slate-950 font-black text-sm py-2.5">START ENDLESS →</button></label>
   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 mt-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST · THIS DIFFICULTY</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
   <div class="grid grid-cols-3 gap-2 mt-3">
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">SCORE</div><div id="score-count" class="font-mono font-black text-2xl text-white mt-1">0</div></div>
@@ -97,7 +98,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
 const $=id=>document.getElementById(id);
 const STORE='schriftPlayerBattle.v2';
 const CATEGORIES={total:{label:'SCHRIFT SCORE',question:'Who has the higher Schrift Score?',digits:2},ppg:{label:'POINTS PER GAME',question:'Who scores more points per game?',digits:1},rpg:{label:'REBOUNDS PER GAME',question:'Who grabs more rebounds per game?',digits:1},apg:{label:'ASSISTS PER GAME',question:'Who averages more assists per game?',digits:1},spg:{label:'STEALS PER GAME',question:'Who averages more steals per game?',digits:1},bpg:{label:'BLOCKS PER GAME',question:'Who averages more blocks per game?',digits:1},gp:{label:'GAMES PLAYED',question:'Who has played more games?',digits:0}};
-let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],roundCategories=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[],signedInUser=null,accountStats=null,accountDailyRun=null;
+let players=[],mode='daily',endlessVariation='classic',category='total',difficulty='rookie',sequence=[],roundCategories=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[],signedInUser=null,accountStats=null,accountDailyRun=null;
 let records={};
 try{records=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){records={}}
 function todayKey(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date())}
@@ -132,11 +133,12 @@ function renderRound(){
  $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('continue').classList.remove('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
  category=roundCategories[round]||'total';renderCard('a',currentA);renderCard('b',currentB);
- $('question').textContent=CATEGORIES[category].question.toUpperCase();
+ $('question').textContent=mode==='endless'&&endlessVariation==='sweep'?'WHO LEADS IN MORE OF THESE FIVE CATEGORIES?':CATEGORIES[category].question.toUpperCase();
  const clutch=(round+1)%5===0;
  $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':mode==='daily'?'DAILY MATCHUP':'ENDLESS MATCHUP';
  $('round-tag').className='pill text-center mt-2 '+(clutch?'text-amber-300':'text-slate-500');
- $('choice-prompt').textContent='Tap the player with the higher '+CATEGORIES[category].label.toLowerCase()+'.';
+ $('choice-prompt').textContent=mode==='endless'&&endlessVariation==='sweep'?'Pick the player who leads in more categories.':'Tap the player with the higher '+CATEGORIES[category].label.toLowerCase()+'.';
+ if(mode==='endless'&&endlessVariation==='sweep'){const cats=roundCategories.slice(round*5,round*5+5);['a','b'].forEach(side=>{$('stats-'+side).innerHTML=cats.map(k=>'<div class="stat-chip"><div class="pill text-slate-500">'+CATEGORIES[k].label+'</div><div class="font-mono font-black text-sm mt-1">???</div></div>').join('')})}
  $('continue').textContent='NEXT MATCHUP →';$('card-a').disabled=false;$('card-b').disabled=false;updateStats();
 }
 const DAILY_CATEGORIES=['total','ppg','rpg','apg','spg','bpg','gp'];
@@ -174,15 +176,17 @@ function buildDaily(){
  }
  return sequenceOut;
 }
-function startMode(nextMode='daily'){
+function startMode(nextMode='daily',variation='classic'){
  if(nextMode!=='endless'&&hasPlayedDaily())return;
- stopTimer();mode=nextMode==='endless'?'endless':'daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
+ stopTimer();mode=nextMode==='endless'?'endless':'daily';endlessVariation=variation;round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
  category='total';difficulty=$('difficulty').value;
  $('daily-category').textContent='Stats rotate throughout the Daily 20';
- $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':'ENDLESS MODE · NO ROUND LIMIT';
+ $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':({classic:'ENDLESS · CLASSIC RUN',sweep:'ENDLESS · STAT SWEEP',time:'ENDLESS · TIME ATTACK'})[endlessVariation];
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');$('daily-locked').classList.add('hidden');$('difficulty').disabled=false;
  $('question').classList.remove('hidden');$('card-a').classList.remove('hidden');$('card-b').classList.remove('hidden');$('round-tag').classList.remove('hidden');$('choice-prompt').parentElement.classList.remove('hidden');
  sequence=mode==='daily'?buildDaily():buildEndless();
+ if(mode==='endless'&&endlessVariation==='sweep'){roundCategories=[];for(let r=0;r<100;r++){const cats=shuffle(DAILY_CATEGORIES,hash('SS-SWEEP|'+todayKey()+'|'+r+'|'+Date.now())).slice(0,5);roundCategories.push(...cats)}}
+ if(mode==='endless'&&endlessVariation==='time'){timer=45;$('timer-label').classList.remove('hidden');$('timer-label').textContent='00:45';timerId=setInterval(()=>{timer--; $('timer-label').textContent='00:'+String(Math.max(timer,0)).padStart(2,'0');if(timer<=10)$('timer-label').classList.add('timer-low');if(timer<=0){stopTimer();finish('timeUp')}},1000)}
  if(sequence.length<(mode==='daily'?40:200)){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
  renderRound();
@@ -202,8 +206,12 @@ async function loadPlayers(){
 }
 function choose(choice){
  if(answered||finished)return;answered=true;$('difficulty').disabled=true;
- const a=value(currentA),b=value(currentB),eps=0.000001;
- const actual=Math.abs(a-b)<eps?'tie':b>a?'b':'a';
+ const eps=0.000001;
+ const sweepCats=mode==='endless'&&endlessVariation==='sweep'?roundCategories.slice(round*5,round*5+5):[category];
+ const winsA=sweepCats.filter(k=>Number(currentA[k])>Number(currentB[k])+eps).length;
+ const winsB=sweepCats.filter(k=>Number(currentB[k])>Number(currentA[k])+eps).length;
+ const a=value(currentA),b=value(currentB);
+ const actual=winsA===winsB?'tie':winsB>winsA?'b':'a';
  const won=actual==='tie'||choice===actual;
  $('card-a').disabled=true;$('card-b').disabled=true;
  const margin=Math.abs(a-b);
@@ -215,11 +223,12 @@ function choose(choice){
  const points=won?Math.round(basePoints*difficultyMultiplier*clutchMultiplier):0;
  if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0}
  history.push({a:currentA.name,b:currentB.name,choice,won,category,points});
- $('value-a').textContent=formatted(currentA);$('value-b').textContent=formatted(currentB);$('value-a').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-a').textContent=CATEGORIES[category].label;$('label-b').textContent=CATEGORIES[category].label;
+ $('value-a').textContent=mode==='endless'&&endlessVariation==='sweep'?winsA+'/'+sweepCats.length:formatted(currentA);$('value-b').textContent=mode==='endless'&&endlessVariation==='sweep'?winsB+'/'+sweepCats.length:formatted(currentB);
+ if(mode==='endless'&&endlessVariation==='sweep'){['a','b'].forEach(side=>{$('stats-'+side).innerHTML=sweepCats.map(k=>'<div class="stat-chip"><div class="pill text-slate-500">'+CATEGORIES[k].label+'</div><div class="font-mono font-black text-sm mt-1">'+Number((side==='a'?currentA:currentB)[k]).toFixed(CATEGORIES[k].digits)+'</div></div>').join('')})}$('value-a').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-a').textContent=CATEGORIES[category].label;$('label-b').textContent=CATEGORIES[category].label;
  $('card-'+(actual==='tie'?'a':actual)).classList.add('correct');$('card-'+choice).classList.add(won?'correct':'wrong');
  $('feedback-title').textContent=won?'THAT’S RIGHT! 🔥':'NOT THIS TIME';
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
- $('feedback-detail').textContent=currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
+ $('feedback-detail').textContent=mode==='endless'&&endlessVariation==='sweep'?currentA.name+' led '+winsA+' categories; '+currentB.name+' led '+winsB+'. '+(won?'Correct majority pick. ':'Incorrect majority pick. '):currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
  $('points-earned').textContent=won?'+'+points:'0 PTS';$('continue').classList.toggle('hidden',!won);
  $('continue').textContent=mode==='daily'&&round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
  $('feedback').classList.remove('hidden');
@@ -242,9 +251,9 @@ function finish(reason){
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
  $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
- $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':reason==='endlessDone'?'ENDLESS RUN COMPLETE':'GAME OVER';
- $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
- $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY ENDLESS AGAIN';
+ $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':reason==='endlessDone'?'ENDLESS RUN COMPLETE':reason==='timeUp'?'TIME EXPIRED':'GAME OVER';
+ $('final-detail').textContent=reason==='timeUp'?'Time expired. Your final score is locked in.':reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
+ $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY AGAIN';
  const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};if(mode==='daily')records.dailyRuns[todayKey()+'_daily']={completed:true,score,correct,accuracy,difficulty};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
  $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?history.length+'/20':String(history.length);$('mode-description').textContent='RUN FINISHED';
 }
@@ -293,7 +302,7 @@ $('continue').onclick=advance;
 
 
 $('difficulty').onchange=()=>{if(round===0&&!history.length&&!answered&&!finished){difficulty=$('difficulty').value;startMode('daily')}else $('difficulty').value=difficulty};
-$('restart').onclick=()=>startMode('endless');$('endless-start').onclick=()=>startMode('endless');$('locked-endless').onclick=()=>startMode('endless');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
+$('restart').onclick=()=>startMode('endless',endlessVariation);$('endless-start').onclick=()=>{$('endless-variation-wrap').classList.toggle('hidden')};$('start-variation').onclick=()=>{startMode('endless',$('endless-variation').value);$('endless-variation-wrap').classList.add('hidden')};$('endless-variation').onchange=()=>{const d={classic:'The original head-to-head comparison, with rotating categories.',sweep:'Five categories appear together. Pick the player who leads in more of them.',time:'You have 45 seconds to answer as many comparisons as possible.'};$('variation-description').textContent=d[$('endless-variation').value]};$('locked-endless').onclick=()=>{$('endless-variation-wrap').classList.remove('hidden');$('daily-locked').classList.add('hidden')};$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadPlayers();
 </script>
 </body></html>
