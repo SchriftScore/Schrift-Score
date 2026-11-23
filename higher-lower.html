@@ -11,7 +11,7 @@
 :root{color-scheme:dark}body{background:#070a11;color:#e2e8f0;font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}
 button{transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}button:active{transform:scale(.98)}
 .grid-glow{background-image:radial-gradient(circle at 50% 0%,#10b98118,transparent 55%),linear-gradient(#17243a44 1px,transparent 1px),linear-gradient(90deg,#17243a44 1px,transparent 1px);background-size:auto,36px 36px,36px 36px}
-.player-card{appearance:none;width:100%;color:inherit;text-align:center;cursor:pointer;background:linear-gradient(145deg,#17243a,#0c111d 75%);border:1px solid #2a3c59;border-radius:22px;min-height:340px;position:relative;overflow:hidden}.player-card:focus-visible{outline:3px solid #34d399;outline-offset:3px}.player-card:disabled{cursor:default}
+.player-card{appearance:none;width:100%;color:inherit;text-align:center;cursor:pointer;background:linear-gradient(145deg,#17243a,#0c111d 75%);border:1px solid #2a3c59;border-radius:22px;min-height:340px;position:relative;overflow:hidden}.player-card:focus-visible{outline:3px solid #34d399;outline-offset:3px}.player-card:hover:not(:disabled){border-color:#34d399;box-shadow:0 0 0 1px #34d39955,0 10px 30px #0005;transform:translateY(-2px)}.player-card:disabled{cursor:default}
 .player-card:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 10%,#ffffff0b,transparent 58%);pointer-events:none}
 .player-photo{width:142px;height:142px;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 8px 18px #0009);position:relative}
 .choice{min-height:68px;font-weight:900;letter-spacing:.07em;border-radius:15px;border:1px solid transparent}
@@ -57,14 +57,14 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
    <div class="flex items-center justify-center gap-3 mb-4"><span class="h-px bg-court-border flex-1"></span><span id="question" class="pill text-slate-300 text-center">WHO HAS THE HIGHER SCHRIFT SCORE?</span><span class="h-px bg-court-border flex-1"></span></div>
    <div class="grid grid-cols-2 gap-3 sm:gap-5 items-stretch">
     <button type="button" id="card-a" class="player-card p-3 sm:p-5 flex flex-col items-center text-center" aria-label="Choose Player A">
-     <div class="pill text-emerald-300 mb-1">PLAYER A · THE BENCHMARK</div>
+     <div class="pill text-emerald-300 mb-1">PLAYER A · TAP TO PICK</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-a" class="player-photo" alt=""></div>
      <div id="name-a" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-a" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-a" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
      <div class="mt-auto pt-4 w-full"><div id="value-a" class="font-mono font-black text-3xl sm:text-4xl text-emerald-300">—</div><div id="label-a" class="pill text-slate-500 mt-1">SCHRIFT SCORE</div></div>
     </button>
     <button type="button" id="card-b" class="player-card p-3 sm:p-5 flex flex-col items-center text-center" aria-label="Choose Player B">
-     <div class="pill text-sky-300 mb-1">PLAYER B · THE CHALLENGER</div>
+     <div class="pill text-sky-300 mb-1">PLAYER B · TAP TO PICK</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-b" class="player-photo" alt=""></div>
      <div id="name-b" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-b" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-b" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
@@ -118,7 +118,7 @@ function renderCard(suffix,p,revealValue){
  $('name-'+suffix).textContent=p.name;
  $('team-'+suffix).textContent=p.team||'NBA';
  const stats=$('stats-'+suffix);
- if(difficulty==='rookie'||revealValue){
+ if(difficulty==='rookie'){
   const items=[['ppg','PPG',p.ppg],['rpg','RPG',p.rpg],['apg','APG',p.apg],['spg','SPG',p.spg],['bpg','BPG',p.bpg]].filter(x=>x[0]!==category);
   stats.innerHTML=items.map(x=>'<div class="stat-chip text-slate-400">'+x[1]+' <b class="text-white ml-1">'+Number(x[2]||0).toFixed(1)+'</b></div>').join('');
  }else stats.innerHTML='<div class="stat-chip col-span-2 text-slate-500">SCOUTING REPORT LOCKED</div>';
