@@ -145,7 +145,11 @@ function buildEndless(){
  const cats=shuffle(DAILY_CATEGORIES,hash('SS-ENDLESS-CATS|'+todayKey()+'|'+Date.now()));
  const pool=shuffle(players,hash('SS-ENDLESS-POOL|'+todayKey()+'|'+Date.now()));
  const out=[];roundCategories=[];
- for(let i=0;i<100;i++){const cat=cats[i%cats.length],a=pool[(i*2)%pool.length],b=pool[(i*2+1)%pool.length];roundCategories.push(cat);out.push(a,b)}
+ for(let i=0;i<100;i++){
+  const cat=cats[i%cats.length],a=pool[(i*2)%pool.length];let b=pool[(i*2+1)%pool.length],offset=2;
+  while(Math.abs(Number(a[cat])-Number(b[cat]))<0.000001&&offset<pool.length){b=pool[(i*2+offset)%pool.length];offset++}
+  roundCategories.push(cat);out.push(a,b)
+ }
  return out;
 }
 function buildDaily(){
