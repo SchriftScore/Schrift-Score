@@ -53,6 +53,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
   <div class="mt-4 flex items-center justify-between gap-3 text-xs font-mono text-slate-500"><span id="mode-description">TODAY'S SHARED CHALLENGE</span><span id="lives-label" class="text-rose-300 hidden">♥ ♥ ♥</span><span id="timer-label" class="text-amber-300 hidden">01:00</span></div>
   <div id="progress" class="flex gap-1.5 mt-2"></div>
   <div id="loading" class="text-center py-20 text-slate-400">Loading the current NBA player pool…</div>
+  <div id="daily-locked" class="hidden mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-6 text-center"><div class="text-3xl">🏆</div><div class="pill text-amber-300 mt-3">DAILY CHALLENGE COMPLETE</div><h2 class="text-2xl font-black text-white mt-2">You already played today.</h2><p id="daily-locked-detail" class="text-sm text-slate-400 mt-2">Your Daily 20 attempt is recorded. Come back tomorrow for a new challenge, or play Endless Mode.</p><button id="locked-endless" class="mt-5 px-6 py-3 rounded-xl bg-sky-400 text-slate-950 font-black text-sm">PLAY ENDLESS →</button></div>
   <div id="error" class="hidden text-center py-12 px-5 rounded-2xl border border-rose-500/30 bg-rose-500/5"><div class="text-rose-400 font-bold">Couldn’t load the player pool.</div><p id="error-detail" class="text-sm text-slate-400 mt-2"></p><button id="retry" class="mt-4 px-4 py-2 bg-court-800 rounded-lg text-sm font-bold">TRY AGAIN</button></div>
   <div id="game" class="hidden mt-5">
    <div class="flex items-center justify-center gap-3 mb-4"><span class="h-px bg-court-border flex-1"></span><span id="question" class="pill text-slate-300 text-center">WHO HAS THE HIGHER SCHRIFT SCORE?</span><span class="h-px bg-court-border flex-1"></span></div>
@@ -95,7 +96,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
 const $=id=>document.getElementById(id);
 const STORE='schriftPlayerBattle.v2';
 const CATEGORIES={total:{label:'SCHRIFT SCORE',question:'Who has the higher Schrift Score?',digits:2},ppg:{label:'POINTS PER GAME',question:'Who scores more points per game?',digits:1},rpg:{label:'REBOUNDS PER GAME',question:'Who grabs more rebounds per game?',digits:1},apg:{label:'ASSISTS PER GAME',question:'Who averages more assists per game?',digits:1},spg:{label:'STEALS PER GAME',question:'Who averages more steals per game?',digits:1},bpg:{label:'BLOCKS PER GAME',question:'Who averages more blocks per game?',digits:1},gp:{label:'GAMES PLAYED',question:'Who has played more games?',digits:0}};
-let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],roundCategories=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[],signedInUser=null,accountStats=null;
+let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],roundCategories=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[],signedInUser=null,accountStats=null,accountDailyRun=null;
 let records={};
 try{records=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){records={}}
 function todayKey(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date())}
@@ -169,11 +170,12 @@ function buildDaily(){
  return sequenceOut;
 }
 function startMode(nextMode='daily'){
+ if(nextMode!=='endless'&&hasPlayedDaily())return;
  stopTimer();mode=nextMode==='endless'?'endless':'daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
  category='total';difficulty=$('difficulty').value;
  $('daily-category').textContent='A different stat every round';
  $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':'ENDLESS MODE · NO ROUND LIMIT';
- $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
+ $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');$('daily-locked').classList.add('hidden');$('difficulty').disabled=false;
  sequence=mode==='daily'?buildDaily():buildEndless();
  if(sequence.length<(mode==='daily'?40:200)){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
@@ -189,11 +191,11 @@ async function loadPlayers(){
   if(data.dataQuality?.partial)throw new Error('The NBA feed is currently incomplete. Try again after the next data refresh.');
   players=data.players.filter(p=>p.name&&Number.isFinite(Number(p.total))&&Number(p.gp)>0&&['ppg','rpg','apg','spg','bpg'].every(k=>Number.isFinite(Number(p[k]))));
   if(players.length<12)throw new Error('Not enough qualified players are available yet.');
-  $('loading').classList.add('hidden');startMode('daily');
+  $('loading').classList.add('hidden');await loadAccountStats();if(hasPlayedDaily())showDailyLocked();else startMode('daily');
  }catch(e){showError(e.message||'Unknown error.')}
 }
 function choose(choice){
- if(answered||finished)return;answered=true;
+ if(answered||finished)return;answered=true;$('difficulty').disabled=true;
  const a=value(currentA),b=value(currentB),eps=0.000001;
  const actual=Math.abs(a-b)<eps?'tie':b>a?'b':'a';
  const won=actual==='tie'||choice===actual;
@@ -236,8 +238,8 @@ function finish(reason){
  $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':reason==='endlessDone'?'ENDLESS RUN COMPLETE':'GAME OVER';
  $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
  $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY ENDLESS AGAIN';
- const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:reason==='dailyDone',score,correct,accuracy};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
- $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?'20/20':String(round+1);$('mode-description').textContent='RUN FINISHED';
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_daily']={completed:true,score,correct,accuracy,difficulty};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
+ $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?history.length+'/20':String(history.length);$('mode-description').textContent='RUN FINISHED';
 }
 async function loadAccountStats(){
  try{
@@ -248,8 +250,17 @@ async function loadAccountStats(){
   const saved=await sb.from('player_battle_stats').select('*').eq('user_id',user.id).maybeSingle();
   if(saved.error)throw saved.error;
   accountStats=saved.data||{best_score:0,total_runs:0,total_correct:0,total_questions:0,best_streak:0};
+  const daily=await sb.from('player_battle_daily_runs').select('*').eq('user_id',user.id).eq('challenge_date',todayKey()).maybeSingle();
+  if(daily.error)throw daily.error;accountDailyRun=daily.data||null;
   $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats.best_score)||0);
  }catch(e){signedInUser=null;$('save-status').textContent='Account save status unavailable. Your stats are still saved on this device.';}
+}
+function hasPlayedDaily(){return !!(records.dailyRuns?.[todayKey()+'_daily']||accountDailyRun)}
+function showDailyLocked(){
+ mode='daily';finished=true;$('loading').classList.add('hidden');$('game').classList.add('hidden');$('daily-locked').classList.remove('hidden');
+ const prior=records.dailyRuns?.[todayKey()+'_daily']||accountDailyRun;
+ if(prior?.score!=null)$('daily-locked-detail').textContent='Your score today was '+prior.score+' points. Come back tomorrow for a new challenge, or play Endless Mode.';
+ $('difficulty').disabled=true;$('mode-description').textContent='DAILY RUN COMPLETE';
 }
 async function saveAccountStats(questionCount){
  if(!signedInUser)return;
@@ -258,6 +269,11 @@ async function saveAccountStats(questionCount){
  const result=await sb.from('player_battle_stats').upsert(payload,{onConflict:'user_id'});
  if(result.error)throw result.error;
  accountStats=payload;$('personal-best').textContent=Math.max(bestForMode(),Number(payload.best_score)||0);$('save-status').textContent='Saved to your Schrift Score account ✓';
+ if(mode==='daily'){
+  const daily=await sb.from('player_battle_daily_runs').insert({user_id:signedInUser.id,challenge_date:todayKey(),difficulty,score,correct,questions:questionCount,accuracy});
+  if(daily.error&&daily.error.code!=='23505')throw daily.error;
+  accountDailyRun={score,correct,questions:questionCount,difficulty};
+ }
 }
 function shareResult(){
  const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
@@ -269,9 +285,8 @@ $('card-a').onclick=()=>choose('a');$('card-b').onclick=()=>choose('b');
 $('continue').onclick=advance;
 
 
-$('difficulty').onchange=()=>{difficulty=$('difficulty').value;startMode(mode)};
-$('restart').onclick=()=>startMode('endless');$('endless-start').onclick=()=>startMode('endless');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
-loadAccountStats();
+$('difficulty').onchange=()=>{if(round===0&&!history.length&&!answered&&!finished){difficulty=$('difficulty').value;startMode('daily')}else $('difficulty').value=difficulty};
+$('restart').onclick=()=>startMode('endless');$('endless-start').onclick=()=>startMode('endless');$('locked-endless').onclick=()=>startMode('endless');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadPlayers();
 </script>
 </body></html>
