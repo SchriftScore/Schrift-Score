@@ -128,7 +128,7 @@ function renderCard(suffix,p,revealValue){
 }
 function renderRound(){
  if(finished)return;answered=false;
- $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('choices').classList.remove('hidden');
+ $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
  renderCard('a',currentA,true);renderCard('b',currentB,false);
  $('question').textContent=CATEGORIES[category].question.toUpperCase();
@@ -205,18 +205,16 @@ function choose(choice){
  const difficultyMultiplier=difficulty==='allstar'?1.25:1;
  const clutchMultiplier=(round+1)%3===0?2:1;
  const points=won?Math.round(basePoints*difficultyMultiplier*clutchMultiplier):0;
- if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0;if(mode==='endless')lives--}
+ if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0}
  history.push({a:currentA.name,b:currentB.name,choice,won,category});
  $('value-b').textContent=formatted(currentB);$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-b').textContent=CATEGORIES[category].label;
  $('card-'+(actual==='tie'?'a':actual)).classList.add('correct');$('card-'+choice).classList.add(won?'correct':'wrong');
- $('feedback-title').textContent=won?(choice==='tie'?'DEAD EVEN! PERFECT CALL':'THAT’S RIGHT! 🔥'):'NOT THIS TIME';
+ $('feedback-title').textContent=won?'THAT’S RIGHT! 🔥':'NOT THIS TIME';
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
  $('feedback-detail').textContent=currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
  $('points-earned').textContent=won?'+'+points:'0 PTS';
  $('continue').textContent=round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
- $('choices').classList.add('hidden');$('feedback').classList.remove('hidden');
- if(mode==='endless'&&lives<=0)$('continue').textContent='SEE FINAL SCORE →';
- if(mode==='timed'&&timer<=0)$('continue').textContent='SEE FINAL SCORE →';
+ $('feedback').classList.remove('hidden');
  updateStats();
  $('continue').textContent=round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
  advanceTimer=setTimeout(()=>{advanceTimer=null;advance()},2200);
@@ -225,28 +223,18 @@ function advance(){
  if(!answered)return;
  if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}
  if(round>=19){finish('dailyDone');return}
- if(mode==='endless'&&lives<=0){finish('outOfLives');return}
- if(mode==='timed'&&timer<=0){finish('time');return}
  round++;
- let next;
- currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();return
- else{
-  const remaining=sequence.filter(p=>p!==currentA&&p!==currentB);
-  if(!remaining.length)sequence=shuffle(players,Math.floor(Math.random()*4294967295));
-  const pool=sequence.filter(p=>p!==currentA&&p!==currentB);
-  next=pool[Math.floor(Math.random()*pool.length)]||players.find(p=>p!==currentB);
- }
- currentA=currentB;currentB=next;renderRound();
+ currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();
 }
 function finish(reason){
  if(finished)return;finished=true;stopTimer();
- $('choices').classList.add('hidden');$('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
+ $('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
  $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
  $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'RUN COMPLETE';
  $('final-detail').textContent='You finished today’s shared challenge. Come back tomorrow for a new set.';
- const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:true,score,correct,accuracy}saveRecords();
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:true,score,correct,accuracy};saveRecords();
  $('personal-best').textContent=bestForMode();$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
 }
 function shareResult(){
