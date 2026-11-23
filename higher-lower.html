@@ -50,6 +50,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">STREAK</div><div id="streak-count" class="font-mono font-black text-2xl text-orange-300 mt-1">0 🔥</div></div>
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500" id="progress-caption">ROUND</div><div id="round-count" class="font-mono font-black text-2xl text-sky-300 mt-1">1/10</div></div>
   </div>
+  <p class="text-[11px] text-slate-500 mt-3 text-center">Scoring: 100 base points, up to 100 extra for closer comparisons, streak bonuses up to 75, and a 2× bonus every fifth round. All-Star adds 25%.</p>
   <div class="mt-4 flex items-center justify-between gap-3 text-xs font-mono text-slate-500"><span id="mode-description">TODAY'S SHARED CHALLENGE</span><span id="lives-label" class="text-rose-300 hidden">♥ ♥ ♥</span><span id="timer-label" class="text-amber-300 hidden">01:00</span></div>
   <div id="progress" class="flex gap-1.5 mt-2"></div>
   <div id="loading" class="text-center py-20 text-slate-400">Loading the current NBA player pool…</div>
@@ -106,7 +107,7 @@ function value(p){return Number(p[category]??0)}
 function formatted(p){return value(p).toFixed(CATEGORIES[category].digits)}
 function safe(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function photo(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
-function recordKey(){return 'daily_'+difficulty}
+function recordKey(){return mode+'_'+difficulty}
 function bestForMode(){return Number(records[recordKey()]?.best)||0}
 function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
@@ -173,9 +174,10 @@ function startMode(nextMode='daily'){
  if(nextMode!=='endless'&&hasPlayedDaily())return;
  stopTimer();mode=nextMode==='endless'?'endless':'daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
  category='total';difficulty=$('difficulty').value;
- $('daily-category').textContent='A different stat every round';
+ $('daily-category').textContent='Stats rotate throughout the Daily 20';
  $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':'ENDLESS MODE · NO ROUND LIMIT';
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');$('daily-locked').classList.add('hidden');$('difficulty').disabled=false;
+ $('question').classList.remove('hidden');$('card-a').classList.remove('hidden');$('card-b').classList.remove('hidden');$('round-tag').classList.remove('hidden');$('choice-prompt').parentElement.classList.remove('hidden');
  sequence=mode==='daily'?buildDaily():buildEndless();
  if(sequence.length<(mode==='daily'?40:200)){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
@@ -231,6 +233,7 @@ function advance(){
 }
 function finish(reason){
  if(finished)return;finished=true;stopTimer();
+ $('question').classList.add('hidden');$('card-a').classList.add('hidden');$('card-b').classList.add('hidden');$('round-tag').classList.add('hidden');$('choice-prompt').parentElement.classList.add('hidden');$('progress').classList.add('hidden');
  $('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
@@ -238,7 +241,7 @@ function finish(reason){
  $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':reason==='endlessDone'?'ENDLESS RUN COMPLETE':'GAME OVER';
  $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
  $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY ENDLESS AGAIN';
- const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_daily']={completed:true,score,correct,accuracy,difficulty};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};if(mode==='daily')records.dailyRuns[todayKey()+'_daily']={completed:true,score,correct,accuracy,difficulty};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
  $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?history.length+'/20':String(history.length);$('mode-description').textContent='RUN FINISHED';
 }
 async function loadAccountStats(){
