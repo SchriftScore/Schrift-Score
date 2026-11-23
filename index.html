@@ -128,45 +128,77 @@
       }
     }
   
+
+/* Schrift Score compact editorial navigation */
+.ss-site-header{background:rgba(8,13,21,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:rgba(91,113,139,.25)}
+.ss-nav-link{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;border-radius:10px;color:#aebdcd;font-size:13px;font-weight:650;letter-spacing:.01em;background:transparent;border:1px solid transparent;cursor:pointer;text-decoration:none;white-space:nowrap}
+.ss-nav-link:hover,.ss-nav-menu[open]>.ss-nav-link{color:#f4fff9;background:rgba(53,211,154,.08);border-color:rgba(53,211,154,.18)}
+.ss-nav-active{color:#5be0ad;background:rgba(53,211,154,.09);border-color:rgba(53,211,154,.2)}
+.ss-nav-menu{position:relative}
+.ss-nav-menu>summary{list-style:none;cursor:pointer}
+.ss-nav-menu>summary::-webkit-details-marker{display:none}
+.ss-chevron{font-size:15px;color:#6f8196;transition:transform .18s ease}
+.ss-nav-menu[open] .ss-chevron{transform:rotate(180deg)}
+.ss-dropdown{position:absolute;top:calc(100% + 10px);left:0;min-width:225px;padding:7px;background:#101a27;border:1px solid #2a3b50;border-radius:13px;box-shadow:0 18px 45px rgba(0,0,0,.42);z-index:60}
+.ss-dropdown-right{left:auto;right:0}
+.ss-dropdown-item{display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#c6d2df;text-decoration:none;text-align:left;font-size:12px;font-weight:600;cursor:pointer}
+.ss-dropdown-item:hover{background:rgba(53,211,154,.1);color:#65e5b5}
+.ss-dropdown-note{padding:9px 11px 5px;margin-top:4px;border-top:1px solid #263447;color:#8293a8;font:10px 'JetBrains Mono',monospace}
+.ss-account-link{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:10px;border:1px solid rgba(53,211,154,.35);background:rgba(53,211,154,.1);color:#70e7b9;font-size:12px;font-weight:750;white-space:nowrap;text-decoration:none}
+.ss-account-link:hover{background:rgba(53,211,154,.17);color:#b1f5d9}
+@media(max-width:900px){.ss-nav-shell{flex-wrap:wrap;gap:8px;padding-top:12px;padding-bottom:10px}.ss-main-nav{order:3;width:100%;overflow-x:auto;padding-bottom:2px;justify-content:flex-start}.ss-nav-link{padding:9px 11px}.ss-account-link{margin-left:auto}}
+@media(max-width:420px){.ss-nav-shell{gap:6px}.ss-main-nav{gap:3px}.ss-nav-link{font-size:12px;padding:8px 9px}.ss-account-link{font-size:11px;padding:8px 9px}}
+
 /* Schrift Score visual system refresh — shared across the full site */
 :root{--ss-bg:#080b12;--ss-panel:#101722;--ss-panel-2:#141e2b;--ss-line:#263447;--ss-muted:#91a0b4;--ss-accent:#35d39a;--ss-accent-2:#16a879;--ss-glow:rgba(53,211,154,.14)}
-html{scroll-behavior:smooth}body{background-color:var(--ss-bg);background-image:radial-gradient(ellipse at 12% -10%,rgba(16,185,129,.13),transparent 38%),radial-gradient(ellipse at 100% 8%,rgba(20,184,166,.08),transparent 32%);color:#edf4f8}
-header{background:rgba(10,15,23,.88)!important;border-color:rgba(91,113,139,.24)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-header a,header button{white-space:nowrap}header .rounded-xl{box-shadow:0 5px 22px rgba(0,0,0,.2)}
-main{position:relative}main h1,main h2,main h3{letter-spacing:-.035em}main h1{line-height:1.06}
-main .rounded-xl,main .rounded-2xl{border-color:rgba(105,129,155,.25)}
-main [class*="bg-court-900"],main [class*="bg-\[#0c111d\]"],main [class*="bg-slate-950"]{background-color:rgba(15,23,34,.88)}
-main .shadow-xl,main .shadow-2xl{box-shadow:0 18px 55px rgba(0,0,0,.22)}
-button,a{transition:transform .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease}
-button:hover:not(:disabled){filter:brightness(1.08)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--ss-accent);outline-offset:3px}
-input,select,textarea{border-color:rgba(117,139,163,.34)!important;border-radius:12px!important;background-color:#0a111b!important;color:#f1f5f9!important}input::placeholder{color:#718096!important}input:focus,select:focus,textarea:focus{border-color:var(--ss-accent)!important;box-shadow:0 0 0 3px var(--ss-glow)}
-main .bg-emerald-500:not(#matchBar){box-shadow:0 7px 22px rgba(16,185,129,.16)}
-main .border-slate-800,main .border-slate-700{border-color:rgba(105,129,155,.25)!important}
-main .text-slate-500{color:#8b9bb0!important}main .text-slate-400{color:#a9b7c8!important}
-main table{border-collapse:separate;border-spacing:0}main table thead th{letter-spacing:.08em;text-transform:uppercase;font-size:.68rem}main tbody tr{transition:background .15s ease}main tbody tr:hover{background:rgba(53,211,154,.055)}
-summary{transition:color .15s ease}summary:hover{color:#e8fff5}
-@media(max-width:768px){header .max-w-7xl{min-height:64px;height:auto;padding-top:10px;padding-bottom:10px}main{padding-top:16px}main .rounded-2xl{border-radius:16px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-</style>
-</head>
-<body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
-
-  <!-- TOP HEADER -->
-  <header class="border-b border-court-border bg-court-900/95 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex flex-col gap-3">
-      <div class="flex items-center justify-between gap-3">
-        <a href="/" class="flex items-center gap-3 min-w-0">
-          <span class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-lg sm:text-xl shadow-lg shadow-emerald-500/20 border border-emerald-400/30 flex-shrink-0">SS</span>
+html{scroll-behavior:smooth}body{background-color:var(--ss-bg);background-image:radial-gradient(ellipse at 12% -10%,rgba(16,185,129,.13),transparent 38%),radial-gradient(ellipse at 100% 8%,rgba(20,184,166,.08),transpar  <!-- TOP HEADER -->
+  <header class="ss-site-header sticky top-0 z-40 border-b border-court-border">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="ss-nav-shell flex items-center justify-between gap-5 min-h-[76px]">
+        <a href="/" class="flex items-center gap-3 min-w-0 flex-shrink-0" aria-label="Schrift Score home">
+          <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-emerald-500/20 border border-emerald-300/30">SS</span>
           <span class="min-w-0">
-            <span class="flex items-center gap-2 flex-wrap">
-              <span class="text-base sm:text-xl font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span>
-              <span id="season-badge" class="text-[9px] sm:text-[10px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
-              <span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">👑 PLUS</span>
+            <span class="flex items-center gap-2">
+              <span class="text-lg font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span>
+              <span id="season-badge" class="hidden sm:inline text-[9px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
+              <span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PLUS</span>
             </span>
-            <span class="block text-[10px] sm:text-xs text-slate-400">Created by <span class="font-semibold text-slate-200">Zachary Schriftman</span></span>
+            <span class="block text-[10px] text-slate-400 tracking-wide">THE NBA, BY THE NUMBERS.</span>
           </span>
         </a>
-        <div class="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-slate-300 bg-court-850 px-2.5 sm:px-3 py-2 rounded-full border border-court-border flex-shrink-0">
+
+        <nav aria-label="Main navigation" class="ss-main-nav flex items-center gap-1.5">
+          <a href="/" class="ss-nav-link ss-nav-active">Players</a>
+          <button onclick="openDraftNight()" class="ss-nav-link">Draft</button>
+          <a href="/battle.html" class="ss-nav-link">Battle</a>
+
+          <details class="ss-nav-menu">
+            <summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary>
+            <div class="ss-dropdown">
+              <button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison</button>
+              <button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button>
+              <a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a>
+            </div>
+          </details>
+
+          <details class="ss-nav-menu">
+            <summary class="ss-nav-link">More <span class="ss-chevron">⌄</span></summary>
+            <div class="ss-dropdown ss-dropdown-right">
+              <a href="/account.html" class="ss-dropdown-item">Account &amp; Plus</a>
+              <button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">☾</span> <span id="theme-text">Switch Theme</span></button>
+              <div class="ss-dropdown-note"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span><span id="player-count">...</span> players tracked</div>
+            </div>
+          </details>
+        </nav>
+
+        <a href="/account.html" class="ss-account-link flex-shrink-0" aria-label="Account and Plus">
+          <span class="hidden sm:inline">Sign In</span><span class="sm:hidden">Account</span><span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+ms-center gap-2 text-[10px] sm:text-xs font-mono text-slate-300 bg-court-850 px-2.5 sm:px-3 py-2 rounded-full border border-court-border flex-shrink-0">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span id="player-count">...</span>
         </div>
