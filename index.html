@@ -179,7 +179,7 @@ summary{transition:color .15s ease}summary:hover{color:#e8fff5}
           <details class="ss-nav-menu"><summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown"><button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison <span id="header-compare-count" class="ml-auto text-[10px] text-emerald-300">0/3</span></button><button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button><a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a></div></details>
           <details class="ss-nav-menu"><summary class="ss-nav-link">More <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown ss-dropdown-right"><a href="/account.html" class="ss-dropdown-item">Account &amp; Plus</a><button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">🌙</span> <span id="theme-text">Theme</span></button><div class="ss-dropdown-note"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span><span id="player-count">...</span> players tracked</div></div></details>
         </nav>
-        <a href="/account.html" class="ss-account-link flex-shrink-0" aria-label="Account and Plus"><span class="hidden sm:inline">Sign In</span><span class="sm:hidden">Account</span><span aria-hidden="true">↗</span></a>
+        <button type="button" id="header-account-action" class="ss-account-link flex-shrink-0" aria-label="Sign up or sign in">Sign Up / Sign In</button>
       </div>
     </div>
   </header>
@@ -3870,5 +3870,45 @@ summary{transition:color .15s ease}summary:hover{color:#e8fff5}
   <script src="/online-draft-room.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/plus-auth.js"></script>
+  <script>
+    (function () {
+      const button = document.getElementById('header-account-action');
+      if (!button) return;
+      function showSignedIn(signedIn) {
+        button.textContent = signedIn ? 'Sign Out' : 'Sign Up / Sign In';
+        button.setAttribute('aria-label', signedIn ? 'Sign out of your account' : 'Sign up or sign in');
+        button.dataset.signedIn = signedIn ? 'true' : 'false';
+      }
+      button.addEventListener('click', async function () {
+        if (button.dataset.signedIn !== 'true') {
+          window.location.href = '/account.html';
+          return;
+        }
+        button.disabled = true;
+        try {
+          const result = await window.SchriftScoreAuth.getClient().auth.signOut();
+          if (result.error) throw result.error;
+          showSignedIn(false);
+        } catch (error) {
+          alert(error.message || 'Unable to sign out. Please try again.');
+        } finally {
+          button.disabled = false;
+        }
+      });
+      async function syncAccountButton() {
+        try {
+          await window.SchriftScoreAuth.ready;
+          const result = await window.SchriftScoreAuth.getClient().auth.getSession();
+          showSignedIn(!!(result.data && result.data.session && result.data.session.user && !result.data.session.user.is_anonymous));
+          window.SchriftScoreAuth.getClient().auth.onAuthStateChange(function (_event, session) {
+            showSignedIn(!!(session && session.user && !session.user.is_anonymous));
+          });
+        } catch (_error) {
+          showSignedIn(false);
+        }
+      }
+      syncAccountButton();
+    })();
+  </script>
 </body>
 </html>
