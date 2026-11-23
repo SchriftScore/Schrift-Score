@@ -207,7 +207,7 @@ function advance(){
  if(mode==='timed'&&timer<=0){finish('time');return}
  round++;
  let next;
- if(mode==='daily'){currentA=sequence[(round+1)*2];currentB=sequence[(round+1)*2+1];renderRound();return}
+ if(mode==='daily'){currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();return}
  else{
   const remaining=sequence.filter(p=>p!==currentA&&p!==currentB);
   if(!remaining.length)sequence=shuffle(players,Math.floor(Math.random()*4294967295));
