@@ -226,7 +226,7 @@ function finish(reason){
  $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'GAME OVER';
  $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run. Come back tomorrow and try again.':'You finished all 20 matchups. Come back tomorrow for a new set.';
  const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:reason==='dailyDone',score,correct,accuracy};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
- $('personal-best').textContent=bestForMode();$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
+ $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
 }
 async function loadAccountStats(){
  try{
@@ -246,7 +246,7 @@ async function saveAccountStats(questionCount){
  const payload={user_id:signedInUser.id,best_score:Math.max(Number(old.best_score)||0,score),total_runs:(Number(old.total_runs)||0)+1,total_correct:(Number(old.total_correct)||0)+correct,total_questions:(Number(old.total_questions)||0)+questionCount,best_streak:Math.max(Number(old.best_streak)||0,bestStreak),updated_at:new Date().toISOString()};
  const result=await sb.from('player_battle_stats').upsert(payload,{onConflict:'user_id'});
  if(result.error)throw result.error;
- accountStats=payload;$('save-status').textContent='Saved to your Schrift Score account ✓';
+ accountStats=payload;$('personal-best').textContent=Math.max(bestForMode(),Number(payload.best_score)||0);$('save-status').textContent='Saved to your Schrift Score account ✓';
 }
 function shareResult(){
  const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
