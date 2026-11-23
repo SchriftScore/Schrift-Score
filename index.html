@@ -162,22 +162,37 @@ summary{transition:color .15s ease}summary:hover{color:#e8fff5}
 @media(max-width:900px){.ss-nav-shell{flex-wrap:wrap;gap:8px;padding-top:12px;padding-bottom:10px}.ss-main-nav{order:3;width:100%;overflow-x:auto;padding-bottom:2px;justify-content:flex-start}.ss-nav-link{padding:9px 11px}.ss-account-link{margin-left:auto}}
 @media(max-width:420px){.ss-nav-shell{gap:6px}.ss-main-nav{gap:3px}.ss-nav-link{font-size:12px;padding:8px 9px}.ss-account-link{font-size:11px;padding:8px 9px}}
 
+
+.ss-site-header{background:rgba(8,13,21,.96)}
+.ss-nav-shell{min-height:68px;gap:18px}
+.ss-main-nav{gap:3px}
+.ss-nav-link{padding:9px 12px;font-size:12px}
+.ss-account-link{font-size:11px;padding:9px 13px}
+@media(max-width:900px){.ss-nav-shell{flex-wrap:nowrap}.ss-main-nav{order:initial;width:auto;overflow:visible}.ss-nav-link{padding:8px 9px}}
+@media(max-width:680px){.ss-nav-shell{flex-wrap:wrap}.ss-main-nav{order:3;width:100%;overflow-x:auto}.ss-account-link{margin-left:auto}}
 </style>
 </head>
 <body class="bg-court-950 text-slate-100 dark:bg-court-950 dark:text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300 transition-colors duration-200">
 
   <!-- TOP HEADER -->
   <header class="ss-site-header sticky top-0 z-40 border-b border-court-border">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="ss-nav-shell flex items-center justify-between gap-5 min-h-[76px]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="ss-nav-shell flex items-center justify-between gap-5 min-h-[72px]">
         <a href="/" class="flex items-center gap-3 min-w-0 flex-shrink-0" aria-label="Schrift Score home">
-          <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-emerald-500/20 border border-emerald-300/30">SS</span>
-          <span class="min-w-0"><span class="flex items-center gap-2"><span class="text-lg font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span><span id="season-badge" class="hidden sm:inline text-[9px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span><span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PLUS</span></span><span class="block text-[10px] text-slate-400 tracking-wide">THE NBA, BY THE NUMBERS.</span></span>
+          <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center font-black text-white text-lg border border-emerald-300/30">SS</span>
+          <span class="min-w-0"><span class="block text-lg font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span><span class="block text-[10px] text-slate-400 tracking-wide">CREATED BY ZACHARY SCHRIFTMAN</span></span>
         </a>
-        <nav aria-label="Main navigation" class="ss-main-nav flex items-center gap-1.5">
-          <a href="/" class="ss-nav-link ss-nav-active">Players</a><button onclick="openDraftNight()" class="ss-nav-link">Draft</button><a href="/battle.html" class="ss-nav-link">Battle</a>
-          <details class="ss-nav-menu"><summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown"><button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison <span id="header-compare-count" class="ml-auto text-[10px] text-emerald-300">0/3</span></button><button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button><a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a></div></details>
-          <details class="ss-nav-menu"><summary class="ss-nav-link">More <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown ss-dropdown-right"><a href="/account.html" class="ss-dropdown-item">Account &amp; Plus</a><button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">🌙</span> <span id="theme-text">Theme</span></button><div class="ss-dropdown-note"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span><span id="player-count">...</span> players tracked</div></div></details>
+        <nav aria-label="Main navigation" class="ss-main-nav flex items-center gap-1">
+          <a href="/" class="ss-nav-link ss-nav-active">Players</a>
+          <button onclick="openDraftNight()" class="ss-nav-link">Draft</button>
+          <a href="/battle.html" class="ss-nav-link">Battle</a>
+          <details class="ss-nav-menu"><summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown">
+            <button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison <span id="header-compare-count" class="ml-auto text-[10px] text-emerald-300">0/3</span></button>
+            <button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button>
+            <a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a>
+            <button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">🌙</span><span id="theme-text">Theme</span></button>
+            <div class="ss-dropdown-note"><span id="player-count">...</span> players tracked</div>
+          </div></details>
         </nav>
         <button type="button" id="header-account-action" class="ss-account-link flex-shrink-0" aria-label="Sign up or sign in">Sign Up / Sign In</button>
       </div>
