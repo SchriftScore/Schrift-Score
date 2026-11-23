@@ -157,65 +157,15 @@ html{scroll-behavior:smooth}body{background-color:var(--ss-bg);background-image:
       <div class="ss-nav-shell flex items-center justify-between gap-5 min-h-[76px]">
         <a href="/" class="flex items-center gap-3 min-w-0 flex-shrink-0" aria-label="Schrift Score home">
           <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-700 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-emerald-500/20 border border-emerald-300/30">SS</span>
-          <span class="min-w-0">
-            <span class="flex items-center gap-2">
-              <span class="text-lg font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span>
-              <span id="season-badge" class="hidden sm:inline text-[9px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span>
-              <span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PLUS</span>
-            </span>
-            <span class="block text-[10px] text-slate-400 tracking-wide">THE NBA, BY THE NUMBERS.</span>
-          </span>
+          <span class="min-w-0"><span class="flex items-center gap-2"><span class="text-lg font-extrabold tracking-tight text-white">SCHRIFT <span class="text-emerald-400">SCORE</span></span><span id="season-badge" class="hidden sm:inline text-[9px] uppercase font-mono font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026/27</span><span id="vip-badge" class="hidden text-[9px] uppercase font-mono font-black tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PLUS</span></span><span class="block text-[10px] text-slate-400 tracking-wide">THE NBA, BY THE NUMBERS.</span></span>
         </a>
-
         <nav aria-label="Main navigation" class="ss-main-nav flex items-center gap-1.5">
-          <a href="/" class="ss-nav-link ss-nav-active">Players</a>
-          <button onclick="openDraftNight()" class="ss-nav-link">Draft</button>
-          <a href="/battle.html" class="ss-nav-link">Battle</a>
-
-          <details class="ss-nav-menu">
-            <summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary>
-            <div class="ss-dropdown">
-              <button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison</button>
-              <button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button>
-              <a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a>
-            </div>
-          </details>
-
-          <details class="ss-nav-menu">
-            <summary class="ss-nav-link">More <span class="ss-chevron">⌄</span></summary>
-            <div class="ss-dropdown ss-dropdown-right">
-              <a href="/account.html" class="ss-dropdown-item">Account &amp; Plus</a>
-              <button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">☾</span> <span id="theme-text">Switch Theme</span></button>
-              <div class="ss-dropdown-note"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span><span id="player-count">...</span> players tracked</div>
-            </div>
-          </details>
+          <a href="/" class="ss-nav-link ss-nav-active">Players</a><button onclick="openDraftNight()" class="ss-nav-link">Draft</button><a href="/battle.html" class="ss-nav-link">Battle</a>
+          <details class="ss-nav-menu"><summary class="ss-nav-link">Tools <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown"><button onclick="openComparisonModal(); this.closest('details').open=false" class="ss-dropdown-item">Player Comparison</button><button onclick="toggleCalculator(); this.closest('details').open=false" class="ss-dropdown-item">Schrift Score Calculator</button><a href="/receipt-generator.html" class="ss-dropdown-item">Card Studio</a></div></details>
+          <details class="ss-nav-menu"><summary class="ss-nav-link">More <span class="ss-chevron">⌄</span></summary><div class="ss-dropdown ss-dropdown-right"><a href="/account.html" class="ss-dropdown-item">Account &amp; Plus</a><button id="theme-toggle-btn" onclick="toggleTheme(); this.closest('details').open=false" class="ss-dropdown-item"><span id="theme-icon">☾</span> <span id="theme-text">Switch Theme</span></button><div class="ss-dropdown-note"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span><span id="player-count">...</span> players tracked</div></div></details>
         </nav>
-
-        <a href="/account.html" class="ss-account-link flex-shrink-0" aria-label="Account and Plus">
-          <span class="hidden sm:inline">Sign In</span><span class="sm:hidden">Account</span><span aria-hidden="true">↗</span>
-        </a>
+        <a href="/account.html" class="ss-account-link flex-shrink-0" aria-label="Account and Plus"><span class="hidden sm:inline">Sign In</span><span class="sm:hidden">Account</span><span aria-hidden="true">↗</span></a>
       </div>
-    </div>
-  </header>
-
-ms-center gap-2 text-[10px] sm:text-xs font-mono text-slate-300 bg-court-850 px-2.5 sm:px-3 py-2 rounded-full border border-court-border flex-shrink-0">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="player-count">...</span>
-        </div>
-      </div>
-      <nav aria-label="Main navigation" class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-        <button id="theme-toggle-btn" onclick="toggleTheme()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-court-850 hover:bg-court-800 border border-court-border text-slate-300 text-xs font-mono">
-          <span id="theme-icon">🌙</span><span id="theme-text" class="hidden sm:inline">Theme</span>
-        </button>
-        <button onclick="openComparisonModal()" class="flex items-center gap-1.5 text-xs font-mono text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 px-3 py-2 rounded-full border border-teal-500/30">
-          <span>⚔️</span><span>Compare</span><span id="header-compare-count" class="bg-teal-500 text-slate-950 font-extrabold px-1.5 rounded-full text-[9px] ml-0.5">0/3</span>
-        </button>
-        <button onclick="toggleCalculator()" class="flex items-center gap-1.5 text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 rounded-full border border-emerald-500/30"><span>⚡</span><span>Calculator</span></button>
-        <a href="/receipt-generator.html" class="flex items-center gap-1.5 text-xs font-mono text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-2 rounded-full border border-emerald-500/30"><span>🧾</span><span>Card Studio</span></a>
-        <a href="/battle.html" class="flex items-center gap-1.5 text-xs font-mono text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-2 rounded-full border border-sky-500/30"><span>🏀</span><span>Battle Center</span></a>
-        <a href="/account.html" class="flex items-center gap-1.5 text-xs font-mono text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 rounded-full border border-amber-500/30"><span>👤</span><span>Sign Up</span></a>
-        <button onclick="openDraftNight()" class="flex items-center gap-1.5 text-xs font-mono text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 rounded-full border border-amber-500/30"><span>🏆</span><span>Draft Night</span></button>
-      </nav>
     </div>
   </header>
 
