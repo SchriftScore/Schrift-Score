@@ -11,7 +11,7 @@
 :root{color-scheme:dark}body{background:#070a11;color:#e2e8f0;font-family:Inter,sans-serif;font-feature-settings:"tnum" 1}
 button{transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}button:active{transform:scale(.98)}
 .grid-glow{background-image:radial-gradient(circle at 50% 0%,#10b98118,transparent 55%),linear-gradient(#17243a44 1px,transparent 1px),linear-gradient(90deg,#17243a44 1px,transparent 1px);background-size:auto,36px 36px,36px 36px}
-.player-card{background:linear-gradient(145deg,#17243a,#0c111d 75%);border:1px solid #2a3c59;border-radius:22px;min-height:340px;position:relative;overflow:hidden}
+.player-card{appearance:none;width:100%;color:inherit;text-align:center;cursor:pointer;background:linear-gradient(145deg,#17243a,#0c111d 75%);border:1px solid #2a3c59;border-radius:22px;min-height:340px;position:relative;overflow:hidden}.player-card:focus-visible{outline:3px solid #34d399;outline-offset:3px}.player-card:disabled{cursor:default}
 .player-card:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 10%,#ffffff0b,transparent 58%);pointer-events:none}
 .player-photo{width:142px;height:142px;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 8px 18px #0009);position:relative}
 .choice{min-height:68px;font-weight:900;letter-spacing:.07em;border-radius:15px;border:1px solid transparent}
@@ -38,12 +38,12 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
   <p class="text-sm sm:text-base text-slate-400 mt-3 max-w-xl mx-auto">Know the players. Know the numbers. Prove it.</p>
  </section>
  <section class="max-w-5xl mx-auto -mt-1">
-  <div class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 flex items-center justify-between"><div><div class="pill text-emerald-300">DAILY CHALLENGE</div><div class="font-black text-white mt-1">10 matchups. One score. Every day.</div></div><div class="text-2xl">🏀</div></div>
-  <div class="grid sm:grid-cols-3 gap-2 mt-3">
-   <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">COMPARE BY</span><select id="category" class="w-full bg-[#0c111d] text-white text-sm font-bold outline-none" style="color-scheme:dark"><option value="total">Schrift Score</option><option value="ppg">Points per game</option><option value="rpg">Rebounds per game</option><option value="apg">Assists per game</option><option value="spg">Steals per game</option><option value="bpg">Blocks per game</option><option value="gp">Games played</option></select></label>
+  <div class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 flex items-center justify-between"><div><div class="pill text-emerald-300">DAILY 20</div><div class="font-black text-white mt-1">20 matchups. One shared challenge. Every day.</div></div><div class="text-2xl">🏀</div></div>
+  <div class="grid sm:grid-cols-2 gap-2 mt-3">
+   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">TODAY'S CATEGORY · SAME FOR EVERYONE</span><div id="daily-category" class="text-sm font-black text-white">Schrift Score</div></div>
    <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">DIFFICULTY</span><select id="difficulty" class="w-full bg-[#0c111d] text-white text-sm font-bold outline-none" style="color-scheme:dark"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option></select></label>
-   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
   </div>
+  <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 mt-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST · THIS DIFFICULTY</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
   <div class="grid grid-cols-3 gap-2 mt-3">
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">SCORE</div><div id="score-count" class="font-mono font-black text-2xl text-white mt-1">0</div></div>
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">STREAK</div><div id="streak-count" class="font-mono font-black text-2xl text-orange-300 mt-1">0 🔥</div></div>
@@ -56,28 +56,23 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
   <div id="game" class="hidden mt-5">
    <div class="flex items-center justify-center gap-3 mb-4"><span class="h-px bg-court-border flex-1"></span><span id="question" class="pill text-slate-300 text-center">WHO HAS THE HIGHER SCHRIFT SCORE?</span><span class="h-px bg-court-border flex-1"></span></div>
    <div class="grid grid-cols-2 gap-3 sm:gap-5 items-stretch">
-    <article id="card-a" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
+    <button type="button" id="card-a" class="player-card p-3 sm:p-5 flex flex-col items-center text-center" aria-label="Choose Player A">
      <div class="pill text-emerald-300 mb-1">PLAYER A · THE BENCHMARK</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-a" class="player-photo" alt=""></div>
      <div id="name-a" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-a" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-a" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
      <div class="mt-auto pt-4 w-full"><div id="value-a" class="font-mono font-black text-3xl sm:text-4xl text-emerald-300">—</div><div id="label-a" class="pill text-slate-500 mt-1">SCHRIFT SCORE</div></div>
-    </article>
-    <article id="card-b" class="player-card p-3 sm:p-5 flex flex-col items-center text-center">
+    </button>
+    <button type="button" id="card-b" class="player-card p-3 sm:p-5 flex flex-col items-center text-center" aria-label="Choose Player B">
      <div class="pill text-sky-300 mb-1">PLAYER B · THE CHALLENGER</div>
      <div class="h-36 flex items-end justify-center w-full"><img id="photo-b" class="player-photo" alt=""></div>
      <div id="name-b" class="font-black text-lg sm:text-2xl text-white mt-2 leading-tight"></div><div id="team-b" class="text-xs font-mono text-slate-400 mt-1"></div>
      <div id="stats-b" class="mt-4 grid grid-cols-2 gap-1.5 w-full text-[10px] sm:text-xs"></div>
      <div class="mt-auto pt-4 w-full"><div id="value-b" class="font-mono font-black text-3xl sm:text-4xl text-slate-500">???</div><div id="label-b" class="pill text-slate-500 mt-1">HIDDEN VALUE</div></div>
-    </article>
+    </button>
    </div>
-   <div id="round-tag" class="pill text-center mt-2 text-slate-500">STANDARD MATCHUP</div>
-   <div class="text-center mt-5 mb-3"><div class="text-xs text-slate-500">MAKE YOUR CALL</div><div id="choice-prompt" class="text-lg sm:text-xl font-black text-white mt-1">Does Player B have the higher number?</div></div>
-   <div class="grid grid-cols-3 gap-2 sm:gap-3" id="choices">
-    <button id="higher" class="choice bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs sm:text-sm">HIGHER <span class="block text-lg">↑</span></button>
-    <button id="tie" class="choice bg-court-800 hover:bg-court-700 border border-court-border text-white text-xs sm:text-sm">SAME <span class="block text-lg">=</span></button>
-    <button id="lower" class="choice bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs sm:text-sm">LOWER <span class="block text-lg">↓</span></button>
-   </div>
+   <div id="round-tag" class="pill text-center mt-2 text-slate-500">DAILY 20 MATCHUP</div>
+   <div class="text-center mt-5 mb-3"><div class="text-xs text-emerald-300 font-bold">TAP THE PLAYER YOU THINK HAS THE HIGHER</div><div id="choice-prompt" class="text-lg sm:text-xl font-black text-white mt-1">Choose the player with the higher Schrift Score</div></div>
    <div id="feedback" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-court-900 border border-court-border">
     <div class="flex items-start justify-between gap-3"><div><div id="feedback-title" class="font-black text-xl"></div><div id="feedback-detail" class="text-sm text-slate-400 mt-1"></div></div><div id="points-earned" class="font-mono font-black text-2xl text-emerald-300 whitespace-nowrap"></div></div>
     <button id="continue" class="mt-4 w-full sm:w-auto px-7 py-3 rounded-xl bg-white text-slate-950 font-black text-sm">NEXT MATCHUP →</button>
@@ -107,18 +102,16 @@ function value(p){return Number(p[category]??0)}
 function formatted(p){return value(p).toFixed(CATEGORIES[category].digits)}
 function safe(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function photo(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
-function recordKey(){return 'daily_'+category}
+function recordKey(){return 'daily_'+difficulty+'_'+category}
 function bestForMode(){return Number(records[recordKey()]?.best)||0}
 function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
 function updateStats(){
  $('score-count').textContent=score;$('streak-count').textContent=streak+' 🔥';$('personal-best').textContent=bestForMode();
- $('round-count').textContent=mode==='daily'?Math.min(round+1,10)+'/10':mode==='endless'?round+1:'—';
- $('progress-caption').textContent=mode==='timed'?'TIME LEFT':'ROUND';
- $('lives-label').classList.toggle('hidden',mode!=='endless');$('lives-label').textContent='♥ '.repeat(Math.max(0,lives));
- $('timer-label').classList.toggle('hidden',mode!=='timed');$('timer-label').textContent='00:'+String(Math.max(0,timer)).padStart(2,'0');$('timer-label').classList.toggle('timer-low',timer<=10);
- const count=mode==='daily'?10:Math.min(20,Math.max(10,round+2));
- $('progress').innerHTML=Array.from({length:count},(_,i)=>'<div class="progress-dot flex-1 '+(mode==='daily'?(i<round?'done':i===round?'current':''):(i<round?'done':i===round?'current':''))+'"></div>').join('');
+ $('round-count').textContent=Math.min(round+1,20)+'/20';
+ $('progress-caption').textContent='ROUND';
+ $('lives-label').classList.add('hidden');$('timer-label').classList.add('hidden');
+ $('progress').innerHTML=Array.from({length:20},(_,i)=>'<div class="progress-dot flex-1 '+(i<round?'done':i===round?'current':'')+'"></div>').join('');
 }
 function renderCard(suffix,p,revealValue){
  const img=$('photo-'+suffix);img.style.visibility='visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
@@ -126,36 +119,64 @@ function renderCard(suffix,p,revealValue){
  $('team-'+suffix).textContent=p.team||'NBA';
  const stats=$('stats-'+suffix);
  if(difficulty==='rookie'||revealValue){
-  const items=[['PPG',p.ppg],['RPG',p.rpg],['APG',p.apg],['SPG',p.spg],['BPG',p.bpg]];
-  stats.innerHTML=items.map(x=>'<div class="stat-chip text-slate-400">'+x[0]+' <b class="text-white ml-1">'+Number(x[1]||0).toFixed(1)+'</b></div>').join('');
+  const items=[['ppg','PPG',p.ppg],['rpg','RPG',p.rpg],['apg','APG',p.apg],['spg','SPG',p.spg],['bpg','BPG',p.bpg]].filter(x=>x[0]!==category);
+  stats.innerHTML=items.map(x=>'<div class="stat-chip text-slate-400">'+x[1]+' <b class="text-white ml-1">'+Number(x[2]||0).toFixed(1)+'</b></div>').join('');
  }else stats.innerHTML='<div class="stat-chip col-span-2 text-slate-500">SCOUTING REPORT LOCKED</div>';
  $('value-'+suffix).textContent=revealValue?formatted(p):suffix==='a'?formatted(p):'???';
  $('value-'+suffix).className='font-mono font-black text-3xl sm:text-4xl '+(revealValue||suffix==='a'?'text-emerald-300':'text-slate-500');
- $('label-'+suffix).textContent=revealValue||suffix==='a'?CATEGORIES[category].label:'HIDDEN VALUE';
+ $('label-'+suffix).textContent=CATEGORIES[category].label;
 }
 function renderRound(){
  if(finished)return;answered=false;
  $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('choices').classList.remove('hidden');
- $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');
+ $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
  renderCard('a',currentA,true);renderCard('b',currentB,false);
  $('question').textContent=CATEGORIES[category].question.toUpperCase();
  const clutch=(round+1)%3===0;
  $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':'STANDARD MATCHUP';
  $('round-tag').className='pill text-center mt-2 '+(clutch?'text-amber-300':'text-slate-500');
- $('choice-prompt').textContent='Does '+currentB.name+' have the higher number?';
- $('continue').textContent='NEXT MATCHUP →';updateStats();
+ $('choice-prompt').textContent='Tap the player with the higher '+CATEGORIES[category].label.toLowerCase()+'.';
+ $('continue').textContent='NEXT MATCHUP →';$('card-a').disabled=false;$('card-b').disabled=false;updateStats();
 }
+const DAILY_CATEGORIES=['total','ppg','rpg','apg','spg','bpg','gp'];
+function dailyCategory(){return DAILY_CATEGORIES[hash('SCHRIFT-SCORE-DAILY-CATEGORY|'+todayKey())%DAILY_CATEGORIES.length]}
 function buildDaily(){
- const list=shuffle(players,hash('SCHRIFT-SCORE-DAILY-10|'+todayKey()));
- return list.slice(0,20);
+ const seed='SCHRIFT-SCORE-DAILY-20|'+todayKey()+'|'+category+'|'+difficulty;
+ const pairs=[];
+ for(let i=0;i<players.length;i++){
+  for(let j=i+1;j<players.length;j++){
+   const a=players[i],b=players[j],av=Number(a[category]),bv=Number(b[category]);
+   if(!Number.isFinite(av)||!Number.isFinite(bv)||Math.abs(av-bv)<0.000001)continue;
+   pairs.push({a,b,gap:Math.abs(av-bv)/Math.max(Math.abs(av),Math.abs(bv),1),key:[a.name,b.name].sort().join('|')});
+  }
+ }
+ pairs.sort((x,y)=>y.gap-x.gap||(hash(seed+x.key)-hash(seed+y.key)));
+ const rookie=[.02,.08,.04,.15,.10,.25,.19,.36,.30,.48,.42,.59,.53,.70,.64,.80,.74,.89,.84,.97];
+ const allStar=[.18,.25,.21,.34,.29,.42,.37,.49,.44,.56,.52,.64,.60,.72,.68,.81,.77,.89,.85,.97];
+ const targets=difficulty==='rookie'?rookie:allStar,usedPlayers=new Set(),usedPairs=new Set(),chosen=[];
+ for(const percentile of targets){
+  const center=Math.min(pairs.length-1,Math.floor(percentile*(pairs.length-1)));
+  let pick=null;
+  for(let radius=0;radius<pairs.length&&!pick;radius++){
+   for(const idx of radius===0?[center]:[center-radius,center+radius]){
+    const candidate=pairs[idx];
+    if(candidate&&!usedPairs.has(candidate.key)&&!usedPlayers.has(candidate.a.name)&&!usedPlayers.has(candidate.b.name)){pick=candidate;break}
+   }
+  }
+  if(!pick)pick=pairs.find(p=>!usedPairs.has(p.key));
+  if(!pick)break;
+  chosen.push(pick);usedPairs.add(pick.key);usedPlayers.add(pick.a.name);usedPlayers.add(pick.b.name);
+ }
+ return chosen.flatMap(p=>[p.a,p.b]);
 }
 function startMode(nextMode='daily'){
  stopTimer();mode='daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
- category=$('category').value;difficulty=$('difficulty').value;
- $('mode-description').textContent='TODAY’S SHARED 10-MATCHUP CHALLENGE';
+ category=dailyCategory();difficulty=$('difficulty').value;
+ $('daily-category').textContent=CATEGORIES[category].label.replaceAll(' PER GAME',' PER GAME') ;
+ $('mode-description').textContent='TODAY’S SHARED 20-MATCHUP CHALLENGE';
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
  sequence=buildDaily();
- if(sequence.length<20){showError('There are not enough players to create a matchup.');return}
+ if(sequence.length<40){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
  renderRound();
 
@@ -175,8 +196,9 @@ async function loadPlayers(){
 function choose(choice){
  if(answered||finished)return;answered=true;
  const a=value(currentA),b=value(currentB),eps=0.000001;
- const actual=Math.abs(a-b)<eps?'tie':b>a?'higher':'lower';
- const won=choice===actual;
+ const actual=Math.abs(a-b)<eps?'tie':b>a?'b':'a';
+ const won=actual==='tie'||choice===actual;
+ $('card-a').disabled=true;$('card-b').disabled=true;
  const margin=Math.abs(a-b);
  const closeCall=margin>0&&(margin/Math.max(Math.abs(a),Math.abs(b),1))<=0.05;
  const basePoints=100+Math.min(100,Math.round(margin*4))+(streak*15)+(closeCall?50:0);
@@ -186,28 +208,28 @@ function choose(choice){
  if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0;if(mode==='endless')lives--}
  history.push({a:currentA.name,b:currentB.name,choice,won,category});
  $('value-b').textContent=formatted(currentB);$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-b').textContent=CATEGORIES[category].label;
- $('card-b').classList.add(won?'correct':'wrong');
+ $('card-'+(actual==='tie'?'a':actual)).classList.add('correct');$('card-'+choice).classList.add(won?'correct':'wrong');
  $('feedback-title').textContent=won?(choice==='tie'?'DEAD EVEN! PERFECT CALL':'THAT’S RIGHT! 🔥'):'NOT THIS TIME';
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
- $('feedback-detail').textContent=currentB.name+' recorded '+formatted(currentB)+' '+CATEGORIES[category].label+'. '+currentA.name+' recorded '+formatted(currentA)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):('The correct answer was '+actual.toUpperCase()+'.'));
+ $('feedback-detail').textContent=currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
  $('points-earned').textContent=won?'+'+points:'0 PTS';
- $('continue').textContent=mode==='daily'&&round===9?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
+ $('continue').textContent=round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
  $('choices').classList.add('hidden');$('feedback').classList.remove('hidden');
  if(mode==='endless'&&lives<=0)$('continue').textContent='SEE FINAL SCORE →';
  if(mode==='timed'&&timer<=0)$('continue').textContent='SEE FINAL SCORE →';
  updateStats();
- $('continue').textContent=round===9?'FINISH DAILY 10 →':'SKIP AHEAD →';
+ $('continue').textContent=round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
  advanceTimer=setTimeout(()=>{advanceTimer=null;advance()},2200);
 }
 function advance(){
  if(!answered)return;
  if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}
- if(mode==='daily'&&round>=9){finish('dailyDone');return}
+ if(round>=19){finish('dailyDone');return}
  if(mode==='endless'&&lives<=0){finish('outOfLives');return}
  if(mode==='timed'&&timer<=0){finish('time');return}
  round++;
  let next;
- if(mode==='daily'){currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();return}
+ currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();return
  else{
   const remaining=sequence.filter(p=>p!==currentA&&p!==currentB);
   if(!remaining.length)sequence=shuffle(players,Math.floor(Math.random()*4294967295));
@@ -221,11 +243,11 @@ function finish(reason){
  $('choices').classList.add('hidden');$('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
- $('result-emoji').textContent=reason==='dailyDone'&&correct===10?'🏆':reason==='outOfLives'?'💀':'🏀';
- $('final-title').textContent=reason==='dailyDone'?'DAILY 10 COMPLETE':reason==='outOfLives'?'OUT OF LIVES':reason==='time'?'SHOT CLOCK EXPIRED':'RUN COMPLETE';
- $('final-detail').textContent=reason==='dailyDone'?'You finished today’s shared challenge. Come back tomorrow for a new set.':reason==='outOfLives'?'Three misses ended your run. Run it back.':reason==='time'?'Time expired. Every correct answer counts.':'Your Player Battle run is complete.';
- const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};if(mode==='daily'){records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()]={completed:true,score,correct,accuracy}}saveRecords();
- $('personal-best').textContent=bestForMode();$('round-count').textContent=mode==='daily'?'10/10':total;$('mode-description').textContent='RUN FINISHED';
+ $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
+ $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'RUN COMPLETE';
+ $('final-detail').textContent='You finished today’s shared challenge. Come back tomorrow for a new set.';
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:true,score,correct,accuracy}saveRecords();
+ $('personal-best').textContent=bestForMode();$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
 }
 function shareResult(){
  const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
@@ -233,12 +255,12 @@ function shareResult(){
  else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>$('share').textContent='COPIED!').catch(()=>$('share').textContent='COPY FAILED')}
  else $('share').textContent='SHARE UNAVAILABLE';
 }
-$('higher').onclick=()=>choose('higher');$('lower').onclick=()=>choose('lower');$('tie').onclick=()=>choose('tie');
+$('card-a').onclick=()=>choose('a');$('card-b').onclick=()=>choose('b');
 $('continue').onclick=advance;
 
-$('category').onchange=()=>{category=$('category').value;startMode(mode)};
+
 $('difficulty').onchange=()=>{difficulty=$('difficulty').value;startMode(mode)};
-$('restart').onclick=()=>startMode(mode);$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
+$('restart').onclick=()=>startMode('daily');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadPlayers();
 </script>
 </body></html>
