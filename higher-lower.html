@@ -108,7 +108,7 @@ function value(p){return Number(p[category]??0)}
 function formatted(p){return value(p).toFixed(CATEGORIES[category].digits)}
 function safe(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function photo(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
-function recordKey(){return mode+'_'+difficulty}
+function recordKey(){return mode==='endless'?'endless_'+endlessVariation+'_'+difficulty:'daily_'+difficulty}
 function bestForMode(){return Number(records[recordKey()]?.best)||0}
 function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
