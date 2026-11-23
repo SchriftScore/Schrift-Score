@@ -40,9 +40,10 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
  <section class="max-w-5xl mx-auto -mt-1">
   <div class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 flex items-center justify-between"><div><div class="pill text-emerald-300">DAILY 20</div><div class="font-black text-white mt-1">20 matchups. One shared challenge. Every day.</div></div><div class="text-2xl">🏀</div></div>
   <div class="grid sm:grid-cols-2 gap-2 mt-3">
-   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">TODAY'S CATEGORY · SAME FOR EVERYONE</span><div id="daily-category" class="text-sm font-black text-white">Schrift Score</div></div>
+   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">TODAY'S CATEGORY · SAME FOR EVERYONE</span><div id="daily-category" class="text-sm font-black text-white">A different stat each round</div></div>
    <label class="rounded-xl bg-court-900 border border-court-border px-3 py-2"><span class="pill text-slate-500 block mb-1">DIFFICULTY</span><select id="difficulty" class="w-full bg-[#0c111d] text-white text-sm font-bold outline-none" style="color-scheme:dark"><option value="rookie">Rookie · Stats visible</option><option value="allstar">All-Star · Names only</option></select></label>
   </div>
+  <button id="endless-start" type="button" class="mt-3 w-full rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 text-left hover:border-sky-300 flex items-center justify-between"><span><span class="pill text-sky-300 block">ENDLESS MODE</span><span class="text-sm font-bold text-white">Play as long as you can. One mistake ends your run.</span></span><span class="text-sky-300 font-black">PLAY →</span></button>
   <div class="rounded-xl bg-court-900 border border-court-border px-3 py-2 mt-2 flex items-center justify-between"><div><span class="pill text-slate-500 block mb-1">PERSONAL BEST · THIS DIFFICULTY</span><span id="personal-best" class="font-mono font-black text-xl text-amber-300">0</span></div><span class="text-2xl">🏆</span></div>
   <div class="grid grid-cols-3 gap-2 mt-3">
    <div class="rounded-xl border border-court-border bg-court-900 p-3 text-center"><div class="pill text-slate-500">SCORE</div><div id="score-count" class="font-mono font-black text-2xl text-white mt-1">0</div></div>
@@ -82,7 +83,7 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
     <div id="final-score" class="font-mono font-black text-5xl text-emerald-300 mt-3">0</div><div class="text-xs text-slate-500 pill mt-1">POINTS</div>
     <div class="text-slate-400 text-sm mt-3" id="final-detail"></div>
     <div class="grid grid-cols-3 gap-2 max-w-md mx-auto mt-5"><div class="stat-chip"><div class="pill text-slate-500">CORRECT</div><div id="final-correct" class="font-mono font-black text-xl mt-1">0</div></div><div class="stat-chip"><div class="pill text-slate-500">ACCURACY</div><div id="final-accuracy" class="font-mono font-black text-xl mt-1">0%</div></div><div class="stat-chip"><div class="pill text-slate-500">BEST STREAK</div><div id="final-streak" class="font-mono font-black text-xl mt-1">0</div></div></div>
-    <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
+    <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY ENDLESS</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
    </div>
   </div>
   <p id="save-status" class="text-[11px] text-center mt-7 text-slate-400">Sign in to save your Player Battle stats to your Schrift Score account. Guest stats stay on this device.</p>
@@ -110,10 +111,10 @@ function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}c
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
 function updateStats(){
  $('score-count').textContent=score;$('streak-count').textContent=streak+' 🔥';$('personal-best').textContent=bestForMode();
- $('round-count').textContent=Math.min(round+1,20)+'/20';
+ $('round-count').textContent=mode==='daily'?Math.min(round+1,20)+'/20':String(round+1);
  $('progress-caption').textContent='ROUND';
  $('lives-label').classList.add('hidden');$('timer-label').classList.add('hidden');
- $('progress').innerHTML=Array.from({length:20},(_,i)=>'<div class="progress-dot flex-1 '+(i<round?'done':i===round?'current':'')+'"></div>').join('');
+ $('progress').innerHTML=mode==='daily'?Array.from({length:20},(_,i)=>'<div class="progress-dot flex-1 '+(i<round?'done':i===round?'current':'')+'"></div>').join(''):'';
 }
 function renderCard(suffix,p){
  const img=$('photo-'+suffix);img.style.visibility='visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
@@ -122,7 +123,7 @@ function renderCard(suffix,p){
  $('stats-'+suffix).innerHTML='';
  $('value-'+suffix).textContent='???';
  $('value-'+suffix).className='font-mono font-black text-3xl sm:text-4xl text-slate-500';
- $('label-'+suffix).textContent='VALUE HIDDEN';
+ $('label-'+suffix).textContent=CATEGORIES[category].label;
 }
 function renderRound(){
  if(finished)return;answered=false;
@@ -130,14 +131,21 @@ function renderRound(){
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
  category=roundCategories[round]||'total';renderCard('a',currentA);renderCard('b',currentB);
  $('question').textContent=CATEGORIES[category].question.toUpperCase();
- const clutch=(round+1)%3===0;
- $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':'STANDARD MATCHUP';
+ const clutch=(round+1)%5===0;
+ $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':mode==='daily'?'DAILY MATCHUP':'ENDLESS MATCHUP';
  $('round-tag').className='pill text-center mt-2 '+(clutch?'text-amber-300':'text-slate-500');
  $('choice-prompt').textContent='Tap the player with the higher '+CATEGORIES[category].label.toLowerCase()+'.';
  $('continue').textContent='NEXT MATCHUP →';$('card-a').disabled=false;$('card-b').disabled=false;updateStats();
 }
 const DAILY_CATEGORIES=['total','ppg','rpg','apg','spg','bpg','gp'];
 function dailyCategory(){return DAILY_CATEGORIES[hash('SCHRIFT-SCORE-DAILY-CATEGORY|'+todayKey())%DAILY_CATEGORIES.length]}
+function buildEndless(){
+ const cats=shuffle(DAILY_CATEGORIES,hash('SS-ENDLESS-CATS|'+todayKey()+'|'+Date.now()));
+ const pool=shuffle(players,hash('SS-ENDLESS-POOL|'+todayKey()+'|'+Date.now()));
+ const out=[];roundCategories=[];
+ for(let i=0;i<100;i++){const cat=cats[i%cats.length],a=pool[(i*2)%pool.length],b=pool[(i*2+1)%pool.length];roundCategories.push(cat);out.push(a,b)}
+ return out;
+}
 function buildDaily(){
  const rookie=[.02,.08,.04,.15,.10,.25,.19,.36,.30,.48,.42,.59,.53,.70,.64,.80,.74,.89,.84,.97];
  const allStar=[.18,.25,.21,.34,.29,.42,.37,.49,.44,.56,.52,.64,.60,.72,.68,.81,.77,.89,.85,.97];
@@ -161,13 +169,13 @@ function buildDaily(){
  return sequenceOut;
 }
 function startMode(nextMode='daily'){
- stopTimer();mode='daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
+ stopTimer();mode=nextMode==='endless'?'endless':'daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
  category='total';difficulty=$('difficulty').value;
- $('daily-category').textContent='A DIFFERENT STAT EVERY ROUND';
- $('mode-description').textContent='TODAY’S SHARED 20-MATCHUP CHALLENGE';
+ $('daily-category').textContent='A different stat every round';
+ $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':'ENDLESS MODE · NO ROUND LIMIT';
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
- sequence=buildDaily();
- if(sequence.length<40){showError('There are not enough qualified players to build today’s 20 matchups.');return}
+ sequence=mode==='daily'?buildDaily():buildEndless();
+ if(sequence.length<(mode==='daily'?40:200)){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
  renderRound();
 
@@ -192,9 +200,10 @@ function choose(choice){
  $('card-a').disabled=true;$('card-b').disabled=true;
  const margin=Math.abs(a-b);
  const closeCall=margin>0&&(margin/Math.max(Math.abs(a),Math.abs(b),1))<=0.05;
- const basePoints=100+Math.min(100,Math.round(margin*4))+(streak*15)+(closeCall?50:0);
+ const relativeGap=margin/Math.max(Math.abs(a),Math.abs(b),0.5);
+ const basePoints=100+Math.round((1-Math.min(relativeGap,1))*100)+Math.min(streak*15,75);
  const difficultyMultiplier=difficulty==='allstar'?1.25:1;
- const clutchMultiplier=(round+1)%3===0?2:1;
+ const clutchMultiplier=(round+1)%5===0?2:1;
  const points=won?Math.round(basePoints*difficultyMultiplier*clutchMultiplier):0;
  if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0}
  history.push({a:currentA.name,b:currentB.name,choice,won,category,points});
@@ -204,16 +213,17 @@ function choose(choice){
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
  $('feedback-detail').textContent=currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
  $('points-earned').textContent=won?'+'+points:'0 PTS';$('continue').classList.toggle('hidden',!won);
- $('continue').textContent=round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
+ $('continue').textContent=mode==='daily'&&round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
  $('feedback').classList.remove('hidden');
  updateStats();
- $('continue').textContent=round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
+ $('continue').textContent=mode==='daily'&&round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
  advanceTimer=setTimeout(()=>{advanceTimer=null;if(won){advance()}else{finish('wrongAnswer')}},1800);
 }
 function advance(){
  if(!answered)return;
  if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}
- if(round>=19){finish('dailyDone');return}
+ if(mode==='daily'&&round>=19){finish('dailyDone');return}
+ if(mode==='endless'&&round>=99){finish('endlessDone');return}
  round++;
  currentA=sequence[round*2];currentB=sequence[round*2+1];renderRound();
 }
@@ -223,10 +233,11 @@ function finish(reason){
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
  $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
- $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'GAME OVER';
- $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run. Come back tomorrow and try again.':'You finished all 20 matchups. Come back tomorrow for a new set.';
+ $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':reason==='endlessDone'?'ENDLESS RUN COMPLETE':'GAME OVER';
+ $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
+ $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY ENDLESS AGAIN';
  const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:reason==='dailyDone',score,correct,accuracy};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
- $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
+ $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?'20/20':String(round+1);$('mode-description').textContent='RUN FINISHED';
 }
 async function loadAccountStats(){
  try{
@@ -259,7 +270,7 @@ $('continue').onclick=advance;
 
 
 $('difficulty').onchange=()=>{difficulty=$('difficulty').value;startMode(mode)};
-$('restart').onclick=()=>startMode('daily');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
+$('restart').onclick=()=>startMode('endless');$('endless-start').onclick=()=>startMode('endless');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadAccountStats();
 loadPlayers();
 </script>
