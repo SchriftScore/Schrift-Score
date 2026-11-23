@@ -104,7 +104,7 @@ function value(p){return Number(p[category]??0)}
 function formatted(p){return value(p).toFixed(CATEGORIES[category].digits)}
 function safe(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function photo(p){return p.playerId?'https://a.espncdn.com/i/headshots/nba/players/full/'+encodeURIComponent(p.playerId)+'.png':''}
-function recordKey(){return 'daily_'+difficulty+'_'+category}
+function recordKey(){return 'daily_'+difficulty}
 function bestForMode(){return Number(records[recordKey()]?.best)||0}
 function saveRecords(){try{localStorage.setItem(STORE,JSON.stringify(records))}catch(e){}}
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
@@ -126,7 +126,7 @@ function renderCard(suffix,p){
 }
 function renderRound(){
  if(finished)return;answered=false;
- $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');
+ $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('continue').classList.remove('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
  category=roundCategories[round]||'total';renderCard('a',currentA);renderCard('b',currentB);
  $('question').textContent=CATEGORIES[category].question.toUpperCase();
@@ -203,7 +203,7 @@ function choose(choice){
  $('feedback-title').textContent=won?'THAT’S RIGHT! 🔥':'NOT THIS TIME';
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
  $('feedback-detail').textContent=currentA.name+' had '+formatted(currentA)+' '+CATEGORIES[category].label+'; '+currentB.name+' had '+formatted(currentB)+'. '+(won?((closeCall?'Close-call bonus! ':'')+(clutchMultiplier===2?'Clutch round! ':'')+'Difficulty bonus: '+difficultyMultiplier+'x.'):'The correct player was '+(actual==='a'?currentA.name:currentB.name)+'.');
- $('points-earned').textContent=won?'+'+points:'0 PTS';
+ $('points-earned').textContent=won?'+'+points:'0 PTS';$('continue').classList.toggle('hidden',!won);
  $('continue').textContent=round===19?'SEE DAILY RESULTS →':'NEXT MATCHUP →';
  $('feedback').classList.remove('hidden');
  updateStats();
