@@ -85,14 +85,16 @@ button{transition:transform .15s,background .15s,border-color .15s,box-shadow .1
     <div class="flex flex-wrap justify-center gap-2 mt-6"><button id="share" class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm">SHARE RESULT ↗</button><button id="restart" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">PLAY AGAIN</button><a href="/battle.html" class="px-5 py-3 rounded-xl bg-court-800 border border-court-border text-white font-bold text-sm">BATTLE CENTER</a></div>
    </div>
   </div>
-  <p class="text-[11px] text-slate-600 text-center mt-7">Player statistics come from the live Schrift Score season leaderboard. Daily matchups are shared by date; personal records are saved on this device.</p>
+  <p id="save-status" class="text-[11px] text-center mt-7 text-slate-400">Sign in to save your Player Battle stats to your Schrift Score account. Guest stats stay on this device.</p>
  </section>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/plus-auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const STORE='schriftPlayerBattle.v2';
 const CATEGORIES={total:{label:'SCHRIFT SCORE',question:'Who has the higher Schrift Score?',digits:2},ppg:{label:'POINTS PER GAME',question:'Who scores more points per game?',digits:1},rpg:{label:'REBOUNDS PER GAME',question:'Who grabs more rebounds per game?',digits:1},apg:{label:'ASSISTS PER GAME',question:'Who averages more assists per game?',digits:1},spg:{label:'STEALS PER GAME',question:'Who averages more steals per game?',digits:1},bpg:{label:'BLOCKS PER GAME',question:'Who averages more blocks per game?',digits:1},gp:{label:'GAMES PLAYED',question:'Who has played more games?',digits:0}};
-let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[];
+let players=[],mode='daily',category='total',difficulty='rookie',sequence=[],roundCategories=[],round=0,score=0,correct=0,streak=0,bestStreak=0,lives=3,answered=false,currentA=null,currentB=null,timer=60,timerId=null,advanceTimer=null,finished=false,history=[],signedInUser=null,accountStats=null;
 let records={};
 try{records=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){records={}}
 function todayKey(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date())}
@@ -113,24 +115,20 @@ function updateStats(){
  $('lives-label').classList.add('hidden');$('timer-label').classList.add('hidden');
  $('progress').innerHTML=Array.from({length:20},(_,i)=>'<div class="progress-dot flex-1 '+(i<round?'done':i===round?'current':'')+'"></div>').join('');
 }
-function renderCard(suffix,p,revealValue){
+function renderCard(suffix,p){
  const img=$('photo-'+suffix);img.style.visibility='visible';img.src=photo(p);img.alt=p.name+' headshot';img.onerror=()=>{img.style.visibility='hidden'};
  $('name-'+suffix).textContent=p.name;
  $('team-'+suffix).textContent=p.team||'NBA';
- const stats=$('stats-'+suffix);
- if(difficulty==='rookie'){
-  const items=[['ppg','PPG',p.ppg],['rpg','RPG',p.rpg],['apg','APG',p.apg],['spg','SPG',p.spg],['bpg','BPG',p.bpg]].filter(x=>x[0]!==category);
-  stats.innerHTML=items.map(x=>'<div class="stat-chip text-slate-400">'+x[1]+' <b class="text-white ml-1">'+Number(x[2]||0).toFixed(1)+'</b></div>').join('');
- }else stats.innerHTML='<div class="stat-chip col-span-2 text-slate-500">SCOUTING REPORT LOCKED</div>';
- $('value-'+suffix).textContent=revealValue?formatted(p):suffix==='a'?formatted(p):'???';
- $('value-'+suffix).className='font-mono font-black text-3xl sm:text-4xl '+(revealValue||suffix==='a'?'text-emerald-300':'text-slate-500');
- $('label-'+suffix).textContent=CATEGORIES[category].label;
+ $('stats-'+suffix).innerHTML='';
+ $('value-'+suffix).textContent='???';
+ $('value-'+suffix).className='font-mono font-black text-3xl sm:text-4xl text-slate-500';
+ $('label-'+suffix).textContent='VALUE HIDDEN';
 }
 function renderRound(){
  if(finished)return;answered=false;
  $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
- renderCard('a',currentA,true);renderCard('b',currentB,false);
+ category=roundCategories[round]||'total';renderCard('a',currentA);renderCard('b',currentB);
  $('question').textContent=CATEGORIES[category].question.toUpperCase();
  const clutch=(round+1)%3===0;
  $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':'STANDARD MATCHUP';
@@ -141,38 +139,31 @@ function renderRound(){
 const DAILY_CATEGORIES=['total','ppg','rpg','apg','spg','bpg','gp'];
 function dailyCategory(){return DAILY_CATEGORIES[hash('SCHRIFT-SCORE-DAILY-CATEGORY|'+todayKey())%DAILY_CATEGORIES.length]}
 function buildDaily(){
- const seed='SCHRIFT-SCORE-DAILY-20|'+todayKey()+'|'+category+'|'+difficulty;
- const pairs=[];
- for(let i=0;i<players.length;i++){
-  for(let j=i+1;j<players.length;j++){
-   const a=players[i],b=players[j],av=Number(a[category]),bv=Number(b[category]);
+ const rookie=[.02,.08,.04,.15,.10,.25,.19,.36,.30,.48,.42,.59,.53,.70,.64,.80,.74,.89,.84,.97];
+ const allStar=[.18,.25,.21,.34,.29,.42,.37,.49,.44,.56,.52,.64,.60,.72,.68,.81,.77,.89,.85,.97];
+ const targets=difficulty==='rookie'?rookie:allStar;
+ const categoryOrder=shuffle(DAILY_CATEGORIES,hash('SCHRIFT-SCORE-DAILY-STATS|'+todayKey()));
+ roundCategories=Array.from({length:20},(_,i)=>categoryOrder[i%categoryOrder.length]);
+ const sequenceOut=[];
+ for(let r=0;r<20;r++){
+  const cat=roundCategories[r],seed='SCHRIFT-SCORE-DAILY-20|'+todayKey()+'|'+cat+'|'+difficulty+'|'+r,pairs=[];
+  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){
+   const a=players[i],b=players[j],av=Number(a[cat]),bv=Number(b[cat]);
    if(!Number.isFinite(av)||!Number.isFinite(bv)||Math.abs(av-bv)<0.000001)continue;
    pairs.push({a,b,gap:Math.abs(av-bv)/Math.max(Math.abs(av),Math.abs(bv),1),key:[a.name,b.name].sort().join('|')});
   }
- }
- pairs.sort((x,y)=>y.gap-x.gap||(hash(seed+x.key)-hash(seed+y.key)));
- const rookie=[.02,.08,.04,.15,.10,.25,.19,.36,.30,.48,.42,.59,.53,.70,.64,.80,.74,.89,.84,.97];
- const allStar=[.18,.25,.21,.34,.29,.42,.37,.49,.44,.56,.52,.64,.60,.72,.68,.81,.77,.89,.85,.97];
- const targets=difficulty==='rookie'?rookie:allStar,usedPlayers=new Set(),usedPairs=new Set(),chosen=[];
- for(const percentile of targets){
-  const center=Math.min(pairs.length-1,Math.floor(percentile*(pairs.length-1)));
-  let pick=null;
-  for(let radius=0;radius<pairs.length&&!pick;radius++){
-   for(const idx of radius===0?[center]:[center-radius,center+radius]){
-    const candidate=pairs[idx];
-    if(candidate&&!usedPairs.has(candidate.key)&&!usedPlayers.has(candidate.a.name)&&!usedPlayers.has(candidate.b.name)){pick=candidate;break}
-   }
-  }
-  if(!pick)pick=pairs.find(p=>!usedPairs.has(p.key));
+  pairs.sort((x,y)=>y.gap-x.gap||(hash(seed+x.key)-hash(seed+y.key)));
+  const percentile=targets[r],center=Math.min(pairs.length-1,Math.floor(percentile*(pairs.length-1)));
+  const pick=pairs[center];
   if(!pick)break;
-  chosen.push(pick);usedPairs.add(pick.key);usedPlayers.add(pick.a.name);usedPlayers.add(pick.b.name);
+  sequenceOut.push(pick.a,pick.b);
  }
- return chosen.flatMap(p=>[p.a,p.b]);
+ return sequenceOut;
 }
 function startMode(nextMode='daily'){
  stopTimer();mode='daily';round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
- category=dailyCategory();difficulty=$('difficulty').value;
- $('daily-category').textContent=CATEGORIES[category].label.replaceAll(' PER GAME',' PER GAME') ;
+ category='total';difficulty=$('difficulty').value;
+ $('daily-category').textContent='A DIFFERENT STAT EVERY ROUND';
  $('mode-description').textContent='TODAY’S SHARED 20-MATCHUP CHALLENGE';
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');
  sequence=buildDaily();
@@ -206,8 +197,8 @@ function choose(choice){
  const clutchMultiplier=(round+1)%3===0?2:1;
  const points=won?Math.round(basePoints*difficultyMultiplier*clutchMultiplier):0;
  if(won){score+=points;correct++;streak++;bestStreak=Math.max(bestStreak,streak)}else{streak=0}
- history.push({a:currentA.name,b:currentB.name,choice,won,category});
- $('value-b').textContent=formatted(currentB);$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-b').textContent=CATEGORIES[category].label;
+ history.push({a:currentA.name,b:currentB.name,choice,won,category,points});
+ $('value-a').textContent=formatted(currentA);$('value-b').textContent=formatted(currentB);$('value-a').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('value-b').className='font-mono font-black text-3xl sm:text-4xl text-emerald-300 reveal';$('label-a').textContent=CATEGORIES[category].label;$('label-b').textContent=CATEGORIES[category].label;
  $('card-'+(actual==='tie'?'a':actual)).classList.add('correct');$('card-'+choice).classList.add(won?'correct':'wrong');
  $('feedback-title').textContent=won?'THAT’S RIGHT! 🔥':'NOT THIS TIME';
  $('feedback-title').className='font-black text-xl '+(won?'text-emerald-300':'text-rose-400');
@@ -217,7 +208,7 @@ function choose(choice){
  $('feedback').classList.remove('hidden');
  updateStats();
  $('continue').textContent=round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
- advanceTimer=setTimeout(()=>{advanceTimer=null;advance()},2200);
+ advanceTimer=setTimeout(()=>{advanceTimer=null;if(won){advance()}else{finish('wrongAnswer')}},1800);
 }
 function advance(){
  if(!answered)return;
@@ -232,10 +223,30 @@ function finish(reason){
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
  $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
- $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'RUN COMPLETE';
- $('final-detail').textContent='You finished today’s shared challenge. Come back tomorrow for a new set.';
- const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:true,score,correct,accuracy};saveRecords();
+ $('final-title').textContent=reason==='dailyDone'?'DAILY 20 COMPLETE':'GAME OVER';
+ $('final-detail').textContent=reason==='wrongAnswer'?'One wrong pick ends the run. Come back tomorrow and try again.':'You finished all 20 matchups. Come back tomorrow for a new set.';
+ const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};records.dailyRuns[todayKey()+'_'+difficulty]={completed:reason==='dailyDone',score,correct,accuracy};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
  $('personal-best').textContent=bestForMode();$('round-count').textContent='20/20';$('mode-description').textContent='RUN FINISHED';
+}
+async function loadAccountStats(){
+ try{
+  await window.SchriftScoreAuth.ready;
+  const sb=window.SchriftScoreAuth.getClient(),res=await sb.auth.getUser(),user=res.data?.user;
+  if(!user||user.is_anonymous){signedInUser=null;$('save-status').textContent='Sign in to save your Player Battle stats to your Schrift Score account. Guest stats stay on this device.';return}
+  signedInUser=user;$('save-status').textContent='Signed in — your Player Battle stats save to your Schrift Score account.';
+  const saved=await sb.from('player_battle_stats').select('*').eq('user_id',user.id).maybeSingle();
+  if(saved.error)throw saved.error;
+  accountStats=saved.data||{best_score:0,total_runs:0,total_correct:0,total_questions:0,best_streak:0};
+  $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats.best_score)||0);
+ }catch(e){signedInUser=null;$('save-status').textContent='Account save status unavailable. Your stats are still saved on this device.';}
+}
+async function saveAccountStats(questionCount){
+ if(!signedInUser)return;
+ const sb=window.SchriftScoreAuth.getClient(),old=accountStats||{best_score:0,total_runs:0,total_correct:0,total_questions:0,best_streak:0};
+ const payload={user_id:signedInUser.id,best_score:Math.max(Number(old.best_score)||0,score),total_runs:(Number(old.total_runs)||0)+1,total_correct:(Number(old.total_correct)||0)+correct,total_questions:(Number(old.total_questions)||0)+questionCount,best_streak:Math.max(Number(old.best_streak)||0,bestStreak),updated_at:new Date().toISOString()};
+ const result=await sb.from('player_battle_stats').upsert(payload,{onConflict:'user_id'});
+ if(result.error)throw result.error;
+ accountStats=payload;$('save-status').textContent='Saved to your Schrift Score account ✓';
 }
 function shareResult(){
  const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
@@ -249,6 +260,7 @@ $('continue').onclick=advance;
 
 $('difficulty').onchange=()=>{difficulty=$('difficulty').value;startMode(mode)};
 $('restart').onclick=()=>startMode('daily');$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
+loadAccountStats();
 loadPlayers();
 </script>
 </body></html>
