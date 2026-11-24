@@ -132,7 +132,7 @@ function renderRound(){
  if(finished)return;answered=false;$('progress').classList.remove('hidden');
  $('feedback').classList.add('hidden');$('game-over').classList.add('hidden');$('continue').classList.remove('hidden');
  $('card-a').classList.remove('correct','wrong');$('card-b').classList.remove('correct','wrong');$('card-a').disabled=false;$('card-b').disabled=false;
- category=roundCategories[round]||'total';renderCard('a',currentA);renderCard('b',currentB);
+ category=mode==='endless'&&endlessVariation==='sweep'?(roundCategories[round*5]||'total'):(roundCategories[round]||'total');renderCard('a',currentA);renderCard('b',currentB);
  $('question').textContent=mode==='endless'&&endlessVariation==='sweep'?'WHO LEADS IN MORE OF THESE FIVE CATEGORIES?':CATEGORIES[category].question.toUpperCase();
  const clutch=(round+1)%5===0;
  $('round-tag').textContent=clutch?'🔥 CLUTCH ROUND · 2X POINTS':mode==='daily'?'DAILY MATCHUP':'ENDLESS MATCHUP';
@@ -193,6 +193,7 @@ function buildDaily(){
 async function startMode(nextMode='daily',variation='classic'){
  if(nextMode!=='endless'&&hasPlayedDaily())return;
  stopTimer();mode=nextMode==='endless'?'endless':'daily';endlessVariation=variation;round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
+ category='total';difficulty=$('difficulty').value;
  if(mode==='daily'){
   records.dailyRuns=records.dailyRuns||{};
   records.dailyRuns[todayKey()+'_daily']={started:true,completed:false,score:0,correct:0,questions:0,difficulty};
@@ -207,7 +208,7 @@ async function startMode(nextMode='daily',variation='classic'){
    }catch(error){$('save-status').textContent='Daily attempt is locked on this device. Account reservation could not sync.'}
   }
  }
- category='total';difficulty=$('difficulty').value;
+ category='total';
  $('daily-category').textContent='Stats rotate throughout the Daily 20';
  $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':({classic:'ENDLESS · CLASSIC RUN',sweep:'ENDLESS · STAT SWEEP',time:'ENDLESS · TIME ATTACK'})[endlessVariation];
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');$('daily-locked').classList.add('hidden');$('difficulty').disabled=false;
