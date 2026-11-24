@@ -144,13 +144,22 @@ function renderRound(){
 const DAILY_CATEGORIES=['total','ppg','rpg','apg','spg','bpg','gp'];
 function dailyCategory(){return DAILY_CATEGORIES[hash('SCHRIFT-SCORE-DAILY-CATEGORY|'+todayKey())%DAILY_CATEGORIES.length]}
 function buildEndless(){
- const cats=shuffle(DAILY_CATEGORIES,hash('SS-ENDLESS-CATS|'+todayKey()+'|'+Date.now()));
- const pool=shuffle(players,hash('SS-ENDLESS-POOL|'+todayKey()+'|'+Date.now()));
+ const seed=Date.now(),pool=shuffle(players,hash('SS-ENDLESS-POOL|'+todayKey()+'|'+seed));
  const out=[];roundCategories=[];
  for(let i=0;i<100;i++){
-  const cat=cats[i%cats.length],a=pool[(i*2)%pool.length];let b=pool[(i*2+1)%pool.length],offset=2;
-  while(Math.abs(Number(a[cat])-Number(b[cat]))<0.000001&&offset<pool.length){b=pool[(i*2+offset)%pool.length];offset++}
-  roundCategories.push(cat);out.push(a,b)
+  const cats=endlessVariation==='sweep'
+   ?shuffle(DAILY_CATEGORIES,hash('SS-SWEEP-CATS|'+todayKey()+'|'+seed+'|'+i)).slice(0,5)
+   :[shuffle(DAILY_CATEGORIES,hash('SS-ENDLESS-CATS|'+todayKey()+'|'+seed))[i%DAILY_CATEGORIES.length]];
+  const a=pool[(i*2)%pool.length];let b=pool[(i*2+1)%pool.length],offset=2;
+  const majority=player=>cats.filter(k=>Number(player[k])>Number(a[k])).length;
+  const validPair=player=>{
+   const winsA=cats.filter(k=>Number(a[k])>Number(player[k])).length;
+   const winsB=cats.filter(k=>Number(player[k])>Number(a[k])).length;
+   return endlessVariation==='sweep'?winsA!==winsB:winsA!==0;
+  };
+  while(!validPair(b)&&offset<pool.length){b=pool[(i*2+offset)%pool.length];offset++}
+  if(!validPair(b))throw new Error('Could not build a decisive matchup.');
+  roundCategories.push(...cats);out.push(a,b);
  }
  return out;
 }
@@ -160,7 +169,7 @@ function buildDaily(){
  const targets=difficulty==='rookie'?rookie:allStar;
  const categoryOrder=shuffle(DAILY_CATEGORIES,hash('SCHRIFT-SCORE-DAILY-STATS|'+todayKey()));
  roundCategories=Array.from({length:20},(_,i)=>categoryOrder[i%categoryOrder.length]);
- const sequenceOut=[];
+ const sequenceOut=[],usedPairs=new Set();
  for(let r=0;r<20;r++){
   const cat=roundCategories[r],seed='SCHRIFT-SCORE-DAILY-20|'+todayKey()+'|'+cat+'|'+difficulty+'|'+r,pairs=[];
   for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){
@@ -170,9 +179,13 @@ function buildDaily(){
   }
   pairs.sort((x,y)=>y.gap-x.gap||(hash(seed+x.key)-hash(seed+y.key)));
   const percentile=targets[r],center=Math.min(pairs.length-1,Math.floor(percentile*(pairs.length-1)));
-  const pick=pairs[center];
+  let pick=null;
+  for(let distance=0;distance<pairs.length&&!pick;distance++){
+   const candidates=distance===0?[pairs[center]]:[pairs[Math.max(0,center-distance)],pairs[Math.min(pairs.length-1,center+distance)]];
+   pick=candidates.find(candidate=>candidate&&!usedPairs.has(candidate.key));
+  }
   if(!pick)break;
-  sequenceOut.push(pick.a,pick.b);
+  usedPairs.add(pick.key);sequenceOut.push(pick.a,pick.b);
  }
  return sequenceOut;
 }
@@ -185,7 +198,6 @@ function startMode(nextMode='daily',variation='classic'){
  $('game-over').classList.add('hidden');$('game').classList.remove('hidden');$('error').classList.add('hidden');$('daily-locked').classList.add('hidden');$('difficulty').disabled=false;
  $('question').classList.remove('hidden');$('card-a').classList.remove('hidden');$('card-b').classList.remove('hidden');$('round-tag').classList.remove('hidden');$('choice-prompt').parentElement.classList.remove('hidden');
  sequence=mode==='daily'?buildDaily():buildEndless();
- if(mode==='endless'&&endlessVariation==='sweep'){roundCategories=[];for(let r=0;r<100;r++){const cats=shuffle(DAILY_CATEGORIES,hash('SS-SWEEP|'+todayKey()+'|'+r+'|'+Date.now())).slice(0,5);roundCategories.push(...cats)}}
  if(mode==='endless'&&endlessVariation==='time'){timer=45;$('timer-label').classList.remove('hidden');$('timer-label').textContent='00:45';timerId=setInterval(()=>{timer--; $('timer-label').textContent='00:'+String(Math.max(timer,0)).padStart(2,'0');if(timer<=10)$('timer-label').classList.add('timer-low');if(timer<=0){stopTimer();finish('timeUp')}},1000)}
  if(sequence.length<(mode==='daily'?40:200)){showError('There are not enough qualified players to build today’s 20 matchups.');return}
  currentA=sequence[0];currentB=sequence[1];
@@ -212,11 +224,11 @@ function choose(choice){
  const winsB=sweepCats.filter(k=>Number(currentB[k])>Number(currentA[k])+eps).length;
  const a=value(currentA),b=value(currentB);
  const actual=winsA===winsB?'tie':winsB>winsA?'b':'a';
- const won=actual==='tie'||choice===actual;
+ const won=actual!=='tie'&&choice===actual;
  $('card-a').disabled=true;$('card-b').disabled=true;
- const margin=Math.abs(a-b);
- const closeCall=margin>0&&(margin/Math.max(Math.abs(a),Math.abs(b),1))<=0.05;
- const relativeGap=margin/Math.max(Math.abs(a),Math.abs(b),0.5);
+ const categoryGaps=sweepCats.map(k=>Math.abs(Number(currentA[k])-Number(currentB[k]))/Math.max(Math.abs(Number(currentA[k])),Math.abs(Number(currentB[k])),0.5));
+ const relativeGap=categoryGaps.reduce((sum,gap)=>sum+gap,0)/categoryGaps.length;
+ const closeCall=relativeGap<=0.05;
  const basePoints=100+Math.round((1-Math.min(relativeGap,1))*100)+Math.min(streak*15,75);
  const difficultyMultiplier=difficulty==='allstar'?1.25:1;
  const clutchMultiplier=(round+1)%5===0?2:1;
@@ -234,7 +246,8 @@ function choose(choice){
  $('feedback').classList.remove('hidden');
  updateStats();
  $('continue').textContent=mode==='daily'&&round===19?'FINISH DAILY 20 →':'NEXT MATCHUP →';
- advanceTimer=setTimeout(()=>{advanceTimer=null;if(won){advance()}else{finish('wrongAnswer')}},1800);
+ if(!won){finish('wrongAnswer');return}
+ advanceTimer=setTimeout(()=>{advanceTimer=null;advance()},1400);
 }
 function advance(){
  if(!answered)return;
@@ -301,7 +314,14 @@ $('card-a').onclick=()=>choose('a');$('card-b').onclick=()=>choose('b');
 $('continue').onclick=advance;
 
 
-$('difficulty').onchange=()=>{if(round===0&&!history.length&&!answered&&!finished){difficulty=$('difficulty').value;startMode('daily')}else $('difficulty').value=difficulty};
+$('difficulty').onchange=()=>{
+ if(round===0&&!history.length&&!answered&&!finished){
+  difficulty=$('difficulty').value;
+  if(mode==='daily'){
+   sequence=buildDaily();currentA=sequence[0];currentB=sequence[1];renderRound();
+  }else updateStats();
+ }else $('difficulty').value=difficulty;
+};
 $('restart').onclick=()=>startMode('endless',endlessVariation);$('endless-start').onclick=()=>{$('endless-variation-wrap').classList.toggle('hidden')};$('start-variation').onclick=()=>{startMode('endless',$('endless-variation').value);$('endless-variation-wrap').classList.add('hidden')};$('endless-variation').onchange=()=>{const d={classic:'The original head-to-head comparison, with rotating categories.',sweep:'Five categories appear together. Pick the player who leads in more of them.',time:'You have 45 seconds to answer as many comparisons as possible.'};$('variation-description').textContent=d[$('endless-variation').value]};$('locked-endless').onclick=()=>{$('endless-variation-wrap').classList.remove('hidden');$('daily-locked').classList.add('hidden')};$('share').onclick=shareResult;$('retry').onclick=loadPlayers;
 loadPlayers();
 </script>
