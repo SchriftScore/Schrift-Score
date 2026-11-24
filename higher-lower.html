@@ -190,9 +190,23 @@ function buildDaily(){
  }
  return sequenceOut;
 }
-function startMode(nextMode='daily',variation='classic'){
+async function startMode(nextMode='daily',variation='classic'){
  if(nextMode!=='endless'&&hasPlayedDaily())return;
  stopTimer();mode=nextMode==='endless'?'endless':'daily';endlessVariation=variation;round=0;score=0;correct=0;streak=0;bestStreak=0;lives=3;timer=60;finished=false;history=[];
+ if(mode==='daily'){
+  records.dailyRuns=records.dailyRuns||{};
+  records.dailyRuns[todayKey()+'_daily']={started:true,completed:false,score:0,correct:0,questions:0,difficulty};
+  saveRecords();
+  if(signedInUser){
+   try{
+    const sb=window.SchriftScoreAuth.getClient();
+    const claim=await sb.from('player_battle_daily_runs').insert({user_id:signedInUser.id,challenge_date:todayKey(),difficulty,score:0,correct:0,questions:0,accuracy:0});
+    if(claim.error?.code==='23505'){accountDailyRun={started:true};showDailyLocked();return}
+    if(claim.error)throw claim.error;
+    accountDailyRun={started:true,challenge_date:todayKey(),difficulty};
+   }catch(error){$('save-status').textContent='Daily attempt is locked on this device. Account reservation could not sync.'}
+  }
+ }
  category='total';difficulty=$('difficulty').value;
  $('daily-category').textContent='Stats rotate throughout the Daily 20';
  $('mode-description').textContent=mode==='daily'?'TODAY’S SHARED 20-MATCHUP CHALLENGE':({classic:'ENDLESS · CLASSIC RUN',sweep:'ENDLESS · STAT SWEEP',time:'ENDLESS · TIME ATTACK'})[endlessVariation];
@@ -214,7 +228,7 @@ async function loadPlayers(){
   if(data.dataQuality?.partial)throw new Error('The NBA feed is currently incomplete. Try again after the next data refresh.');
   players=data.players.filter(p=>p.name&&Number.isFinite(Number(p.total))&&Number(p.gp)>0&&['ppg','rpg','apg','spg','bpg'].every(k=>Number.isFinite(Number(p[k]))));
   if(players.length<12)throw new Error('Not enough qualified players are available yet.');
-  $('loading').classList.add('hidden');await loadAccountStats();if(hasPlayedDaily())showDailyLocked();else startMode('daily');
+  $('loading').classList.add('hidden');await loadAccountStats();if(hasPlayedDaily())showDailyLocked();else await startMode('daily');
  }catch(e){showError(e.message||'Unknown error.')}
 }
 function choose(choice){
@@ -300,8 +314,8 @@ async function saveAccountStats(questionCount){
  if(result.error)throw result.error;
  accountStats=payload;$('personal-best').textContent=Math.max(bestForMode(),Number(payload.best_score)||0);$('save-status').textContent='Saved to your Schrift Score account ✓';
  if(mode==='daily'){
-  const daily=await sb.from('player_battle_daily_runs').insert({user_id:signedInUser.id,challenge_date:todayKey(),difficulty,score,correct,questions:questionCount,accuracy});
-  if(daily.error&&daily.error.code!=='23505')throw daily.error;
+  const daily=await sb.from('player_battle_daily_runs').update({difficulty,score,correct,questions:questionCount,accuracy}).eq('user_id',signedInUser.id).eq('challenge_date',todayKey());
+  if(daily.error)throw daily.error;
   accountDailyRun={score,correct,questions:questionCount,difficulty};
  }
 }
