@@ -304,7 +304,8 @@ function hasPlayedDaily(){return !!(records.dailyRuns?.[todayKey()+'_daily']||ac
 function showDailyLocked(){
  mode='daily';finished=true;$('loading').classList.add('hidden');$('game').classList.add('hidden');$('daily-locked').classList.remove('hidden');
  const prior=records.dailyRuns?.[todayKey()+'_daily']||accountDailyRun;
- if(prior?.score!=null)$('daily-locked-detail').textContent='Your score today was '+prior.score+' points. Come back tomorrow for a new challenge, or play Endless Mode.';
+ if(prior?.completed&&prior.score!=null)$('daily-locked-detail').textContent='Your score today was '+prior.score+' points. Come back tomorrow for a new challenge, or play Endless Mode.';
+ else $('daily-locked-detail').textContent='You already started today’s Daily 20 attempt. Your one attempt is reserved for today. Come back tomorrow, or play Endless Mode.';
  $('difficulty').disabled=true;$('mode-description').textContent='DAILY RUN COMPLETE';
 }
 async function saveAccountStats(questionCount){
