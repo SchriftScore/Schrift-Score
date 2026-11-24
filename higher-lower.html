@@ -284,7 +284,7 @@ function finish(reason){
  $('final-detail').textContent=reason==='timeUp'?'Time expired. Your final score is locked in.':reason==='wrongAnswer'?'One wrong pick ends the run.':reason==='endlessDone'?'You reached the end of this endless session.':'You finished all 20 matchups. Come back tomorrow for a new set.';
  $('restart').textContent=mode==='daily'?'PLAY ENDLESS':'PLAY AGAIN';
  const key=recordKey(),oldBest=bestForMode();records[key]={best:Math.max(oldBest,score),last:score,accuracy:accuracy};records.dailyRuns=records.dailyRuns||{};if(mode==='daily')records.dailyRuns[todayKey()+'_daily']={completed:true,score,correct,accuracy,difficulty};saveRecords();saveAccountStats(total).catch(()=>{$('save-status').textContent='Your run is saved on this device. Account sync failed; please try again later.';});
- $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats?.best_score)||0);$('round-count').textContent=mode==='daily'?history.length+'/20':String(history.length);$('mode-description').textContent='RUN FINISHED';
+ $('personal-best').textContent=bestForMode();$('round-count').textContent=mode==='daily'?history.length+'/20':String(history.length);$('mode-description').textContent='RUN FINISHED';
 }
 async function loadAccountStats(){
  try{
@@ -297,7 +297,7 @@ async function loadAccountStats(){
   accountStats=saved.data||{best_score:0,total_runs:0,total_correct:0,total_questions:0,best_streak:0};
   const daily=await sb.from('player_battle_daily_runs').select('*').eq('user_id',user.id).eq('challenge_date',todayKey()).maybeSingle();
   if(daily.error)throw daily.error;accountDailyRun=daily.data||null;
-  $('personal-best').textContent=Math.max(bestForMode(),Number(accountStats.best_score)||0);
+  $('personal-best').textContent=bestForMode();
  }catch(e){signedInUser=null;$('save-status').textContent='Account save status unavailable. Your stats are still saved on this device.';}
 }
 function hasPlayedDaily(){return !!(records.dailyRuns?.[todayKey()+'_daily']||accountDailyRun)}
@@ -313,7 +313,7 @@ async function saveAccountStats(questionCount){
  const payload={user_id:signedInUser.id,best_score:Math.max(Number(old.best_score)||0,score),total_runs:(Number(old.total_runs)||0)+1,total_correct:(Number(old.total_correct)||0)+correct,total_questions:(Number(old.total_questions)||0)+questionCount,best_streak:Math.max(Number(old.best_streak)||0,bestStreak),updated_at:new Date().toISOString()};
  const result=await sb.from('player_battle_stats').upsert(payload,{onConflict:'user_id'});
  if(result.error)throw result.error;
- accountStats=payload;$('personal-best').textContent=Math.max(bestForMode(),Number(payload.best_score)||0);$('save-status').textContent='Saved to your Schrift Score account ✓';
+ accountStats=payload;$('personal-best').textContent=bestForMode();$('save-status').textContent='Saved to your Schrift Score account ✓';
  if(mode==='daily'){
   const daily=await sb.from('player_battle_daily_runs').update({difficulty,score,correct,questions:questionCount,accuracy}).eq('user_id',signedInUser.id).eq('challenge_date',todayKey());
   if(daily.error)throw daily.error;
@@ -321,7 +321,7 @@ async function saveAccountStats(questionCount){
  }
 }
 function shareResult(){
- const text='🏀 NBA Schrift Score Player Battle\\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\\nCan you beat my score? '+location.origin+'/higher-lower.html';
+ const text='🏀 NBA Schrift Score Player Battle\n'+score+' points | '+correct+'/'+history.length+' correct | '+(history.length?Math.round(correct/history.length*100):0)+'% accuracy\nCan you beat my score? '+location.origin+'/higher-lower.html';
  if(navigator.share){navigator.share({title:'Schrift Score Player Battle',text}).catch(()=>{})}
  else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>$('share').textContent='COPIED!').catch(()=>$('share').textContent='COPY FAILED')}
  else $('share').textContent='SHARE UNAVAILABLE';
