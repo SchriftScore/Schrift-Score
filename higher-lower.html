@@ -151,11 +151,12 @@ function buildEndless(){
    ?shuffle(DAILY_CATEGORIES,hash('SS-SWEEP-CATS|'+todayKey()+'|'+seed+'|'+i)).slice(0,5)
    :[shuffle(DAILY_CATEGORIES,hash('SS-ENDLESS-CATS|'+todayKey()+'|'+seed))[i%DAILY_CATEGORIES.length]];
   const a=pool[(i*2)%pool.length];let b=pool[(i*2+1)%pool.length],offset=2;
-  const majority=player=>cats.filter(k=>Number(player[k])>Number(a[k])).length;
   const validPair=player=>{
-   const winsA=cats.filter(k=>Number(a[k])>Number(player[k])).length;
-   const winsB=cats.filter(k=>Number(player[k])>Number(a[k])).length;
-   return endlessVariation==='sweep'?winsA!==winsB:winsA!==0;
+   const winsA=cats.filter(k=>Number(a[k])>Number(player[k])+0.000001).length;
+   const winsB=cats.filter(k=>Number(player[k])>Number(a[k])+0.000001).length;
+   return endlessVariation==='sweep'
+    ?winsA!==winsB
+    :Math.abs(Number(a[cats[0]])-Number(player[cats[0]]))>0.000001;
   };
   while(!validPair(b)&&offset<pool.length){b=pool[(i*2+offset)%pool.length];offset++}
   if(!validPair(b))throw new Error('Could not build a decisive matchup.');
@@ -260,7 +261,7 @@ function advance(){
 function finish(reason){
  if(finished)return;finished=true;stopTimer();
  $('question').classList.add('hidden');$('card-a').classList.add('hidden');$('card-b').classList.add('hidden');$('round-tag').classList.add('hidden');$('choice-prompt').parentElement.classList.add('hidden');$('progress').classList.add('hidden');
- $('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');
+ $('feedback').classList.add('hidden');$('game-over').classList.remove('hidden');$('timer-label').classList.add('hidden');$('timer-label').classList.remove('timer-low');
  const total=history.length,accuracy=total?Math.round(correct/total*100):0;
  $('final-score').textContent=score;$('final-correct').textContent=correct+'/'+total;$('final-accuracy').textContent=accuracy+'%';$('final-streak').textContent=bestStreak;
  $('result-emoji').textContent=reason==='dailyDone'&&correct===20?'🏆':'🏀';
